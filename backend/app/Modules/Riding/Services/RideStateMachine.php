@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\DB;
 final class RideStateMachine
 {
     /**
-     * @param  array<string, mixed>  $payload
+     * @param array<string, mixed> $payload
      */
     public function transition(
         Ride $ride,

@@ -16,18 +16,18 @@ final class Transitions
     public static function map(): array
     {
         return [
-            RideStatus::Requested->value      => [RideStatus::Searching->value, RideStatus::Cancelled->value, RideStatus::Failed->value],
-            RideStatus::Searching->value      => [RideStatus::Offered->value, RideStatus::NoDrivers->value, RideStatus::Cancelled->value, RideStatus::Failed->value],
-            RideStatus::Offered->value        => [RideStatus::Accepted->value, RideStatus::Searching->value, RideStatus::Cancelled->value, RideStatus::Failed->value],
-            RideStatus::Accepted->value       => [RideStatus::DriverArriving->value, RideStatus::Cancelled->value, RideStatus::Failed->value],
+            RideStatus::Requested->value => [RideStatus::Searching->value, RideStatus::Cancelled->value, RideStatus::Failed->value],
+            RideStatus::Searching->value => [RideStatus::Offered->value, RideStatus::NoDrivers->value, RideStatus::Cancelled->value, RideStatus::Failed->value],
+            RideStatus::Offered->value => [RideStatus::Accepted->value, RideStatus::Searching->value, RideStatus::Cancelled->value, RideStatus::Failed->value],
+            RideStatus::Accepted->value => [RideStatus::DriverArriving->value, RideStatus::Cancelled->value, RideStatus::Failed->value],
             RideStatus::DriverArriving->value => [RideStatus::DriverArrived->value, RideStatus::Cancelled->value, RideStatus::Failed->value],
-            RideStatus::DriverArrived->value  => [RideStatus::InProgress->value, RideStatus::Cancelled->value, RideStatus::Failed->value],
-            RideStatus::InProgress->value     => [RideStatus::Completed->value, RideStatus::Cancelled->value, RideStatus::Failed->value],
+            RideStatus::DriverArrived->value => [RideStatus::InProgress->value, RideStatus::Cancelled->value, RideStatus::Failed->value],
+            RideStatus::InProgress->value => [RideStatus::Completed->value, RideStatus::Cancelled->value, RideStatus::Failed->value],
             // Terminal:
-            RideStatus::Completed->value  => [],
-            RideStatus::Cancelled->value  => [],
-            RideStatus::NoDrivers->value  => [],
-            RideStatus::Failed->value     => [],
+            RideStatus::Completed->value => [],
+            RideStatus::Cancelled->value => [],
+            RideStatus::NoDrivers->value => [],
+            RideStatus::Failed->value => [],
         ];
     }
 

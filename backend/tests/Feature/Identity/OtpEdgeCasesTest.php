@@ -8,9 +8,10 @@ use App\Modules\Identity\Exceptions\InvalidOtpException;
 use App\Modules\Identity\Exceptions\OtpThrottledException;
 use App\Modules\Identity\Models\PhoneVerification;
 use App\Modules\Identity\Services\OtpService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
     // Stub the SMS gateway so the test doesn't depend on a real provider.
@@ -41,7 +42,10 @@ it('locks the verification record after max attempts', function (): void {
     $maxAttempts = (int) config('sms.otp.max_attempts', 5);
 
     for ($i = 0; $i < $maxAttempts; $i++) {
-        try { $otp->verify('+995555000002', '000000', 'signup'); } catch (\Throwable) {}
+        try {
+            $otp->verify('+995555000002', '000000', 'signup');
+        } catch (Throwable) {
+        }
     }
 
     expect(fn () => $otp->verify('+995555000002', '999999', 'signup'))

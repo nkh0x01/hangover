@@ -22,8 +22,8 @@ final class SuperAdminSeeder extends Seeder
             return;
         }
 
-        $email = (string) env('ADMIN_EMAIL', 'admin@hangover.local');
-        $password = (string) env('ADMIN_PASSWORD', 'change-me-on-first-login');
+        $email = (string) config('app.admin_email', 'admin@hangover.local');
+        $password = (string) config('app.admin_password', 'change-me-on-first-login');
 
         $user = User::firstOrCreate(
             ['email' => $email],
@@ -34,7 +34,7 @@ final class SuperAdminSeeder extends Seeder
                 'last_name' => 'Admin',
                 'status' => 'active',
                 'locale' => 'en',
-                'referral_code' => strtoupper(substr(Ulid::new(), 0, 8)),
+                'referral_code' => strtoupper(substr(Ulid::new(), -8)),
                 'email_verified_at' => now(),
                 'password' => Hash::make($password),
             ],

@@ -23,9 +23,11 @@ return new class extends Migration
             $t->timestamps(3);
         });
 
-        DB::statement('ALTER TABLE cities ADD COLUMN center POINT NOT NULL SRID 4326');
-        DB::statement('ALTER TABLE cities ADD COLUMN bounding_polygon POLYGON NULL SRID 4326');
-        DB::statement('ALTER TABLE cities ADD SPATIAL INDEX cities_center_sp (center)');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE cities ADD COLUMN center POINT NOT NULL SRID 4326');
+            DB::statement('ALTER TABLE cities ADD COLUMN bounding_polygon POLYGON NULL SRID 4326');
+            DB::statement('ALTER TABLE cities ADD SPATIAL INDEX cities_center_sp (center)');
+        }
 
         Schema::create('zones', function (Blueprint $t): void {
             $t->bigIncrements('id');
@@ -36,8 +38,10 @@ return new class extends Migration
             $t->timestamps(3);
         });
 
-        DB::statement('ALTER TABLE zones ADD COLUMN polygon POLYGON NOT NULL SRID 4326');
-        DB::statement('ALTER TABLE zones ADD SPATIAL INDEX zones_polygon_sp (polygon)');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE zones ADD COLUMN polygon POLYGON NOT NULL SRID 4326');
+            DB::statement('ALTER TABLE zones ADD SPATIAL INDEX zones_polygon_sp (polygon)');
+        }
     }
 
     public function down(): void

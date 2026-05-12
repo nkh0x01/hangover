@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 final class FareEstimateService
 {
     private const AVERAGE_SCOOTER_KMH = 25.0;
+
     private const DETOUR_FACTOR = 1.35;
 
     public function estimate(

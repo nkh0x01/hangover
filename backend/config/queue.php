@@ -33,7 +33,7 @@ return [
 
     'queues' => [
         'realtime' => env('QUEUE_REALTIME', 'realtime'),
-        'default'  => env('QUEUE_DEFAULT', 'default'),
-        'low'      => env('QUEUE_LOW', 'low'),
+        'default' => env('QUEUE_DEFAULT', 'default'),
+        'low' => env('QUEUE_LOW', 'low'),
     ],
 ];

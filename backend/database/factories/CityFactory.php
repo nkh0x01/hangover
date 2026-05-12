@@ -31,10 +31,14 @@ final class CityFactory extends Factory
     public function configure(): static
     {
         return $this->afterCreating(function (City $city): void {
-            DB::statement(
-                'UPDATE cities SET center = ST_SRID(POINT(?, ?), 4326) WHERE id = ?',
-                [44.8271, 41.7151, $city->id],
-            );
+            // POINT lives in MySQL only; SQLite test runs use the
+            // sqlite-aware migration which omits the spatial column.
+            if (DB::getDriverName() === 'mysql') {
+                DB::statement(
+                    'UPDATE cities SET center = ST_SRID(POINT(?, ?), 4326) WHERE id = ?',
+                    [44.8271, 41.7151, $city->id],
+                );
+            }
         });
     }
 }

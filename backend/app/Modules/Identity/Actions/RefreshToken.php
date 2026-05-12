@@ -15,7 +15,7 @@ final readonly class RefreshToken
     public function __construct(private TokenIssuer $issuer) {}
 
     /**
-     * @param  array{token: string, expires_at: string, abilities: array<int, string>}
+     * @return array{token: string, expires_at: string, abilities: array<int, string>}
      */
     public function execute(User $user, UserDevice $device): array
     {

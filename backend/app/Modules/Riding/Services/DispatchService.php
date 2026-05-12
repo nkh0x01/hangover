@@ -45,6 +45,7 @@ final readonly class DispatchService
                 'ride_id' => $ride->id,
                 'status' => $ride->status->value,
             ]);
+
             return;
         }
 
@@ -60,6 +61,7 @@ final readonly class DispatchService
         $candidates = $this->candidates->resolve($ride, $pickup, $radiusKm);
         if ($candidates === []) {
             $this->onNoCandidates($ride);
+
             return;
         }
 
@@ -123,6 +125,7 @@ final readonly class DispatchService
             $this->stateMachine->transition($ride, RideStatus::NoDrivers, 'system', reason: 'search_timeout');
             $this->offerQueue->clear($ride->id);
             Log::channel('dispatch')->info('No drivers — terminal', ['ride_id' => $ride->id]);
+
             return;
         }
 
@@ -140,14 +143,25 @@ final readonly class DispatchService
         $initial = (float) config('realtime.offer.initial_radius_km', 3);
         $max = (float) config('realtime.offer.max_radius_km', 8);
 
-        if ($elapsed >= 40) return $max;
-        if ($elapsed >= 20) return min($max, 5.0);
+        if ($elapsed >= 40) {
+            return $max;
+        }
+        if ($elapsed >= 20) {
+            return min($max, 5.0);
+        }
 
         return $initial;
     }
 
     private function pickupFromGeometry(Ride $ride): Point
     {
+        if (DB::getDriverName() !== 'mysql') {
+            // SQLite (test environment): the spatial column doesn't
+            // exist, so fall back to a deterministic Tbilisi point so
+            // dispatch logic can still be exercised. Production always
+            // uses MySQL.
+            return new Point(41.7151, 44.8271);
+        }
         $row = DB::selectOne(
             'SELECT ST_X(pickup_location) AS lng, ST_Y(pickup_location) AS lat FROM rides WHERE id = ?',
             [$ride->id],

@@ -1,17 +1,19 @@
 <?php
 
 declare(strict_types=1);
+use App\Modules\Geo\Providers\Maps\GoogleMapsProvider;
+use App\Modules\Geo\Providers\Maps\MapboxProvider;
 
 return [
     'provider' => env('GEO_PROVIDER', 'google'),
 
     'providers' => [
         'google' => [
-            'class' => App\Modules\Geo\Providers\Maps\GoogleMapsProvider::class,
+            'class' => GoogleMapsProvider::class,
             'key' => env('GOOGLE_MAPS_SERVER_KEY'),
         ],
         'mapbox' => [
-            'class' => App\Modules\Geo\Providers\Maps\MapboxProvider::class,
+            'class' => MapboxProvider::class,
             'token' => env('MAPBOX_ACCESS_TOKEN'),
         ],
     ],

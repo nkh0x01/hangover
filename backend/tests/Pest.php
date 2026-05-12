@@ -5,9 +5,15 @@ declare(strict_types=1);
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-uses(TestCase::class)->in('Feature');
-uses(TestCase::class, RefreshDatabase::class)->in('Feature/Riding');
-uses(TestCase::class, RefreshDatabase::class)->in('Feature/Pricing');
-uses(TestCase::class, RefreshDatabase::class)->in('Feature/Driver');
-uses(TestCase::class, RefreshDatabase::class)->in('Feature/Identity');
-uses(TestCase::class, RefreshDatabase::class)->in('Feature/Geo');
+// Feature tests at the root of tests/Feature (e.g. HealthCheckTest)
+// don't need a database. Sub-directories that do, layer RefreshDatabase
+// on top via the specific declarations below.
+uses(TestCase::class)->in(__DIR__.'/Feature');
+
+uses(RefreshDatabase::class)->in(
+    __DIR__.'/Feature/Riding',
+    __DIR__.'/Feature/Pricing',
+    __DIR__.'/Feature/Driver',
+    __DIR__.'/Feature/Identity',
+    __DIR__.'/Feature/Geo',
+);

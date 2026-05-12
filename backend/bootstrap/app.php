@@ -9,13 +9,17 @@ use App\Http\Middleware\LocalizeRequest;
 use App\Http\Middleware\LogRequestId;
 use App\Support\Exceptions\DomainException;
 use App\Support\Http\JsonErrorRenderer;
-use Illuminate\Auth\AuthenticationException;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\Http\Middleware\CheckAbilities;
+use Laravel\Sanctum\Http\Middleware\CheckForAnyAbility;
+use Spatie\Permission\Middleware\PermissionMiddleware;
+use Spatie\Permission\Middleware\RoleMiddleware;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -24,7 +28,8 @@ return Application::configure(basePath: dirname(__DIR__))
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         channels: __DIR__.'/../routes/channels.php',
-        health: '/api/v1/health',
+        // health endpoint is defined explicitly in routes/api.php so the
+        // JSON envelope matches App\Support\Http\JsonErrorRenderer.
         apiPrefix: 'api',
         then: function (): void {
             // Module API route files are loaded via App\Providers\ModuleServiceProvider
@@ -42,12 +47,12 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'device.bound' => EnsureDeviceBound::class,
-            'app.version'  => EnforceAppVersion::class,
-            'idempotent'   => EnsureIdempotency::class,
-            'role'         => \Spatie\Permission\Middleware\RoleMiddleware::class,
-            'permission'   => \Spatie\Permission\Middleware\PermissionMiddleware::class,
-            'ability'      => \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
-            'abilities'    => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
+            'app.version' => EnforceAppVersion::class,
+            'idempotent' => EnsureIdempotency::class,
+            'role' => RoleMiddleware::class,
+            'permission' => PermissionMiddleware::class,
+            'ability' => CheckForAnyAbility::class,
+            'abilities' => CheckAbilities::class,
         ]);
 
         // Sanctum stateful domains for SPA / admin panel sessions.
@@ -60,12 +65,12 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             return match (true) {
-                $e instanceof ValidationException     => JsonErrorRenderer::validation($e),
+                $e instanceof ValidationException => JsonErrorRenderer::validation($e),
                 $e instanceof AuthenticationException => JsonErrorRenderer::unauthenticated($e),
-                $e instanceof AuthorizationException  => JsonErrorRenderer::forbidden($e),
-                $e instanceof DomainException         => JsonErrorRenderer::domain($e),
-                $e instanceof HttpExceptionInterface  => JsonErrorRenderer::http($e),
-                default                               => JsonErrorRenderer::unexpected($e),
+                $e instanceof AuthorizationException => JsonErrorRenderer::forbidden($e),
+                $e instanceof DomainException => JsonErrorRenderer::domain($e),
+                $e instanceof HttpExceptionInterface => JsonErrorRenderer::http($e),
+                default => JsonErrorRenderer::unexpected($e),
             };
         });
     })

@@ -4,13 +4,28 @@ declare(strict_types=1);
 
 namespace App\Modules\Driver\Models;
 
+use App\Modules\Geo\Models\City;
 use App\Modules\Identity\Models\User;
+use App\Modules\Riding\Models\Ride;
 use Database\Factories\DriverFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property int $city_id
+ * @property string $status
+ * @property bool $online
+ * @property Carbon|null $online_since
+ * @property int|null $current_vehicle_id
+ * @property string $rating_avg
+ * @property User $user
+ * @property Vehicle|null $currentVehicle
+ */
 class Driver extends Model
 {
     use HasFactory;
@@ -60,7 +75,7 @@ class Driver extends Model
 
     public function city(): BelongsTo
     {
-        return $this->belongsTo(\App\Modules\Geo\Models\City::class);
+        return $this->belongsTo(City::class);
     }
 
     public function vehicles(): HasMany
@@ -85,6 +100,6 @@ class Driver extends Model
 
     public function rides(): HasMany
     {
-        return $this->hasMany(\App\Modules\Riding\Models\Ride::class);
+        return $this->hasMany(Ride::class);
     }
 }

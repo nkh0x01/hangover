@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Identity\Models;
 
+use App\Modules\Driver\Models\Driver;
 use App\Support\Ulid;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
@@ -73,7 +74,9 @@ class User extends Authenticatable implements FilamentUser
     {
         static::creating(function (self $user): void {
             $user->ulid ??= Ulid::new();
-            $user->referral_code ??= strtoupper(substr(Ulid::new(), 0, 8));
+            // ULID first 10 chars are pure timestamp — taking the
+            // random suffix avoids collisions on rapid signups.
+            $user->referral_code ??= strtoupper(substr(Ulid::new(), -8));
         });
     }
 
@@ -105,6 +108,6 @@ class User extends Authenticatable implements FilamentUser
 
     public function driver(): HasOne
     {
-        return $this->hasOne(\App\Modules\Driver\Models\Driver::class);
+        return $this->hasOne(Driver::class);
     }
 }

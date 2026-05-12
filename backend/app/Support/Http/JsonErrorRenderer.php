@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Support\Http;
 
 use App\Support\Exceptions\DomainException;
-use Illuminate\Auth\AuthenticationException;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
@@ -86,7 +86,7 @@ final class JsonErrorRenderer
     }
 
     /**
-     * @param  array<string, mixed>  $details
+     * @param array<string, mixed> $details
      */
     private static function envelope(int $status, string $code, string $message, array $details = []): JsonResponse
     {

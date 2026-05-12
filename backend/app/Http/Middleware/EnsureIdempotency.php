@@ -65,7 +65,7 @@ final class EnsureIdempotency
                 bodySha: $bodySha,
                 body: $body,
                 contentType: (string) $response->headers->get('Content-Type', 'application/json'),
-            ), ttlSeconds: ((int) config('idempotency.ttl_hours', env('IDEMPOTENCY_TTL_HOURS', 24))) * 3600);
+            ), ttlSeconds: ((int) config('idempotency.ttl_hours', 24)) * 3600);
         }
 
         return $response;

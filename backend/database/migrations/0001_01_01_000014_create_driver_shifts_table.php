@@ -27,15 +27,17 @@ return new class extends Migration
             $t->index(['driver_id', 'started_at']);
         });
 
-        // online_duration_seconds as a generated column.
-        DB::statement(<<<'SQL'
-            ALTER TABLE driver_shifts
-                ADD COLUMN online_duration_seconds INT AS (
-                    CASE WHEN ended_at IS NULL THEN NULL
-                    ELSE TIMESTAMPDIFF(SECOND, started_at, ended_at)
-                    END
-                ) STORED
-        SQL);
+        // online_duration_seconds as a MySQL generated column.
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement(<<<'SQL'
+                ALTER TABLE driver_shifts
+                    ADD COLUMN online_duration_seconds INT AS (
+                        CASE WHEN ended_at IS NULL THEN NULL
+                        ELSE TIMESTAMPDIFF(SECOND, started_at, ended_at)
+                        END
+                    ) STORED
+            SQL);
+        }
     }
 
     public function down(): void

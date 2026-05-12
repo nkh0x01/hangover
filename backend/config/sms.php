@@ -1,6 +1,8 @@
 <?php
 
 declare(strict_types=1);
+use App\Modules\Communication\Sms\NullSmsGateway;
+use App\Modules\Communication\Sms\TwilioSmsGateway;
 
 return [
     'driver' => env('SMS_DRIVER', 'null'),
@@ -9,10 +11,10 @@ return [
 
     'drivers' => [
         'null' => [
-            'class' => App\Modules\Communication\Sms\NullSmsGateway::class,
+            'class' => NullSmsGateway::class,
         ],
         'twilio' => [
-            'class' => App\Modules\Communication\Sms\TwilioSmsGateway::class,
+            'class' => TwilioSmsGateway::class,
             'sid' => env('TWILIO_ACCOUNT_SID'),
             'token' => env('TWILIO_AUTH_TOKEN'),
             'from' => env('TWILIO_FROM'),
@@ -24,5 +26,6 @@ return [
         'ttl_minutes' => 5,
         'max_attempts' => 5,
         'resend_cooldown_seconds' => 60,
+        'per_phone_per_hour' => (int) env('RATELIMIT_OTP_PER_PHONE_PER_HOUR', 5),
     ],
 ];

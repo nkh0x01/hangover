@@ -25,8 +25,10 @@ return new class extends Migration
             $t->index(['driver_id', 'recorded_at']);
         });
 
-        DB::statement('ALTER TABLE live_locations ADD COLUMN location POINT NOT NULL SRID 4326');
-        DB::statement('ALTER TABLE live_locations ADD SPATIAL INDEX live_locations_location_sp (location)');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE live_locations ADD COLUMN location POINT NOT NULL SRID 4326');
+            DB::statement('ALTER TABLE live_locations ADD SPATIAL INDEX live_locations_location_sp (location)');
+        }
     }
 
     public function down(): void

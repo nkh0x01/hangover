@@ -9,7 +9,7 @@ use App\Modules\Riding\Models\Ride;
 use App\Modules\Riding\Services\DispatchService;
 use App\Modules\Riding\StateMachine\RideStatus;
 use App\Support\Ulid;
-use Illuminate\Support\Facades\DB;
+use Tests\Support\SpatialTestHelpers;
 
 it('terminates a ride as no_drivers once the search window elapses without candidates', function (): void {
     $city = City::factory()->create();
@@ -37,10 +37,7 @@ it('terminates a ride as no_drivers once the search window elapses without candi
         'requested_at' => now()->subSeconds((int) config('realtime.offer.search_timeout_seconds', 60) + 5),
     ]);
     $ride->save();
-    DB::statement(
-        'UPDATE rides SET pickup_location = ST_SRID(POINT(?,?),4326), dropoff_location = ST_SRID(POINT(?,?),4326) WHERE id=?',
-        [44.8271, 41.7151, 44.8271, 41.7321, $ride->id],
-    );
+    SpatialTestHelpers::setRidePoints($ride->id, 44.8271, 41.7151, 44.8271, 41.7321);
 
     /** @var DispatchService $dispatch */
     $dispatch = app(DispatchService::class);
@@ -74,10 +71,7 @@ it('exits the loop gracefully when the ride has already advanced to a terminal s
         'requested_at' => now(),
     ]);
     $ride->save();
-    DB::statement(
-        'UPDATE rides SET pickup_location = ST_SRID(POINT(?,?),4326), dropoff_location = ST_SRID(POINT(?,?),4326) WHERE id=?',
-        [44.8271, 41.7151, 44.8271, 41.7321, $ride->id],
-    );
+    SpatialTestHelpers::setRidePoints($ride->id, 44.8271, 41.7151, 44.8271, 41.7321);
 
     /** @var DispatchService $dispatch */
     $dispatch = app(DispatchService::class);

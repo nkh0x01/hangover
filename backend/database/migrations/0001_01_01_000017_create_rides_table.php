@@ -75,34 +75,36 @@ return new class extends Migration
             $t->index(['status', 'requested_at']);
         });
 
-        DB::statement('ALTER TABLE rides ADD COLUMN pickup_location POINT NOT NULL SRID 4326');
-        DB::statement('ALTER TABLE rides ADD COLUMN dropoff_location POINT NOT NULL SRID 4326');
-        DB::statement('ALTER TABLE rides ADD SPATIAL INDEX rides_pickup_sp (pickup_location)');
-        DB::statement('ALTER TABLE rides ADD SPATIAL INDEX rides_dropoff_sp (dropoff_location)');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE rides ADD COLUMN pickup_location POINT NOT NULL SRID 4326');
+            DB::statement('ALTER TABLE rides ADD COLUMN dropoff_location POINT NOT NULL SRID 4326');
+            DB::statement('ALTER TABLE rides ADD SPATIAL INDEX rides_pickup_sp (pickup_location)');
+            DB::statement('ALTER TABLE rides ADD SPATIAL INDEX rides_dropoff_sp (dropoff_location)');
 
-        // Generated locking columns: NULL when ride is in a terminal state,
-        // the driver/customer id otherwise. Unique indexes on these columns
-        // prevent the cardinal "two active rides" bug at the DB level.
-        DB::statement(<<<'SQL'
-            ALTER TABLE rides
-                ADD COLUMN active_driver_lock BIGINT UNSIGNED AS (
-                    CASE
-                        WHEN status IN ('offered','accepted','driver_arriving','driver_arrived','in_progress')
-                        THEN driver_id
-                        ELSE NULL
-                    END
-                ) VIRTUAL,
-                ADD COLUMN active_customer_lock BIGINT UNSIGNED AS (
-                    CASE
-                        WHEN status IN ('requested','searching','offered','accepted','driver_arriving','driver_arrived','in_progress')
-                        THEN customer_id
-                        ELSE NULL
-                    END
-                ) VIRTUAL
-        SQL);
+            // Generated locking columns: NULL when ride is in a terminal state,
+            // the driver/customer id otherwise. Unique indexes on these columns
+            // prevent the cardinal "two active rides" bug at the DB level.
+            DB::statement(<<<'SQL'
+                ALTER TABLE rides
+                    ADD COLUMN active_driver_lock BIGINT UNSIGNED AS (
+                        CASE
+                            WHEN status IN ('offered','accepted','driver_arriving','driver_arrived','in_progress')
+                            THEN driver_id
+                            ELSE NULL
+                        END
+                    ) VIRTUAL,
+                    ADD COLUMN active_customer_lock BIGINT UNSIGNED AS (
+                        CASE
+                            WHEN status IN ('requested','searching','offered','accepted','driver_arriving','driver_arrived','in_progress')
+                            THEN customer_id
+                            ELSE NULL
+                        END
+                    ) VIRTUAL
+            SQL);
 
-        DB::statement('CREATE UNIQUE INDEX rides_active_driver_uq   ON rides (active_driver_lock)');
-        DB::statement('CREATE UNIQUE INDEX rides_active_customer_uq ON rides (active_customer_lock)');
+            DB::statement('CREATE UNIQUE INDEX rides_active_driver_uq   ON rides (active_driver_lock)');
+            DB::statement('CREATE UNIQUE INDEX rides_active_customer_uq ON rides (active_customer_lock)');
+        }
     }
 
     public function down(): void

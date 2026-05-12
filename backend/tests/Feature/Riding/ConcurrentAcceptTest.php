@@ -14,6 +14,7 @@ use App\Modules\Riding\Models\RideOffer;
 use App\Modules\Riding\StateMachine\RideStatus;
 use App\Support\Ulid;
 use Illuminate\Support\Facades\DB;
+use Tests\Support\SpatialTestHelpers;
 
 /**
  * The single most important correctness test in the platform: when
@@ -51,10 +52,7 @@ function buildOfferedRide(int $offers = 2): array
         'requested_at' => now(),
     ]);
     $ride->save();
-    DB::statement(
-        'UPDATE rides SET pickup_location = ST_SRID(POINT(?,?),4326), dropoff_location = ST_SRID(POINT(?,?),4326) WHERE id=?',
-        [44.8271, 41.7151, 44.8271, 41.7321, $ride->id],
-    );
+    SpatialTestHelpers::setRidePoints($ride->id, 44.8271, 41.7151, 44.8271, 41.7321);
 
     $drivers = collect();
     for ($i = 0; $i < $offers; $i++) {

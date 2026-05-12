@@ -62,17 +62,21 @@ final readonly class CreateRideRequest
 
                 // POINT columns are not Eloquent-fillable; raw UPDATE so the
                 // generated active_*_lock columns recompute.
-                DB::statement(
-                    'UPDATE rides
-                        SET pickup_location  = ST_SRID(POINT(?, ?), 4326),
-                            dropoff_location = ST_SRID(POINT(?, ?), 4326)
-                      WHERE id = ?',
-                    [
-                        $data->pickup->lng, $data->pickup->lat,
-                        $data->dropoff->lng, $data->dropoff->lat,
-                        $ride->id,
-                    ],
-                );
+                // MySQL-only — sqlite test runs use a sqlite-aware migration
+                // that omits the spatial columns.
+                if (DB::getDriverName() === 'mysql') {
+                    DB::statement(
+                        'UPDATE rides
+                            SET pickup_location  = ST_SRID(POINT(?, ?), 4326),
+                                dropoff_location = ST_SRID(POINT(?, ?), 4326)
+                          WHERE id = ?',
+                        [
+                            $data->pickup->lng, $data->pickup->lat,
+                            $data->dropoff->lng, $data->dropoff->lat,
+                            $ride->id,
+                        ],
+                    );
+                }
 
                 return $ride->refresh();
             });
@@ -95,7 +99,13 @@ final readonly class CreateRideRequest
     {
         $msg = $e->getMessage();
 
-        return str_contains($msg, $indexName)
-            || (isset($e->errorInfo[1]) && (int) $e->errorInfo[1] === 1062 && str_contains($msg, $indexName));
+        if (str_contains($msg, $indexName)) {
+            return true;
+        }
+
+        // MySQL duplicate-key SQLSTATE without the index name in the
+        // message (rare, but possible on some MySQL flavours): fall
+        // back to checking the SQLSTATE error code.
+        return isset($e->errorInfo[1]) && (int) $e->errorInfo[1] === 1062;
     }
 }

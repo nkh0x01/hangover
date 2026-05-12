@@ -18,18 +18,18 @@
         </include>
     </source>
     <php>
-        <env name="APP_ENV" value="testing"/>
-        <env name="APP_DEBUG" value="true"/>
-        <env name="APP_KEY" value="base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="/>
-        <env name="BCRYPT_ROUNDS" value="4"/>
-        <env name="CACHE_STORE" value="array"/>
-        <env name="DB_CONNECTION" value="mysql"/>
-        <env name="DB_DATABASE" value="hangover_test"/>
-        <env name="MAIL_MAILER" value="array"/>
-        <env name="PULSE_ENABLED" value="false"/>
-        <env name="QUEUE_CONNECTION" value="sync"/>
-        <env name="SESSION_DRIVER" value="array"/>
-        <env name="TELESCOPE_ENABLED" value="false"/>
-        <env name="BROADCAST_CONNECTION" value="log"/>
+        <env name="APP_ENV" value="testing" force="false"/>
+        <env name="APP_DEBUG" value="true" force="false"/>
+        <env name="APP_KEY" value="base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=" force="false"/>
+        <env name="BCRYPT_ROUNDS" value="4" force="false"/>
+        <env name="CACHE_STORE" value="array" force="false"/>
+        <env name="DB_CONNECTION" value="mysql" force="false"/>
+        <env name="DB_DATABASE" value="hangover_test" force="false"/>
+        <env name="MAIL_MAILER" value="array" force="false"/>
+        <env name="PULSE_ENABLED" value="false" force="false"/>
+        <env name="QUEUE_CONNECTION" value="sync" force="false"/>
+        <env name="SESSION_DRIVER" value="array" force="false"/>
+        <env name="TELESCOPE_ENABLED" value="false" force="false"/>
+        <env name="BROADCAST_CONNECTION" value="log" force="false"/>
     </php>
 </phpunit>

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Riding\Services;
 
+use Illuminate\Redis\Connections\Connection;
 use Illuminate\Support\Facades\Redis;
 
 /**
@@ -24,7 +25,7 @@ final class DriverOfferQueue
 {
     private const TTL_SECONDS = 600;
 
-    private function conn(): \Illuminate\Redis\Connections\Connection
+    private function conn(): Connection
     {
         return Redis::connection((string) config('geo.index.connection', 'geo'));
     }

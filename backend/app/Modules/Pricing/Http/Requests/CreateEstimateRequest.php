@@ -16,10 +16,10 @@ final class CreateEstimateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'pickup.lat'   => ['required', 'numeric', 'between:-90,90'],
-            'pickup.lng'   => ['required', 'numeric', 'between:-180,180'],
-            'dropoff.lat'  => ['required', 'numeric', 'between:-90,90'],
-            'dropoff.lng'  => ['required', 'numeric', 'between:-180,180'],
+            'pickup.lat' => ['required', 'numeric', 'between:-90,90'],
+            'pickup.lng' => ['required', 'numeric', 'between:-180,180'],
+            'dropoff.lat' => ['required', 'numeric', 'between:-90,90'],
+            'dropoff.lng' => ['required', 'numeric', 'between:-180,180'],
             'vehicle_type' => ['nullable', 'in:scooter_electric,scooter_petrol,moped,bicycle_electric'],
         ];
     }

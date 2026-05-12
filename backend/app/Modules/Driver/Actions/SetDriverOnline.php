@@ -19,8 +19,15 @@ final readonly class SetDriverOnline
         if ($driver->status !== 'approved') {
             throw new class('Driver not approved.') extends DomainException
             {
-                public function code(): string { return 'driver.not_approved'; }
-                public function status(): int { return 403; }
+                public function code(): string
+                {
+                    return 'driver.not_approved';
+                }
+
+                public function status(): int
+                {
+                    return 403;
+                }
             };
         }
 
@@ -28,8 +35,15 @@ final readonly class SetDriverOnline
         if (! $vehicleId) {
             throw new class('No active vehicle on file.') extends DomainException
             {
-                public function code(): string { return 'driver.no_active_vehicle'; }
-                public function status(): int { return 409; }
+                public function code(): string
+                {
+                    return 'driver.no_active_vehicle';
+                }
+
+                public function status(): int
+                {
+                    return 409;
+                }
             };
         }
 

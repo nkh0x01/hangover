@@ -15,7 +15,7 @@ use Throwable;
 abstract class DomainException extends RuntimeException
 {
     /**
-     * @param  array<string, mixed>  $details
+     * @param array<string, mixed> $details
      */
     public function __construct(
         string $message = '',

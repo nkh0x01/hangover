@@ -52,7 +52,7 @@ final class AppServiceProvider extends ServiceProvider
 
             return [
                 Limit::perMinute(3)->by('otp:ip:'.$request->ip()),
-                Limit::perHour((int) env('RATELIMIT_OTP_PER_PHONE_PER_HOUR', 5))->by('otp:phone:'.$phone),
+                Limit::perHour((int) config('sms.otp.per_phone_per_hour', 5))->by('otp:phone:'.$phone),
             ];
         });
 

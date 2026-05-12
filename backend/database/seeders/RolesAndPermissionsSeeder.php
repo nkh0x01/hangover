@@ -44,13 +44,13 @@ final class RolesAndPermissionsSeeder extends Seeder
      * Role -> permission(s) mapping. '*' = all permissions.
      */
     private const ROLES = [
-        'super_admin'    => ['*'],
-        'ops_admin'      => ['dashboard.view', 'livemap.view', 'user.view', 'user.suspend', 'driver.view', 'driver.approve', 'driver.suspend', 'ride.view', 'ride.cancel', 'promo.manage', 'support.view', 'support.respond', 'fraud.manage', 'sos.manage'],
-        'finance_admin'  => ['dashboard.view', 'transaction.view', 'refund.create', 'payout.manage', 'ride.view', 'user.view'],
-        'support_agent'  => ['dashboard.view', 'support.view', 'support.respond', 'user.view', 'ride.view'],
-        'dispatcher'     => ['dashboard.view', 'livemap.view', 'ride.view', 'ride.dispatch'],
-        'driver'         => [],
-        'customer'       => [],
+        'super_admin' => ['*'],
+        'ops_admin' => ['dashboard.view', 'livemap.view', 'user.view', 'user.suspend', 'driver.view', 'driver.approve', 'driver.suspend', 'ride.view', 'ride.cancel', 'promo.manage', 'support.view', 'support.respond', 'fraud.manage', 'sos.manage'],
+        'finance_admin' => ['dashboard.view', 'transaction.view', 'refund.create', 'payout.manage', 'ride.view', 'user.view'],
+        'support_agent' => ['dashboard.view', 'support.view', 'support.respond', 'user.view', 'ride.view'],
+        'dispatcher' => ['dashboard.view', 'livemap.view', 'ride.view', 'ride.dispatch'],
+        'driver' => [],
+        'customer' => [],
     ];
 
     public function run(): void

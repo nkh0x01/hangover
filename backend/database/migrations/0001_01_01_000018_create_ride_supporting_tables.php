@@ -51,7 +51,9 @@ return new class extends Migration
             $t->index(['ride_id', 'seq']);
         });
 
-        DB::statement('ALTER TABLE ride_route_points ADD COLUMN location POINT NOT NULL SRID 4326');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE ride_route_points ADD COLUMN location POINT NOT NULL SRID 4326');
+        }
 
         Schema::create('ride_messages', function (Blueprint $t): void {
             $t->bigIncrements('id');

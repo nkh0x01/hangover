@@ -11,10 +11,16 @@ use App\Modules\Riding\Exceptions\DuplicateActiveRideException;
 use App\Modules\Riding\Jobs\DispatchRide;
 use App\Support\Geo\Point;
 use Illuminate\Support\Facades\Queue;
+use Tests\Support\SpatialTestHelpers;
 
 beforeEach(fn () => Queue::fake());
 
 it('refuses a second concurrent ride for the same customer', function (): void {
+    // Exercises the active_customer_lock partial unique index, which
+    // is a MySQL generated column — skip on SQLite test runs.
+    if (! SpatialTestHelpers::requiresMysql()) {
+        $this->markTestSkipped('Requires MySQL generated columns');
+    }
     $city = City::factory()->create();
     $customer = User::factory()->create();
 

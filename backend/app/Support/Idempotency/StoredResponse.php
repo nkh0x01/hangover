@@ -24,7 +24,7 @@ final readonly class StoredResponse
     }
 
     /**
-     * @param  array<string, mixed>  $blob
+     * @param array<string, mixed> $blob
      */
     public static function fromArray(array $blob): self
     {

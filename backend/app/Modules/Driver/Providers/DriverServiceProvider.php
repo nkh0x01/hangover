@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Driver\Providers;
 
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
 final class DriverServiceProvider extends ServiceProvider
@@ -22,6 +23,6 @@ final class DriverServiceProvider extends ServiceProvider
 
     private function loadRoutesFromRoot(string $file): void
     {
-        \Illuminate\Support\Facades\Route::middleware('api')->group($file);
+        Route::middleware('api')->group($file);
     }
 }

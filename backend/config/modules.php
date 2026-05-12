@@ -1,6 +1,18 @@
 <?php
 
 declare(strict_types=1);
+use App\Modules\Cms\Providers\CmsServiceProvider;
+use App\Modules\Communication\Providers\CommunicationServiceProvider;
+use App\Modules\Driver\Providers\DriverServiceProvider;
+use App\Modules\Geo\Providers\GeoServiceProvider;
+use App\Modules\Identity\Providers\IdentityServiceProvider;
+use App\Modules\Payment\Providers\PaymentServiceProvider;
+use App\Modules\Pricing\Providers\PricingServiceProvider;
+use App\Modules\Promotion\Providers\PromotionServiceProvider;
+use App\Modules\Rating\Providers\RatingServiceProvider;
+use App\Modules\Riding\Providers\RidingServiceProvider;
+use App\Modules\Support\Providers\SupportServiceProvider;
+use App\Modules\Wallet\Providers\WalletServiceProvider;
 
 /**
  * Module registry. Order matters only insofar as dependency direction —
@@ -8,17 +20,17 @@ declare(strict_types=1);
  */
 return [
     'enabled' => [
-        App\Modules\Identity\Providers\IdentityServiceProvider::class,
-        App\Modules\Geo\Providers\GeoServiceProvider::class,
-        App\Modules\Driver\Providers\DriverServiceProvider::class,
-        App\Modules\Pricing\Providers\PricingServiceProvider::class,
-        App\Modules\Riding\Providers\RidingServiceProvider::class,
-        App\Modules\Payment\Providers\PaymentServiceProvider::class,
-        App\Modules\Wallet\Providers\WalletServiceProvider::class,
-        App\Modules\Promotion\Providers\PromotionServiceProvider::class,
-        App\Modules\Rating\Providers\RatingServiceProvider::class,
-        App\Modules\Communication\Providers\CommunicationServiceProvider::class,
-        App\Modules\Support\Providers\SupportServiceProvider::class,
-        App\Modules\Cms\Providers\CmsServiceProvider::class,
+        IdentityServiceProvider::class,
+        GeoServiceProvider::class,
+        DriverServiceProvider::class,
+        PricingServiceProvider::class,
+        RidingServiceProvider::class,
+        PaymentServiceProvider::class,
+        WalletServiceProvider::class,
+        PromotionServiceProvider::class,
+        RatingServiceProvider::class,
+        CommunicationServiceProvider::class,
+        SupportServiceProvider::class,
+        CmsServiceProvider::class,
     ],
 ];

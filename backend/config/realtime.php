@@ -25,4 +25,12 @@ return [
         'initial_radius_km' => 3,
         'search_timeout_seconds' => 60,
     ],
+
+    // Client-facing realtime config exposed via GET /api/v1/config so
+    // mobile builds don't have to bake the broker URL in.
+    'client' => [
+        'host' => env('REVERB_HOST_CLIENT'),
+        'port' => env('REVERB_PORT_CLIENT', 8080),
+        'scheme' => env('REVERB_SCHEME_CLIENT', 'ws'),
+    ],
 ];

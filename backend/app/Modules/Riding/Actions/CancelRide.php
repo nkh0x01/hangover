@@ -47,9 +47,9 @@ final readonly class CancelRide
     {
         return match ($actorType) {
             'customer' => 'customer_cancelled',
-            'driver'   => 'driver_cancelled',
-            'admin'    => 'admin_cancelled',
-            default    => 'customer_cancelled',
+            'driver' => 'driver_cancelled',
+            'admin' => 'admin_cancelled',
+            default => 'customer_cancelled',
         };
     }
 }

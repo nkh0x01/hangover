@@ -15,9 +15,11 @@ use App\Modules\Riding\Actions\DriverArriving;
 use App\Modules\Riding\Actions\StartTrip;
 use App\Modules\Riding\Models\Ride;
 use App\Modules\Riding\Models\RideOffer;
+use App\Modules\Riding\Services\RideStateMachine;
 use App\Modules\Riding\StateMachine\RideStatus;
+use App\Support\Exceptions\DomainException;
 use App\Support\Ulid;
-use Illuminate\Support\Facades\DB;
+use Tests\Support\SpatialTestHelpers;
 
 function makeOfferedRide(): array
 {
@@ -49,10 +51,7 @@ function makeOfferedRide(): array
         'requested_at' => now(),
     ]);
     $ride->save();
-    DB::statement(
-        'UPDATE rides SET pickup_location = ST_SRID(POINT(?,?),4326), dropoff_location = ST_SRID(POINT(?,?),4326) WHERE id=?',
-        [44.8271, 41.7151, 44.8271, 41.7321, $ride->id],
-    );
+    SpatialTestHelpers::setRidePoints($ride->id, 44.8271, 41.7151, 44.8271, 41.7321);
 
     RideOffer::create([
         'ride_id' => $ride->id,
@@ -103,8 +102,8 @@ it('lets the customer cancel before pickup', function (): void {
 it('refuses an illegal jump from offered to in_progress', function (): void {
     ['ride' => $ride] = makeOfferedRide();
 
-    $sm = app(\App\Modules\Riding\Services\RideStateMachine::class);
+    $sm = app(RideStateMachine::class);
 
     expect(fn () => $sm->transition($ride->refresh(), RideStatus::InProgress, 'system'))
-        ->toThrow(\App\Support\Exceptions\DomainException::class);
+        ->toThrow(DomainException::class);
 });

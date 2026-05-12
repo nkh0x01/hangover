@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Modules\Driver\Models\Driver;
 use App\Modules\Driver\Models\Vehicle;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -17,7 +18,7 @@ final class VehicleFactory extends Factory
     public function definition(): array
     {
         return [
-            'driver_id' => \App\Modules\Driver\Models\Driver::factory(),
+            'driver_id' => Driver::factory(),
             'type' => 'scooter_electric',
             'brand' => 'Xiaomi',
             'model' => 'Mi Electric Scooter Pro 2',

@@ -25,21 +25,21 @@ return [
         // The customer + driver apps use different OAuth client IDs but
         // share the server secret since auth happens via ID token verify.
         'client_id_customer' => env('GOOGLE_CLIENT_ID_CUSTOMER'),
-        'client_id_driver'   => env('GOOGLE_CLIENT_ID_DRIVER'),
+        'client_id_driver' => env('GOOGLE_CLIENT_ID_DRIVER'),
     ],
 
     'apple' => [
         'client_id_customer' => env('APPLE_CLIENT_ID_CUSTOMER'),
-        'client_id_driver'   => env('APPLE_CLIENT_ID_DRIVER'),
-        'team_id'            => env('APPLE_TEAM_ID'),
-        'key_id'             => env('APPLE_KEY_ID'),
-        'private_key_path'   => env('APPLE_PRIVATE_KEY_PATH'),
+        'client_id_driver' => env('APPLE_CLIENT_ID_DRIVER'),
+        'team_id' => env('APPLE_TEAM_ID'),
+        'key_id' => env('APPLE_KEY_ID'),
+        'private_key_path' => env('APPLE_PRIVATE_KEY_PATH'),
     ],
 
     // -- SMS providers (used by Identity\Services\SmsService) -------------
     'twilio' => [
-        'sid'   => env('TWILIO_ACCOUNT_SID'),
+        'sid' => env('TWILIO_ACCOUNT_SID'),
         'token' => env('TWILIO_AUTH_TOKEN'),
-        'from'  => env('TWILIO_FROM'),
+        'from' => env('TWILIO_FROM'),
     ],
 ];

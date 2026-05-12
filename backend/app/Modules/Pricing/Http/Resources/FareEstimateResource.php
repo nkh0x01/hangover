@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace App\Modules\Pricing\Http\Resources;
 
+use App\Modules\Pricing\Models\FareEstimate;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @mixin \App\Modules\Pricing\Models\FareEstimate
+ * @mixin FareEstimate
  */
 final class FareEstimateResource extends JsonResource
 {

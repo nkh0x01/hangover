@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Modules\Identity\Http\Resources;
 
+use App\Modules\Identity\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 /**
- * @mixin \App\Modules\Identity\Models\User
+ * @mixin User
  */
 final class UserResource extends JsonResource
 {
@@ -24,7 +26,7 @@ final class UserResource extends JsonResource
             'email' => $this->email,
             'email_verified' => (bool) $this->email_verified_at,
             'avatar_url' => $this->avatar_path
-                ? \Illuminate\Support\Facades\Storage::disk(config('filesystems.default'))->temporaryUrl($this->avatar_path, now()->addMinutes(10))
+                ? Storage::disk(config('filesystems.default'))->temporaryUrl($this->avatar_path, now()->addMinutes(10))
                 : null,
             'locale' => $this->locale,
             'status' => $this->status,

@@ -32,7 +32,7 @@ return [
         Watchers\EventWatcher::class => ['enabled' => true, 'ignore' => []],
         Watchers\ExceptionWatcher::class => ['enabled' => true],
         Watchers\GateWatcher::class => ['enabled' => true],
-        Watchers\HttpClientWatcher::class => ['enabled' => true],
+        Watchers\ClientRequestWatcher::class => ['enabled' => true],
         Watchers\JobWatcher::class => ['enabled' => true],
         Watchers\LogWatcher::class => ['enabled' => true],
         Watchers\MailWatcher::class => ['enabled' => true],

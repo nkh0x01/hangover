@@ -14,8 +14,8 @@ return [
 
     'waits' => [
         'redis:realtime' => 10,
-        'redis:default'  => 60,
-        'redis:low'      => 300,
+        'redis:default' => 60,
+        'redis:low' => 300,
     ],
 
     'trim' => [
@@ -80,18 +80,18 @@ return [
     'environments' => [
         'production' => [
             'realtime' => ['maxProcesses' => 10, 'minProcesses' => 4],
-            'default'  => ['maxProcesses' => 10, 'minProcesses' => 2],
-            'low'      => ['maxProcesses' => 4,  'minProcesses' => 1],
+            'default' => ['maxProcesses' => 10, 'minProcesses' => 2],
+            'low' => ['maxProcesses' => 4,  'minProcesses' => 1],
         ],
         'staging' => [
             'realtime' => ['maxProcesses' => 4, 'minProcesses' => 2],
-            'default'  => ['maxProcesses' => 4, 'minProcesses' => 1],
-            'low'      => ['maxProcesses' => 2, 'minProcesses' => 1],
+            'default' => ['maxProcesses' => 4, 'minProcesses' => 1],
+            'low' => ['maxProcesses' => 2, 'minProcesses' => 1],
         ],
         'local' => [
             'realtime' => ['maxProcesses' => 2, 'minProcesses' => 1],
-            'default'  => ['maxProcesses' => 2, 'minProcesses' => 1],
-            'low'      => ['maxProcesses' => 1, 'minProcesses' => 1],
+            'default' => ['maxProcesses' => 2, 'minProcesses' => 1],
+            'low' => ['maxProcesses' => 1, 'minProcesses' => 1],
         ],
     ],
 ];

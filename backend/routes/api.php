@@ -34,7 +34,7 @@ Route::prefix('v1')->group(function (): void {
         return new JsonResponse([
             'data' => [
                 'min_app_version' => config('app.min_app_version'),
-                'release' => env('APP_RELEASE', 'dev'),
+                'release' => config('app.release', 'dev'),
             ],
         ]);
     })->name('api.version');
@@ -46,10 +46,10 @@ Route::prefix('v1')->group(function (): void {
                 'map_provider' => config('geo.provider'),
                 'payment_methods' => array_keys(array_filter((array) config('payments.methods_enabled'))),
                 'reverb' => [
-                    'host' => env('REVERB_HOST_CLIENT'),
-                    'port' => (int) env('REVERB_PORT_CLIENT', 8080),
-                    'scheme' => env('REVERB_SCHEME_CLIENT', 'ws'),
-                    'key' => env('REVERB_APP_KEY'),
+                    'host' => config('realtime.client.host'),
+                    'port' => (int) config('realtime.client.port', 8080),
+                    'scheme' => config('realtime.client.scheme', 'ws'),
+                    'key' => config('broadcasting.connections.reverb.key'),
                 ],
             ],
         ]);

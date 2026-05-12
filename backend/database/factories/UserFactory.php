@@ -27,7 +27,7 @@ final class UserFactory extends Factory
             'email' => $this->faker->unique()->safeEmail(),
             'locale' => 'ka',
             'status' => 'active',
-            'referral_code' => strtoupper(substr(Ulid::new(), 0, 8)),
+            'referral_code' => strtoupper(substr(Ulid::new(), -8)),
         ];
     }
 

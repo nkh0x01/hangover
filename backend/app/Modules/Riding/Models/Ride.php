@@ -11,7 +11,43 @@ use App\Support\Ulid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property string $ulid
+ * @property int $customer_id
+ * @property int|null $driver_id
+ * @property int|null $vehicle_id
+ * @property int $city_id
+ * @property RideStatus $status
+ * @property string|null $cancellation_reason
+ * @property int|null $cancellation_by_user_id
+ * @property string $pickup_address
+ * @property string $dropoff_address
+ * @property int|null $fare_estimate_id
+ * @property string $quoted_amount
+ * @property string|null $final_amount
+ * @property string $surge_multiplier
+ * @property string|null $distance_km
+ * @property int|null $duration_seconds
+ * @property int|null $waiting_seconds
+ * @property string $currency
+ * @property string $payment_method
+ * @property int|null $payment_id
+ * @property int|null $promo_code_id
+ * @property string|null $commission_amount
+ * @property string|null $driver_earnings
+ * @property Carbon|null $requested_at
+ * @property Carbon|null $accepted_at
+ * @property Carbon|null $arriving_at
+ * @property Carbon|null $arrived_at
+ * @property Carbon|null $started_at
+ * @property Carbon|null $completed_at
+ * @property Carbon|null $cancelled_at
+ * @property int|null $customer_rating
+ * @property int|null $driver_rating
+ */
 class Ride extends Model
 {
     protected $table = 'rides';

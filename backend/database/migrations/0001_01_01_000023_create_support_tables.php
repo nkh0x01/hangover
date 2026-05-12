@@ -73,8 +73,10 @@ return new class extends Migration
             $t->index(['status', 'created_at']);
         });
 
-        DB::statement('ALTER TABLE sos_events ADD COLUMN location POINT NOT NULL SRID 4326');
-        DB::statement('ALTER TABLE sos_events ADD SPATIAL INDEX sos_events_location_sp (location)');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE sos_events ADD COLUMN location POINT NOT NULL SRID 4326');
+            DB::statement('ALTER TABLE sos_events ADD SPATIAL INDEX sos_events_location_sp (location)');
+        }
     }
 
     public function down(): void

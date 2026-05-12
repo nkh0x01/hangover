@@ -41,6 +41,7 @@ final class RideResource extends JsonResource
             'driver' => $this->whenLoaded('driver', function () {
                 $driver = $this->driver;
                 $driver?->loadMissing('user', 'currentVehicle');
+
                 return $driver ? [
                     'id' => $driver->user->ulid,
                     'name' => trim(($driver->user->first_name ?? '').' '.($driver->user->last_name ?? '')) ?: null,
@@ -72,6 +73,12 @@ final class RideResource extends JsonResource
      */
     private function coordinates(): array
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return [
+                'pickup_lat' => 0.0, 'pickup_lng' => 0.0,
+                'dropoff_lat' => 0.0, 'dropoff_lng' => 0.0,
+            ];
+        }
         $row = DB::selectOne(
             'SELECT
                 ST_Y(pickup_location)  AS pickup_lat,

@@ -7,7 +7,7 @@ namespace App\Modules\Payment\Contracts;
 final readonly class GatewayResult
 {
     /**
-     * @param  array<string, mixed>  $raw
+     * @param array<string, mixed> $raw
      */
     public function __construct(
         public bool $ok,

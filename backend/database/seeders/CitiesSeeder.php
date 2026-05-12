@@ -26,9 +26,11 @@ final class CitiesSeeder extends Seeder
             ],
         ], ['slug']);
 
-        DB::statement(
-            'UPDATE cities SET center = ST_SRID(POINT(?, ?), 4326) WHERE slug = ?',
-            [44.8271, 41.7151, 'tbilisi'],
-        );
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement(
+                'UPDATE cities SET center = ST_SRID(POINT(?, ?), 4326) WHERE slug = ?',
+                [44.8271, 41.7151, 'tbilisi'],
+            );
+        }
     }
 }

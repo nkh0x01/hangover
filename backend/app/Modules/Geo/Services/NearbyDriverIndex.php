@@ -62,18 +62,24 @@ final class NearbyDriverIndex
      */
     public function nearby(int $cityId, Point $center, float $radiusKm, int $limit = 20): array
     {
+        // Predis's typed GEOSEARCH command applies positional argument
+        // validation that doesn't quite match the Redis 6.2+ surface
+        // we want. Bypass via the raw command path — works identically
+        // on both phpredis and predis client backends.
+        $conn = $this->connection();
         /** @var array<int, array<int, mixed>> $rows */
-        $rows = $this->connection()->command('geosearch', [
+        $rows = $conn->client()->executeRaw([
+            'GEOSEARCH',
             $this->key($cityId),
             'FROMLONLAT',
-            $center->lng,
-            $center->lat,
+            (string) $center->lng,
+            (string) $center->lat,
             'BYRADIUS',
-            $radiusKm,
+            (string) $radiusKm,
             'km',
             'ASC',
             'COUNT',
-            $limit,
+            (string) $limit,
             'WITHCOORD',
             'WITHDIST',
         ]) ?: [];

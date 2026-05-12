@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Log;
  * The first dispatch tick for a freshly-created ride. Subsequent ticks
  * arrive as OfferRideToNextDriver from the rejection / timeout paths.
  */
-final class DispatchRide implements ShouldQueue, ShouldBeUnique
+final class DispatchRide implements ShouldBeUnique, ShouldQueue
 {
     use Dispatchable;
     use InteractsWithQueue;
@@ -26,6 +26,7 @@ final class DispatchRide implements ShouldQueue, ShouldBeUnique
     use SerializesModels;
 
     public int $tries = 3;
+
     public int $timeout = 30;
 
     public function __construct(public readonly int $rideId) {}

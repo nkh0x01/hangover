@@ -33,6 +33,7 @@ final class ExpireRideOffer implements ShouldQueue
     use SerializesModels;
 
     public int $tries = 1;
+
     public int $timeout = 15;
 
     public function __construct(

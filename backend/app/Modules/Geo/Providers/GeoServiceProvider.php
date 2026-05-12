@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Geo\Providers;
 
+use App\Modules\Geo\Console\PruneStaleDriversCommand;
 use App\Modules\Geo\Contracts\MapProvider;
 use App\Modules\Geo\Services\NearbyDriverIndex;
 use Illuminate\Support\Facades\Route;
@@ -38,7 +39,7 @@ final class GeoServiceProvider extends ServiceProvider
 
         if ($this->app->runningInConsole()) {
             $this->commands([
-                \App\Modules\Geo\Console\PruneStaleDriversCommand::class,
+                PruneStaleDriversCommand::class,
             ]);
         }
     }

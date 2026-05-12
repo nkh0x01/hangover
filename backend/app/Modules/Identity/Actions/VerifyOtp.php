@@ -23,7 +23,7 @@ final readonly class VerifyOtp
     ) {}
 
     /**
-     * @param  array<string, mixed>  $deviceMeta  device_uuid, platform, app_version, os_version, fcm_token
+     * @param array<string, mixed> $deviceMeta device_uuid, platform, app_version, os_version, fcm_token
      * @return array{user: User, token: string, expires_at: string, abilities: array<int, string>, is_new: bool}
      */
     public function execute(string $phoneE164, string $code, string $purpose, array $deviceMeta): array

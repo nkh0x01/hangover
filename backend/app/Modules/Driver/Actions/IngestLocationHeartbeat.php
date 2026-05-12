@@ -46,6 +46,7 @@ final readonly class IngestLocationHeartbeat
                 'speed_kmh' => $speedKmh,
                 'max_speed_kmh' => $maxSpeed,
             ]);
+
             return;
         }
 
@@ -72,10 +73,12 @@ final readonly class IngestLocationHeartbeat
             'source' => 'mobile_gps',
         ]);
 
-        DB::statement(
-            'UPDATE live_locations SET location = ST_SRID(POINT(?, ?), 4326) WHERE id = ?',
-            [$location->lng, $location->lat, $row->id],
-        );
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement(
+                'UPDATE live_locations SET location = ST_SRID(POINT(?, ?), 4326) WHERE id = ?',
+                [$location->lng, $location->lat, $row->id],
+            );
+        }
 
         if ($activeRide) {
             event(new DriverLocationUpdated(

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Geo\Console;
 
 use App\Modules\Driver\Models\Driver;
+use App\Modules\Geo\Models\City;
 use App\Modules\Geo\Services\NearbyDriverIndex;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Redis;
@@ -31,7 +32,7 @@ final class PruneStaleDriversCommand extends Command
     {
         $cityIds = $this->option('city') !== null
             ? [(int) $this->option('city')]
-            : \App\Modules\Geo\Models\City::query()->where('is_active', true)->pluck('id')->all();
+            : City::query()->where('is_active', true)->pluck('id')->all();
 
         $totalPruned = 0;
 
