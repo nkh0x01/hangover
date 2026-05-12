@@ -45,44 +45,85 @@ class _PhonePageState extends ConsumerState<PhonePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(Insets.xl),
+      body: DecoratedBox(
+        decoration: const BoxDecoration(gradient: AppGradients.surface),
+        child: SafeArea(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: Insets.l),
-              const BrandLogo(size: BrandLogoSize.m),
-              const SizedBox(height: Insets.xxl),
-              Text('მოგესალმებით', style: Theme.of(context).textTheme.headlineLarge),
-              const SizedBox(height: Insets.xs),
-              Text(
-                'Tbilisi-ში სკუტერი ერთი დაკაკუნებით.\nQuick scooter rides across Tbilisi.',
-                style: Theme.of(context).textTheme.bodyLarge,
+              // Gradient brand hero band — premium-app feel without a full splash.
+              Container(
+                margin: const EdgeInsets.fromLTRB(Insets.l, Insets.l, Insets.l, Insets.xl),
+                padding: const EdgeInsets.all(Insets.xl),
+                decoration: BoxDecoration(
+                  gradient: AppGradients.primary,
+                  borderRadius: BorderRadius.circular(Radii.xl),
+                  boxShadow: AppShadows.heroGreen,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const BrandLogo(size: BrandLogoSize.s, showWordmark: false),
+                    const SizedBox(height: Insets.l),
+                    Text(
+                      'მოგესალმებით',
+                      style: AppType.headlineL.copyWith(color: Colors.white, fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: Insets.xs),
+                    Text(
+                      'Tbilisi-ში სკუტერი ერთი დაკაკუნებით.',
+                      style: AppType.body.copyWith(color: Colors.white.withValues(alpha: 0.85)),
+                    ),
+                    Text(
+                      'Tbilisi on two wheels.',
+                      style: AppType.body.copyWith(color: Colors.white.withValues(alpha: 0.65)),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: Insets.xxl),
-              Text(
-                'ტელეფონის ნომერი',
-                style: Theme.of(context).textTheme.labelMedium,
+
+              // Form
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: Insets.xl),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text('ტელეფონის ნომერი · Phone', style: AppType.label),
+                    const SizedBox(height: Insets.s),
+                    AppTextField(
+                      controller: _controller,
+                      keyboardType: TextInputType.phone,
+                      prefixIcon: const Padding(
+                        padding: EdgeInsets.only(left: Insets.m, right: Insets.s),
+                        child: Icon(Icons.phone_iphone_rounded, color: AppColors.inkSoft, size: 20),
+                      ),
+                      helper: 'ბმულს გამოგიგზავნით 6-ციფრიან კოდს · We text you a 6-digit code',
+                    ),
+                    if (_error != null) ...[
+                      const SizedBox(height: Insets.s),
+                      Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                    ],
+                  ],
+                ),
               ),
-              const SizedBox(height: Insets.s),
-              AppTextField(
-                controller: _controller,
-                keyboardType: TextInputType.phone,
-                helper: 'ბმულს გამოგიგზავნით 6-ციფრიან კოდს',
-              ),
-              if (_error != null) ...[
-                const SizedBox(height: Insets.s),
-                Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
-              ],
+
               const Spacer(),
-              PrimaryButton(label: 'კოდის გაგზავნა / Send code', onPressed: _send, busy: _busy),
-              const SizedBox(height: Insets.m),
-              Center(
+
+              // Hero gradient CTA
+              Padding(
+                padding: const EdgeInsets.fromLTRB(Insets.xl, 0, Insets.xl, Insets.l),
+                child: GradientButton(
+                  label: 'კოდის გაგზავნა · Send code',
+                  onPressed: _send,
+                  busy: _busy,
+                  trailing: const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 18),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: Insets.l),
                 child: Text(
                   'By continuing you agree to our Terms and Privacy Policy',
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.labelMedium,
+                  style: AppType.label,
                 ),
               ),
             ],

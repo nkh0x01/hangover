@@ -11,48 +11,60 @@
   }
   .sidebar {
     width: 260px;
-    background: #0E1518;
+    background: linear-gradient(180deg, #0E1518 0%, #08110D 100%);
     color: #C8CFCD;
     padding: var(--xl) var(--l);
+    position: relative;
   }
+  .sidebar::before {
+    content: '';
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 1px;
+    background: linear-gradient(180deg, transparent, rgba(31,143,96,0.4), transparent);
+  }
+
   .sidebar .brand-row {
     display: flex; align-items: center; gap: 10px;
     color: #FFF;
-    font-weight: 700;
-    font-size: 17px;
+    font-weight: 800; font-size: 17px;
+    letter-spacing: -0.2px;
     margin-bottom: var(--xl);
   }
   .sidebar .brand-row .mark {
-    width: 32px; height: 32px;
-    background: var(--seed); border-radius: 50%;
+    width: 36px; height: 36px;
+    background: var(--grad-primary);
+    border-radius: 50%;
     position: relative;
+    box-shadow: 0 6px 16px rgba(31,143,96,0.45);
     display: flex; align-items: center; justify-content: center;
   }
   .sidebar .brand-row .mark::before {
     content: ''; position: absolute;
-    width: 25px; height: 25px;
+    width: 27px; height: 27px;
     background: #0E1518;
     border-radius: 50%;
   }
   .sidebar .brand-row .mark .h {
     position: relative; z-index: 2;
     width: 14px; height: 14px;
-    border-left: 3px solid var(--seed);
-    border-right: 3px solid var(--seed);
+    border-left: 3px solid #FFF;
+    border-right: 3px solid #FFF;
     border-radius: 2px;
   }
   .sidebar .brand-row .mark .h::before {
     content: '';
     position: absolute;
     left: 0; right: 0; top: 50%;
-    height: 3px; background: var(--seed);
+    height: 3px;
+    background: #FFF;
     transform: translateY(-50%);
     border-radius: 2px;
   }
   .sidebar .brand-row .mark .dot {
     position: absolute;
     bottom: 4px; right: 4px;
-    width: 6px; height: 6px;
+    width: 7px; height: 7px;
     background: var(--accent);
     border-radius: 50%;
     z-index: 3;
@@ -64,58 +76,141 @@
     letter-spacing: 0.08em;
     color: #6E7773;
     margin: var(--l) var(--s) var(--s);
-    font-weight: 600;
+    font-weight: 700;
   }
   .sidebar .nav-item {
     padding: 10px var(--m);
-    border-radius: var(--r-s);
+    border-radius: var(--r-m);
     display: flex; align-items: center; gap: var(--m);
     color: #C8CFCD;
     margin-bottom: 2px;
     font-size: 14px;
   }
   .sidebar .nav-item.active {
-    background: rgba(31,143,96,0.18);
+    background: linear-gradient(90deg, rgba(31,143,96,0.22) 0%, transparent 100%);
     color: #FFF;
-    font-weight: 600;
+    font-weight: 700;
+    border-left: 3px solid var(--accent);
+    padding-left: 9px;
   }
-  .sidebar .nav-item.active .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
   .sidebar .nav-item .icon { width: 18px; text-align: center; opacity: 0.6; }
 
   .main { flex: 1; padding: var(--xxl); background: var(--surface); }
-  .main h1 { font-size: 26px; margin-bottom: var(--xs); color: var(--ink); font-weight: 700; }
-  .main .subtitle { color: var(--ink-soft); font-size: 13px; margin-bottom: var(--xl); }
 
-  .stats { display: flex; gap: var(--l); margin-bottom: var(--xl); }
+  .header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: var(--xl);
+  }
+  .header h1 {
+    font-size: 28px; font-weight: 800; color: var(--ink);
+    letter-spacing: -0.3px;
+  }
+  .header .right {
+    display: flex; align-items: center; gap: var(--m);
+  }
+  .live-banner {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 14px;
+    background: rgba(46,162,101,0.10);
+    border: 1px solid rgba(46,162,101,0.30);
+    border-radius: var(--r-pill);
+    font-size: 12px; font-weight: 700; color: #1F6A48;
+  }
+  .live-banner::before {
+    content: ''; width: 8px; height: 8px;
+    background: var(--success); border-radius: 50%;
+    box-shadow: 0 0 0 4px rgba(46,162,101,0.25);
+  }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--l); margin-bottom: var(--xl); }
   .stat-card {
-    flex: 1;
     background: #FFF;
     border-radius: var(--r-l);
     padding: var(--l);
     border: 1px solid var(--outline-subtle);
+    box-shadow: var(--sh-card);
     position: relative;
+    overflow: hidden;
   }
+  .stat-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .stat-card.warning::after { background: var(--grad-accent); }
+  .stat-card.success::after { background: var(--grad-primary); }
+  .stat-card.info::after    { background: linear-gradient(90deg, #6FA6FF, #2C7BE5); }
+  .stat-card.accent::after  { background: var(--grad-accent); }
+
   .stat-card .label {
     font-size: 11px; color: var(--ink-muted);
-    text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700;
   }
   .stat-card .value {
-    font-size: 32px; font-weight: 700; margin-top: var(--xs);
-    letter-spacing: -0.3px;
+    font-size: 36px; font-weight: 800; margin-top: 6px;
+    letter-spacing: -0.4px;
   }
-  .stat-card .trend { font-size: 12px; margin-top: var(--xs); font-weight: 600; }
+  .stat-card .trend {
+    font-size: 12px; margin-top: 6px; font-weight: 700;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
   .stat-card .trend.up { color: var(--success); }
   .stat-card .trend.down { color: var(--danger); }
   .stat-card .icon {
     position: absolute; top: var(--l); right: var(--l);
-    width: 36px; height: 36px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center; font-size: 16px;
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 18px;
   }
-  .stat-card.warning .icon { background: var(--warning-soft); }
+  .stat-card.warning .icon { background: var(--accent-soft); }
   .stat-card.success .icon { background: var(--success-soft); }
   .stat-card.info    .icon { background: var(--info-soft); }
   .stat-card.accent  .icon { background: var(--accent-soft); }
 
+  /* Live ride map preview */
+  .live-map {
+    background: #FFF;
+    border-radius: var(--r-l);
+    border: 1px solid var(--outline-subtle);
+    box-shadow: var(--sh-card);
+    height: 240px;
+    margin-bottom: var(--xl);
+    position: relative;
+    overflow: hidden;
+    background-image:
+      linear-gradient(rgba(140,150,130,0.45) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(140,150,130,0.45) 1px, transparent 1px);
+    background-size: 40px 40px;
+    background-color: #D7DBC8;
+  }
+  .live-map .map-river {
+    position: absolute; left: -50px; right: -50px;
+    top: 56%; height: 14px;
+    background: #99C0DD; opacity: 0.7;
+    transform: rotate(-3deg);
+  }
+  .live-map .pin {
+    position: absolute; width: 28px; height: 28px;
+    border-radius: 50%; background: var(--ink);
+    border: 2px solid #FFF;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--accent); font-size: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    transform: translate(-50%, -50%);
+  }
+  .live-map .pin.busy {
+    box-shadow: 0 0 0 6px rgba(31,143,96,0.20), 0 2px 6px rgba(0,0,0,0.25);
+  }
+  .live-map .city-badge {
+    position: absolute; left: var(--l); top: var(--l);
+    padding: 6px 12px;
+    background: rgba(255,255,255,0.92);
+    border-radius: var(--r-pill);
+    font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+    box-shadow: var(--sh-card);
+  }
+
+  /* Table */
   table {
     width: 100%;
     background: #FFF;
@@ -123,16 +218,17 @@
     border-collapse: collapse;
     overflow: hidden;
     border: 1px solid var(--outline-subtle);
+    box-shadow: var(--sh-card);
     font-size: 13px;
   }
   thead { background: var(--surface); }
   th {
     text-align: left;
     padding: 14px var(--l);
-    font-weight: 600;
+    font-weight: 700;
     font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.06em;
     color: var(--ink-soft);
     border-bottom: 1px solid var(--outline-subtle);
   }
@@ -142,12 +238,26 @@
     color: var(--ink);
   }
   tr:last-child td { border-bottom: none; }
-  tr:hover td { background: var(--surface); }
   .mono { font-family: monospace; font-size: 12px; color: var(--ink-soft); }
   .since { color: var(--ink-muted); font-size: 12px; }
 
   .panel-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--m); }
-  .panel-toolbar .title { font-weight: 600; font-size: 15px; color: var(--ink); }
+  .panel-toolbar .title { font-weight: 700; font-size: 16px; color: var(--ink); }
+
+  .filter-row {
+    display: flex; gap: var(--s);
+  }
+  .filter-row .chip-filter {
+    padding: 6px 12px;
+    border: 1px solid var(--outline);
+    border-radius: var(--r-pill);
+    font-size: 12px; font-weight: 600;
+    color: var(--ink-soft);
+    background: #FFF;
+  }
+  .filter-row .chip-filter.active {
+    background: var(--ink); color: #FFF; border-color: var(--ink);
+  }
 </style>
 </head>
 <body>
@@ -160,7 +270,7 @@
     </div>
 
     <div class="group-title">Operations</div>
-    <div class="nav-item active"><span class="icon">⚡</span> Active rides <span class="dot" style="margin-left: auto;"></span></div>
+    <div class="nav-item active"><span class="icon">⚡</span> Active rides</div>
     <div class="nav-item"><span class="icon">🗺️</span> Live driver map</div>
     <div class="nav-item"><span class="icon">🚀</span> Live ride map</div>
     <div class="nav-item"><span class="icon">🎯</span> Dispatcher console</div>
@@ -168,7 +278,7 @@
 
     <div class="group-title">Drivers</div>
     <div class="nav-item"><span class="icon">✅</span> Approval queue
-      <span style="margin-left:auto; background: var(--warning); color: #FFF; font-size: 11px; padding: 1px 7px; border-radius: 999px;">3</span>
+      <span style="margin-left:auto; background: var(--accent); color: #FFF; font-size: 11px; padding: 1px 7px; border-radius: 999px;">3</span>
     </div>
     <div class="nav-item"><span class="icon">👥</span> All drivers</div>
     <div class="nav-item"><span class="icon">🛵</span> Vehicles</div>
@@ -183,26 +293,25 @@
   </aside>
 
   <div class="main">
-    <h1>Active rides</h1>
-    <div class="subtitle">
-      <span class="pill success live" style="display: inline-flex; vertical-align: middle; margin-right: 8px;">
-        <span class="dot"></span> Live · refreshing every 5s
-      </span>
-      Auto-refreshes every 5 s. Click any row to drill into the ride. WebSocket-driven monitor lands in Phase 4.
+    <div class="header">
+      <h1>Active rides</h1>
+      <div class="right">
+        <div class="live-banner">Live · refreshing every 5 s</div>
+      </div>
     </div>
 
     <div class="stats">
       <div class="stat-card warning">
         <div class="icon">⚡</div>
         <div class="label">Active rides</div>
-        <div class="value" style="color: var(--warning);">28</div>
-        <div class="trend up">▲ 4 vs 5min ago</div>
+        <div class="value" style="color: var(--accent);">28</div>
+        <div class="trend up">▲ +4 vs 5 min ago</div>
       </div>
       <div class="stat-card success">
         <div class="icon">🛵</div>
         <div class="label">Online drivers</div>
         <div class="value" style="color: var(--success);">142</div>
-        <div class="trend up">▲ 11 vs 5min ago</div>
+        <div class="trend up">▲ +11 vs 5 min ago</div>
       </div>
       <div class="stat-card info">
         <div class="icon">✅</div>
@@ -218,8 +327,30 @@
       </div>
     </div>
 
+    <!-- Live map preview -->
+    <div class="live-map">
+      <div class="city-badge">📍 TBILISI · 28 in flight</div>
+      <div class="map-river"></div>
+      <div class="pin busy" style="top: 30%; left: 18%;">🛵</div>
+      <div class="pin" style="top: 22%; left: 42%;">🛵</div>
+      <div class="pin busy" style="top: 38%; left: 55%;">🛵</div>
+      <div class="pin" style="top: 28%; left: 75%;">🛵</div>
+      <div class="pin busy" style="top: 60%; left: 30%;">🛵</div>
+      <div class="pin" style="top: 65%; left: 50%;">🛵</div>
+      <div class="pin" style="top: 55%; left: 78%;">🛵</div>
+      <div class="pin" style="top: 75%; left: 22%;">🛵</div>
+      <div class="pin" style="top: 78%; left: 65%;">🛵</div>
+      <div class="pin busy" style="top: 45%; left: 88%;">🛵</div>
+    </div>
+
     <div class="panel-toolbar">
       <div class="title">In-flight rides</div>
+      <div class="filter-row">
+        <div class="chip-filter active">All</div>
+        <div class="chip-filter">Searching</div>
+        <div class="chip-filter">Assigned</div>
+        <div class="chip-filter">In progress</div>
+      </div>
     </div>
 
     <table>
@@ -295,16 +426,6 @@
           <td>Airport TBS</td>
           <td><b>22.00 GEL</b></td>
           <td class="since">5 min ago</td>
-        </tr>
-        <tr>
-          <td class="mono">01KRF3GF18</td>
-          <td><span class="pill success"><span class="dot"></span> IN PROGRESS</span></td>
-          <td>+995 595 41 78 90</td>
-          <td>Salome Q.</td>
-          <td>Lisi Lake</td>
-          <td>Vera District</td>
-          <td><b>8.40 GEL</b></td>
-          <td class="since">7 min ago</td>
         </tr>
       </tbody>
     </table>

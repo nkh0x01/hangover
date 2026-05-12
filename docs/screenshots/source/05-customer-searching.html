@@ -15,17 +15,29 @@
     <div class="right"><span>5G</span><span>WiFi</span><span>100%</span></div>
   </div>
 
-  <!-- pulsing pickup pin -->
-  <div class="pin pin-pickup" style="top: 38%; left: 48%;
-       box-shadow: 0 0 0 12px rgba(31,143,96,0.15), 0 0 0 24px rgba(31,143,96,0.08);"></div>
+  <!-- Concentric pulse rings around pickup -->
+  <div style="position: absolute; top: 38%; left: 48%; transform: translate(-50%, -50%); z-index: 1;">
+    <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+                width: 220px; height: 220px;
+                border: 2px solid rgba(31,143,96,0.18);
+                border-radius: 50%;"></div>
+    <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+                width: 120px; height: 120px;
+                border: 2px solid rgba(31,143,96,0.28);
+                border-radius: 50%;
+                background: radial-gradient(rgba(31,143,96,0.10), transparent 70%);"></div>
+    <div style="position: relative; width: 22px; height: 22px; border-radius: 50%;
+                background: var(--seed); border: 4px solid #FFF;
+                box-shadow: 0 4px 12px rgba(31,143,96,0.5);"></div>
+  </div>
 
   <!-- dropoff -->
   <div class="pin pin-dropoff" style="top: 65%; left: 62%;"></div>
 
-  <!-- nearby scooters animating in -->
-  <div class="pin pin-driver" style="top: 25%; left: 30%; width: 30px; height: 30px;">🛵</div>
-  <div class="pin pin-driver" style="top: 52%; left: 25%; width: 30px; height: 30px;">🛵</div>
-  <div class="pin pin-driver" style="top: 42%; left: 75%; width: 30px; height: 30px;">🛵</div>
+  <!-- nearby scooters -->
+  <div class="pin pin-driver live" style="top: 25%; left: 30%;">🛵</div>
+  <div class="pin pin-driver live" style="top: 52%; left: 25%;">🛵</div>
+  <div class="pin pin-driver" style="top: 42%; left: 75%;">🛵</div>
 
   <!-- searching sheet -->
   <div class="sheet">
@@ -50,6 +62,24 @@
     <div class="t-h-m">Looking for a driver nearby</div>
     <div class="gap-xs"></div>
     <div class="t-body">5 scooters are within 1.5 km. Most rides match in under a minute.</div>
+
+    <div class="gap-l"></div>
+
+    <!-- Driver "discovery" tiles -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--s);">
+      <div class="card-soft" style="text-align: center; padding: var(--m);">
+        <div style="font-size: 20px;">🛵</div>
+        <div class="t-caption">230 m</div>
+      </div>
+      <div class="card-soft" style="text-align: center; padding: var(--m);">
+        <div style="font-size: 20px;">🛵</div>
+        <div class="t-caption">410 m</div>
+      </div>
+      <div class="card-soft" style="text-align: center; padding: var(--m);">
+        <div style="font-size: 20px;">🛵</div>
+        <div class="t-caption">1.2 km</div>
+      </div>
+    </div>
 
     <div class="gap-l"></div>
 

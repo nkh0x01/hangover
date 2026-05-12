@@ -21,6 +21,10 @@ class _SplashPageState extends ConsumerState<SplashPage> {
   }
 
   Future<void> _decide() async {
+    // Give the splash animation 600 ms before routing — premium feel
+    // and prevents a perceived flicker on warm starts.
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+    if (!mounted) return;
     final TokenStore store = ref.read(tokenStoreProvider);
     final token = await store.read();
     if (!mounted) return;
@@ -33,6 +37,6 @@ class _SplashPageState extends ConsumerState<SplashPage> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(body: LoadingState());
+    return const Scaffold(body: SplashContent());
   }
 }

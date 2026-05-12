@@ -15,31 +15,46 @@
     <div class="right"><span>5G</span><span>WiFi</span><span>100%</span></div>
   </div>
 
-  <!-- driver self marker (centered, pulsing) -->
-  <div class="pin pin-driver" style="top: 45%; left: 50%; width: 48px; height: 48px;
-       font-size: 22px;
-       box-shadow: 0 0 0 12px rgba(31,143,96,0.18), 0 0 0 24px rgba(31,143,96,0.10);">🛵</div>
+  <!-- self marker -->
+  <div class="pin pin-driver live" style="top: 42%; left: 50%; width: 52px; height: 52px; font-size: 24px;">🛵</div>
 
-  <!-- big online toggle card -->
+  <!-- Hero online toggle -->
   <div style="position: absolute; top: 56px; left: var(--l); right: var(--l); z-index: 3;">
-    <div class="online-card">
+    <div class="online-hero">
       <div class="lozenge">⚡</div>
-      <div style="flex: 1;">
-        <div class="t-title-l">You are online</div>
-        <div class="t-body" style="margin-top: 2px;">Tbilisi · accepting rides</div>
+      <div>
+        <div style="font-size: 18px; font-weight: 800;">You are online</div>
+        <div style="font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.85);">Tbilisi · accepting rides</div>
       </div>
       <div class="switch"></div>
     </div>
+  </div>
 
-    <div style="margin-top: var(--s); display: flex; justify-content: flex-end;">
-      <div class="earnings-badge">
-        <span class="accent-dot"></span>
-        Today · 87.50 GEL
+  <!-- Earnings card -->
+  <div style="position: absolute; top: 170px; left: var(--l); right: var(--l); z-index: 3;">
+    <div class="earnings-card">
+      <div class="ring">
+        <svg width="64" height="64" viewBox="0 0 64 64">
+          <circle cx="32" cy="32" r="28" stroke="rgba(255,255,255,0.15)" stroke-width="5" fill="none"></circle>
+          <circle cx="32" cy="32" r="28" stroke="#E07A3C" stroke-width="5" fill="none"
+                  stroke-dasharray="135 175" stroke-linecap="round"></circle>
+        </svg>
+        <div class="label">77%</div>
+      </div>
+      <div style="flex: 1;">
+        <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.7px;
+                    text-transform: uppercase; color: rgba(255,255,255,0.65);">Today's earnings</div>
+        <div style="font-size: 28px; font-weight: 800; letter-spacing: -0.4px; margin-top: 2px;">
+          87.50 <span style="font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.65);">GEL</span>
+        </div>
+        <div style="font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.8); margin-top: 2px;">
+          Goal: 113 GEL · 6 trips today
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- waiting sheet -->
+  <!-- Bottom waiting sheet -->
   <div class="sheet">
     <div class="handle"></div>
 

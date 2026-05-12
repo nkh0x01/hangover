@@ -3,32 +3,32 @@
 <style>
   .otp-row { display: flex; gap: 10px; justify-content: space-between; }
   .otp-cell {
-    width: 48px; height: 60px;
-    border: 1.5px solid var(--outline);
-    border-radius: var(--r-s);
+    width: 50px; height: 62px;
+    border: 2px solid var(--outline);
+    border-radius: var(--r-m);
     background: #FFF;
+    box-shadow: var(--sh-card);
     display: flex; align-items: center; justify-content: center;
-    font-size: 24px; font-weight: 700;
+    font-size: 26px; font-weight: 800;
     color: var(--ink);
   }
   .otp-cell.filled { border-color: var(--ink); }
-  .otp-cell.active { border-color: var(--seed); border-width: 2px; }
-  .otp-cell.active::after {
-    content: '';
-    width: 2px; height: 28px;
-    background: var(--seed);
+  .otp-cell.active {
+    border-color: var(--seed);
+    box-shadow: 0 0 0 4px rgba(31,143,96,0.10), var(--sh-card);
   }
+  .otp-cell.active::after { content: ''; width: 2px; height: 30px; background: var(--seed); }
 </style>
 </head>
 <body>
-<div class="phone">
+<div class="phone gradient">
   <div class="status-bar">
     <span>9:41</span>
     <div class="right"><span>5G</span><span>WiFi</span><span>100%</span></div>
   </div>
 
   <div class="app-bar">
-    <span class="back">←</span>
+    <div class="back">←</div>
     <span>Verify code</span>
   </div>
 
@@ -52,12 +52,12 @@
     <div class="gap-l"></div>
     <div style="text-align: center;" class="t-body">
       კოდი არ მოგივიდა?
-      <span style="color: var(--seed); font-weight: 600;">ხელახლა გაგზავნა 0:47-ში</span>
+      <span style="color: var(--seed); font-weight: 700;">ხელახლა გაგზავნა 0:47-ში</span>
     </div>
   </div>
 
-  <div style="position: absolute; left: var(--xl); right: var(--xl); bottom: var(--xl);">
-    <button class="btn-primary">დადასტურება · Verify</button>
+  <div style="position: absolute; left: var(--xl); right: var(--xl); bottom: 60px;">
+    <button class="btn-gradient">დადასტურება · Verify →</button>
   </div>
 </div>
 </body></html>

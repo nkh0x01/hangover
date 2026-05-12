@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:rides/rides.dart';
 import 'package:ui_kit/ui_kit.dart';
 
 import '../state/ride_flow_controller.dart';
@@ -39,31 +38,26 @@ class _FareEstimatePageState extends ConsumerState<FareEstimatePage> {
     final fare = state.fareEstimate;
 
     return Scaffold(
-      appBar: AppBar(
-        leading: const BackButton(),
-        title: const Text('Confirm ride'),
-      ),
+      appBar: AppBar(leading: const BackButton(), title: const Text('Confirm ride')),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(Insets.xl),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _RouteSummary(pickup: state.pickupAddress, dropoff: state.dropoffAddress),
-              const SizedBox(height: Insets.xl),
+              _RouteCard(pickup: state.pickupAddress, dropoff: state.dropoffAddress),
+              const SizedBox(height: Insets.l),
               if (fare == null && state.isWorking)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Skeleton(width: 120, height: 14),
-                    SizedBox(height: 12),
-                    Skeleton(width: 200, height: 36, radius: Radii.s),
-                    SizedBox(height: 8),
-                    Skeleton(width: 140, height: 12),
-                  ],
-                )
+                _FareSkeleton()
               else if (fare != null)
-                _FareHero(fare: fare),
+                FareHeroCard(
+                  amount: fare.totalAmount,
+                  currency: fare.currency,
+                  distanceKm: fare.distanceKm,
+                  durationMin: fare.durationMin,
+                  surgeMultiplier: fare.surgeMultiplier,
+                  subtitle: 'Includes booking fee',
+                ),
               const SizedBox(height: Insets.xl),
               Text('Payment', style: Theme.of(context).textTheme.labelMedium),
               const SizedBox(height: Insets.s),
@@ -73,24 +67,22 @@ class _FareEstimatePageState extends ConsumerState<FareEstimatePage> {
               ),
               if (state.error != null) ...[
                 const SizedBox(height: Insets.m),
-                Text(
-                  state.error!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
+                Text(state.error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
               ],
               const Spacer(),
-              PrimaryButton(
+              GradientButton(
                 label: fare == null
                     ? 'Calculating…'
                     : 'Request ride · ${fare.totalAmount.toStringAsFixed(2)} ${fare.currency}',
                 busy: state.isWorking && fare != null,
                 onPressed: fare == null ? null : _confirm,
+                trailing: const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 18),
               ),
               const SizedBox(height: Insets.s),
               Center(
                 child: Text(
                   'You will be charged after the trip completes.',
-                  style: Theme.of(context).textTheme.labelMedium,
+                  style: AppType.label,
                 ),
               ),
             ],
@@ -101,8 +93,31 @@ class _FareEstimatePageState extends ConsumerState<FareEstimatePage> {
   }
 }
 
-class _RouteSummary extends StatelessWidget {
-  const _RouteSummary({required this.pickup, required this.dropoff});
+class _FareSkeleton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(Insets.l),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(Radii.l),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          Skeleton(width: 120, height: 12),
+          SizedBox(height: 12),
+          Skeleton(width: 220, height: 40, radius: Radii.s),
+          SizedBox(height: 12),
+          Skeleton(width: 160, height: 12),
+        ],
+      ),
+    );
+  }
+}
+
+class _RouteCard extends StatelessWidget {
+  const _RouteCard({required this.pickup, required this.dropoff});
 
   final String pickup;
   final String dropoff;
@@ -114,39 +129,26 @@ class _RouteSummary extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(Radii.l),
-        border: Border.all(color: AppColors.outlineSubtle),
+        boxShadow: AppShadows.card,
       ),
       child: Column(
         children: [
-          _RouteRow(
-            icon: Icons.circle,
-            iconColor: AppColors.seed,
-            label: 'Pickup',
-            value: pickup,
-          ),
+          _RouteRow(color: AppColors.seed, label: 'Pickup', value: pickup),
           Padding(
-            padding: const EdgeInsets.only(left: 18, top: Insets.xs, bottom: Insets.xs),
-            child: Row(
+            padding: const EdgeInsets.only(left: 6, top: Insets.xs, bottom: Insets.xs),
+            child: Column(
               children: List.generate(
                 3,
                 (_) => Container(
                   width: 3,
                   height: 3,
                   margin: const EdgeInsets.symmetric(vertical: 1),
-                  decoration: const BoxDecoration(
-                    color: AppColors.outline,
-                    shape: BoxShape.circle,
-                  ),
+                  decoration: const BoxDecoration(color: AppColors.outline, shape: BoxShape.circle),
                 ),
               ),
             ),
           ),
-          _RouteRow(
-            icon: Icons.flag_rounded,
-            iconColor: AppColors.danger,
-            label: 'Dropoff',
-            value: dropoff,
-          ),
+          _RouteRow(color: AppColors.danger, label: 'Dropoff', value: dropoff),
         ],
       ),
     );
@@ -154,10 +156,8 @@ class _RouteSummary extends StatelessWidget {
 }
 
 class _RouteRow extends StatelessWidget {
-  const _RouteRow({required this.icon, required this.iconColor, required this.label, required this.value});
-
-  final IconData icon;
-  final Color iconColor;
+  const _RouteRow({required this.color, required this.label, required this.value});
+  final Color color;
   final String label;
   final String value;
 
@@ -166,15 +166,25 @@ class _RouteRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: iconColor, size: 16),
+        Container(
+          width: 14,
+          height: 14,
+          margin: const EdgeInsets.only(top: 2),
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 2),
+            boxShadow: [BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 6)],
+          ),
+        ),
         const SizedBox(width: Insets.m),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: Theme.of(context).textTheme.labelMedium),
+              Text(label, style: AppType.label),
               const SizedBox(height: 2),
-              Text(value, style: Theme.of(context).textTheme.titleMedium),
+              Text(value, style: AppType.titleM),
             ],
           ),
         ),
@@ -183,75 +193,8 @@ class _RouteRow extends StatelessWidget {
   }
 }
 
-class _FareHero extends StatelessWidget {
-  const _FareHero({required this.fare});
-
-  final FareEstimate fare;
-
-  @override
-  Widget build(BuildContext context) {
-    final isSurging = fare.surgeMultiplier > 1.0;
-    return Container(
-      padding: const EdgeInsets.all(Insets.l),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(Radii.l),
-        border: Border.all(color: AppColors.outlineSubtle),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text('Estimated fare', style: Theme.of(context).textTheme.labelMedium),
-              const Spacer(),
-              if (isSurging)
-                StatusPill(
-                  label: '×${fare.surgeMultiplier.toStringAsFixed(1)} surge',
-                  tone: StatusTone.accent,
-                ),
-            ],
-          ),
-          const SizedBox(height: Insets.s),
-          RichText(
-            text: TextSpan(
-              style: Theme.of(context).textTheme.displayLarge,
-              children: [
-                TextSpan(text: fare.totalAmount.toStringAsFixed(2)),
-                TextSpan(
-                  text: ' ${fare.currency}',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(color: AppColors.inkMuted),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: Insets.s),
-          Row(
-            children: [
-              const Icon(Icons.timer_outlined, size: 14, color: AppColors.inkSoft),
-              const SizedBox(width: 4),
-              Text('${fare.durationMin} min', style: Theme.of(context).textTheme.bodyMedium),
-              const SizedBox(width: Insets.m),
-              const Icon(Icons.route_rounded, size: 14, color: AppColors.inkSoft),
-              const SizedBox(width: 4),
-              Text('${fare.distanceKm.toStringAsFixed(1)} km',
-                  style: Theme.of(context).textTheme.bodyMedium),
-              const Spacer(),
-              Text(
-                'Includes booking fee',
-                style: Theme.of(context).textTheme.labelMedium,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _PaymentSelector extends StatelessWidget {
   const _PaymentSelector({required this.value, required this.onChanged});
-
   final String value;
   final ValueChanged<String> onChanged;
 
@@ -279,7 +222,6 @@ class _PaymentSelector extends StatelessWidget {
 
 class _PaymentOption extends StatelessWidget {
   const _PaymentOption({required this.icon, required this.label, required this.selected, required this.onTap});
-
   final IconData icon;
   final String label;
   final bool selected;
@@ -287,31 +229,30 @@ class _PaymentOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: selected ? AppColors.seed : Colors.white,
+    return InkWell(
       borderRadius: BorderRadius.circular(Radii.m),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(Radii.m),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: Insets.m),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(Radii.m),
-            border: Border.all(color: selected ? AppColors.seed : AppColors.outline, width: 1.5),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 18, color: selected ? Colors.white : AppColors.ink),
-              const SizedBox(width: Insets.s),
-              Text(
-                label,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: selected ? Colors.white : AppColors.ink,
-                    ),
-              ),
-            ],
-          ),
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: AppMotion.fast,
+        curve: AppCurves.status,
+        padding: const EdgeInsets.symmetric(vertical: Insets.m),
+        decoration: BoxDecoration(
+          gradient: selected ? AppGradients.primary : null,
+          color: selected ? null : Colors.white,
+          borderRadius: BorderRadius.circular(Radii.m),
+          border: Border.all(color: selected ? Colors.transparent : AppColors.outline, width: 1.5),
+          boxShadow: selected ? AppShadows.heroGreen : AppShadows.card,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 18, color: selected ? Colors.white : AppColors.ink),
+            const SizedBox(width: Insets.s),
+            Text(
+              label,
+              style: AppType.titleM.copyWith(color: selected ? Colors.white : AppColors.ink),
+            ),
+          ],
         ),
       ),
     );

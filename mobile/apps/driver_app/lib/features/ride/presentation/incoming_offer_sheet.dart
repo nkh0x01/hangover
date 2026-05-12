@@ -7,10 +7,13 @@ import 'package:ui_kit/ui_kit.dart';
 
 import '../../shift/state/shift_controller.dart';
 
-/// Full-screen takeover when an offer comes in. Phase 1.6 makes Accept
-/// dominant, Reject visually quieter, and surfaces the customer rating
-/// + fare more prominently. The countdown is a real visual ring, not
-/// just a number — makes the urgency obvious without copy.
+/// Driver-facing urgent offer modal — Phase 1.6 v2.
+///
+/// The sheet pulses an emerald glow around its edge (urgency cue), the
+/// countdown is a real ring with a numerical center, the fare card is
+/// a gradient hero, and the Accept button is a tall gradient CTA that
+/// shouts "primary action" without needing a colour-blind safety net.
+/// Reject is a quiet outline.
 class IncomingOfferSheet extends ConsumerStatefulWidget {
   const IncomingOfferSheet({super.key, required this.offer});
 
@@ -21,16 +24,15 @@ class IncomingOfferSheet extends ConsumerStatefulWidget {
 }
 
 class _IncomingOfferSheetState extends ConsumerState<IncomingOfferSheet>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   Timer? _ticker;
   Duration _remaining = Duration.zero;
-  late final AnimationController _pulse;
+  late final AnimationController _glow;
 
   @override
   void initState() {
     super.initState();
-    _pulse = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200))
-      ..repeat();
+    _glow = AnimationController(vsync: this, duration: AppMotion.breathe)..repeat(reverse: true);
     _remaining = widget.offer.expiresAt.difference(DateTime.now());
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
@@ -47,7 +49,7 @@ class _IncomingOfferSheetState extends ConsumerState<IncomingOfferSheet>
   @override
   void dispose() {
     _ticker?.cancel();
-    _pulse.dispose();
+    _glow.dispose();
     super.dispose();
   }
 
@@ -57,96 +59,84 @@ class _IncomingOfferSheetState extends ConsumerState<IncomingOfferSheet>
     final progress = (_remaining.inMilliseconds / 12000).clamp(0.0, 1.0);
 
     return Container(
-      color: Colors.black.withValues(alpha: 0.6),
+      color: Colors.black.withValues(alpha: 0.7),
       alignment: Alignment.bottomCenter,
-      child: BottomSheetCard(
-        padding: const EdgeInsets.fromLTRB(Insets.xl, Insets.xl, Insets.xl, Insets.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text('New ride', style: Theme.of(context).textTheme.headlineMedium),
-                const Spacer(),
-                _CountdownRing(progress: progress, remaining: _remaining),
+      child: AnimatedBuilder(
+        animation: _glow,
+        builder: (_, child) {
+          final intensity = 0.6 + 0.4 * _glow.value;
+          return Container(
+            decoration: BoxDecoration(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(Radii.xl)),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.seed.withValues(alpha: 0.45 * intensity),
+                  blurRadius: 40 * intensity,
+                  spreadRadius: 4 * intensity,
+                  offset: const Offset(0, -8),
+                ),
               ],
             ),
-            const SizedBox(height: Insets.l),
-
-            // Pickup / dropoff list
-            _OfferRow(
-              icon: Icons.circle,
-              iconColor: AppColors.seed,
-              title: offer.pickupAddress,
-              subtitle: '~${offer.distanceToPickupM} m to pickup · 2 min',
-            ),
-            const SizedBox(height: Insets.s),
-            _OfferRow(
-              icon: Icons.flag_rounded,
-              iconColor: AppColors.danger,
-              title: offer.dropoffAddress,
-              subtitle: '2.7 km trip · ~7 min',
-            ),
-
-            const SizedBox(height: Insets.l),
-
-            // Fare hero
-            Container(
-              padding: const EdgeInsets.all(Insets.l),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceVariant,
-                borderRadius: BorderRadius.circular(Radii.l),
-              ),
-              child: Row(
+            child: child!,
+          );
+        },
+        child: BottomSheetCard(
+          padding: const EdgeInsets.fromLTRB(Insets.xl, Insets.xl, Insets.xl, Insets.xl),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Fare', style: Theme.of(context).textTheme.labelMedium),
-                        const SizedBox(height: 2),
-                        Text(
-                          '${offer.fareAmount.toStringAsFixed(2)} ${offer.currency}',
-                          style: Theme.of(context).textTheme.headlineMedium,
-                        ),
-                      ],
-                    ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text('Customer', style: Theme.of(context).textTheme.labelMedium),
-                      const SizedBox(height: 2),
-                      Row(
-                        children: const [
-                          Icon(Icons.star_rounded, size: 16, color: AppColors.warning),
-                          SizedBox(width: 4),
-                          Text('4.92', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-                        ],
-                      ),
-                    ],
-                  ),
+                  const StatusPill(label: 'New ride', tone: StatusTone.accent, pulse: true),
+                  const Spacer(),
+                  _CountdownRing(progress: progress, remaining: _remaining),
                 ],
               ),
-            ),
+              const SizedBox(height: Insets.l),
 
-            const SizedBox(height: Insets.l),
+              Text('Accept this ride', style: AppType.headlineM),
+              const SizedBox(height: Insets.l),
 
-            // Actions — Accept dominant, Reject secondary
-            PrimaryButton(
-              label: 'Accept ride',
-              leading: const Icon(Icons.check_rounded, color: Colors.white),
-              onPressed: () => ref.read(shiftProvider.notifier).acceptOffer(offer.rideId),
-            ),
-            const SizedBox(height: Insets.s),
-            SecondaryButton(
-              label: 'Reject',
-              color: AppColors.inkSoft,
-              onPressed: () => ref.read(shiftProvider.notifier).rejectOffer(offer.rideId),
-            ),
-          ],
+              FareHeroCard(
+                amount: offer.fareAmount,
+                currency: offer.currency,
+                distanceKm: 2.7,
+                durationMin: 7,
+                subtitle: '★ 4.92 customer',
+              ),
+
+              const SizedBox(height: Insets.l),
+
+              _OfferRow(
+                icon: Icons.my_location_rounded,
+                iconColor: AppColors.seed,
+                title: offer.pickupAddress,
+                subtitle: '~${offer.distanceToPickupM} m to pickup · 2 min',
+              ),
+              const SizedBox(height: Insets.s),
+              _OfferRow(
+                icon: Icons.flag_rounded,
+                iconColor: AppColors.danger,
+                title: offer.dropoffAddress,
+                subtitle: '2.7 km trip · ~7 min',
+              ),
+
+              const SizedBox(height: Insets.xl),
+
+              GradientButton(
+                label: 'Accept ride',
+                leading: const Icon(Icons.check_rounded, color: Colors.white, size: 20),
+                onPressed: () => ref.read(shiftProvider.notifier).acceptOffer(offer.rideId),
+              ),
+              const SizedBox(height: Insets.s),
+              SecondaryButton(
+                label: 'Reject',
+                color: AppColors.inkSoft,
+                onPressed: () => ref.read(shiftProvider.notifier).rejectOffer(offer.rideId),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -155,7 +145,6 @@ class _IncomingOfferSheetState extends ConsumerState<IncomingOfferSheet>
 
 class _CountdownRing extends StatelessWidget {
   const _CountdownRing({required this.progress, required this.remaining});
-
   final double progress;
   final Duration remaining;
 
@@ -175,10 +164,8 @@ class _CountdownRing extends StatelessWidget {
               strokeWidth: 5,
             ),
           ),
-          Text(
-            '${remaining.inSeconds}s',
-            style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.seed),
-          ),
+          Text('${remaining.inSeconds}s',
+              style: AppType.bodyStrong.copyWith(color: AppColors.seed)),
         ],
       ),
     );
@@ -187,7 +174,6 @@ class _CountdownRing extends StatelessWidget {
 
 class _OfferRow extends StatelessWidget {
   const _OfferRow({required this.icon, required this.iconColor, required this.title, required this.subtitle});
-
   final IconData icon;
   final Color iconColor;
   final String title;
@@ -213,9 +199,9 @@ class _OfferRow extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: Theme.of(context).textTheme.titleMedium),
+              Text(title, style: AppType.titleM),
               const SizedBox(height: 2),
-              Text(subtitle, style: Theme.of(context).textTheme.bodyMedium),
+              Text(subtitle, style: AppType.body),
             ],
           ),
         ),

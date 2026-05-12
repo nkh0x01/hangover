@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Identity\Http\Controllers\Auth\OtpController;
 use App\Modules\Identity\Http\Controllers\Auth\SessionController;
+use App\Modules\Identity\Http\Controllers\Profile\DeviceController;
 use App\Modules\Identity\Http\Controllers\Profile\MeController;
 use Illuminate\Support\Facades\Route;
 
@@ -30,6 +31,12 @@ Route::prefix('v1')->group(function (): void {
 
         Route::post('/auth/logout', [SessionController::class, 'logout'])
             ->name('auth.logout');
+
+        // FCM/APNs token registration — same endpoint for both apps
+        // since it acts on the bearer-token's device.
+        Route::post('/me/devices/fcm-token', [DeviceController::class, 'registerFcmToken'])
+            ->middleware('throttle:api.write')
+            ->name('me.devices.fcm-token');
 
         // Customer profile endpoints
         Route::prefix('customer')->middleware('ability:customer')->group(function (): void {

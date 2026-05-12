@@ -80,12 +80,64 @@ class _HomePageState extends ConsumerState<HomePage> {
               onTap: (point) => ref.read(rideFlowProvider.notifier).setPickup(point),
             ),
           ),
+
+          // Top floating chrome
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: Insets.l),
-              child: _TopBar(driversNearby: _nearby.length),
+              child: Row(
+                children: [
+                  _CircleControl(icon: Icons.menu_rounded),
+                  const Spacer(),
+                  GlassCard(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: Insets.m,
+                      vertical: Insets.s - 2,
+                    ),
+                    radius: Radii.pill,
+                    blur: 22,
+                    tint: Colors.white.withValues(alpha: 0.78),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: AppColors.success,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.success.withValues(alpha: 0.35),
+                                blurRadius: 8,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${_nearby.length} online nearby',
+                          style: AppType.bodyStrong,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Spacer(),
+                  _CircleControl(icon: Icons.notifications_none_rounded),
+                ],
+              ),
             ),
           ),
+
+          // Locate FAB
+          Positioned(
+            right: Insets.l,
+            bottom: 200,
+            child: _LocateFab(onTap: _refreshNearby),
+          ),
+
+          // Where-to card
           Align(
             alignment: Alignment.bottomCenter,
             child: SafeArea(
@@ -94,15 +146,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                 padding: const EdgeInsets.all(Insets.l),
                 child: _WhereToCard(
                   driversNearby: _nearby.length,
-                  onTap: () => context.push('/ride/destination'),
+                  onTap: () => context.push('/ride/search'),
                 ),
               ),
             ),
-          ),
-          Positioned(
-            right: Insets.l,
-            bottom: 160,
-            child: _LocateFab(onTap: _refreshNearby),
           ),
         ],
       ),
@@ -110,46 +157,8 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 }
 
-class _TopBar extends StatelessWidget {
-  const _TopBar({required this.driversNearby});
-
-  final int driversNearby;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _CircleControl(icon: Icons.menu_rounded),
-        const Spacer(),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: Insets.m, vertical: Insets.s - 2),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(Radii.pill),
-            boxShadow: const [BoxShadow(blurRadius: 8, color: Color(0x14000000))],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const _Pulse(),
-              const SizedBox(width: 6),
-              Text(
-                '$driversNearby online nearby',
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(color: AppColors.ink),
-              ),
-            ],
-          ),
-        ),
-        const Spacer(),
-        _CircleControl(icon: Icons.notifications_none_rounded),
-      ],
-    );
-  }
-}
-
 class _CircleControl extends StatelessWidget {
   const _CircleControl({required this.icon});
-
   final IconData icon;
 
   @override
@@ -157,10 +166,10 @@ class _CircleControl extends StatelessWidget {
     return Container(
       width: 44,
       height: 44,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         shape: BoxShape.circle,
-        boxShadow: const [BoxShadow(blurRadius: 8, color: Color(0x14000000))],
+        boxShadow: AppShadows.card,
       ),
       child: Icon(icon, size: 20, color: AppColors.ink),
     );
@@ -173,28 +182,19 @@ class _LocateFab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: TouchTargets.fab,
-      height: TouchTargets.fab,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
-        boxShadow: const [BoxShadow(blurRadius: 10, color: Color(0x1F000000))],
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(TouchTargets.fab / 2),
+      child: Container(
+        width: TouchTargets.fab,
+        height: TouchTargets.fab,
+        decoration: const BoxDecoration(
+          gradient: AppGradients.primary,
+          shape: BoxShape.circle,
+          boxShadow: AppShadows.fab,
+        ),
+        child: const Icon(Icons.my_location_rounded, color: Colors.white, size: 24),
       ),
-      child: const Icon(Icons.my_location_rounded, color: AppColors.seed, size: 24),
-    );
-  }
-}
-
-class _Pulse extends StatelessWidget {
-  const _Pulse();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 8,
-      height: 8,
-      decoration: const BoxDecoration(color: AppColors.success, shape: BoxShape.circle),
     );
   }
 }
@@ -214,7 +214,12 @@ class _WhereToCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(Radii.xl),
         onTap: onTap,
-        child: Padding(
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(Radii.xl),
+            boxShadow: AppShadows.card,
+          ),
           padding: const EdgeInsets.all(Insets.l),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -222,26 +227,39 @@ class _WhereToCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.search_rounded, color: AppColors.inkSoft),
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: const BoxDecoration(
+                      color: AppColors.surfaceVariant,
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: const Icon(Icons.search_rounded, color: AppColors.ink, size: 20),
+                  ),
                   const SizedBox(width: Insets.m),
                   Expanded(
-                    child: Text(
-                      'სად მიდიხართ? / Where to?',
-                      style: Theme.of(context).textTheme.titleMedium,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('სად მიდიხართ?', style: AppType.titleL),
+                        Text('Where to?',
+                            style: AppType.body.copyWith(color: AppColors.inkMuted)),
+                      ],
                     ),
                   ),
                   const Icon(Icons.chevron_right_rounded, color: AppColors.inkSoft),
                 ],
               ),
-              const SizedBox(height: Insets.s),
-              const Divider(),
-              const SizedBox(height: Insets.s),
+              const SizedBox(height: Insets.m),
+              const Divider(height: 1),
+              const SizedBox(height: Insets.m),
               Row(
-                children: [
+                children: const [
                   _QuickChip(icon: Icons.home_rounded, label: 'Home'),
-                  const SizedBox(width: Insets.s),
+                  SizedBox(width: Insets.s),
                   _QuickChip(icon: Icons.work_rounded, label: 'Work'),
-                  const SizedBox(width: Insets.s),
+                  SizedBox(width: Insets.s),
                   _QuickChip(icon: Icons.history_rounded, label: 'Recent'),
                 ],
               ),
@@ -270,9 +288,9 @@ class _QuickChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: AppColors.inkSoft),
+          Icon(icon, size: 14, color: AppColors.ink),
           const SizedBox(width: 6),
-          Text(label, style: Theme.of(context).textTheme.labelMedium?.copyWith(color: AppColors.ink)),
+          Text(label, style: AppType.bodyStrong),
         ],
       ),
     );

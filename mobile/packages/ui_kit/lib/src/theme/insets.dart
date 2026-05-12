@@ -2,6 +2,7 @@
 /// driver app's primary action sheets (where one-handed taps need more
 /// vertical breathing room).
 class Insets {
+  static const xxs = 2.0;
   static const xs = 4.0;
   static const s = 8.0;
   static const m = 12.0;

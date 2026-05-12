@@ -15,30 +15,45 @@
     <div class="right"><span>5G</span><span>WiFi</span><span>100%</span></div>
   </div>
 
-  <!-- driver moving toward pickup -->
-  <div class="pin pin-driver" style="top: 28%; left: 35%; width: 40px; height: 40px; font-size: 18px;">🛵</div>
+  <!-- Gradient ETA banner at top -->
+  <div style="position: absolute; top: 56px; left: var(--l); right: var(--l); z-index: 3;
+              background: var(--grad-ink); color: #FFF;
+              border-radius: var(--r-l);
+              padding: 14px var(--l);
+              display: flex; align-items: center; gap: 12px;
+              box-shadow: 0 12px 30px rgba(0,0,0,0.32);">
+    <div style="width: 10px; height: 10px; background: var(--success); border-radius: 50%;
+                box-shadow: 0 0 0 4px rgba(46,162,101,0.35);"></div>
+    <div>
+      <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.6px;
+                  text-transform: uppercase; color: rgba(255,255,255,0.7);">Driver arrives in</div>
+      <div style="font-size: 18px; font-weight: 800; letter-spacing: -0.3px;">2 min · 320 m</div>
+    </div>
+    <div style="margin-left: auto;">
+      <div style="width: 40px; height: 40px; border-radius: 50%;
+                  background: rgba(255,255,255,0.12);
+                  display: flex; align-items: center; justify-content: center;
+                  font-size: 16px;">📤</div>
+    </div>
+  </div>
+
+  <!-- Animated route -->
+  <div class="pin pin-driver live" style="top: 30%; left: 35%; width: 40px; height: 40px; font-size: 18px;">🛵</div>
   <div class="pin pin-pickup" style="top: 48%; left: 50%;"></div>
   <div class="pin pin-dropoff" style="top: 64%; left: 56%;"></div>
 
-  <!-- route polylines -->
   <svg style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%;" viewBox="0 0 393 852" xmlns="http://www.w3.org/2000/svg">
-    <path d="M 137 238  C 175 290, 185 360, 196 408" stroke="#1F8F60" stroke-width="6" stroke-linecap="round" fill="none" />
-    <path d="M 196 408  L 220 545" stroke="#1F8F60" stroke-width="6" stroke-linecap="round" fill="none" opacity="0.35" stroke-dasharray="2 8" />
+    <defs>
+      <linearGradient id="rg" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#2EC07F"/>
+        <stop offset="100%" stop-color="#1F8F60"/>
+      </linearGradient>
+    </defs>
+    <path d="M 137 256  C 175 290, 185 360, 196 408" stroke="url(#rg)" stroke-width="7" stroke-linecap="round" fill="none" />
+    <path d="M 196 408  L 220 545" stroke="#1F8F60" stroke-width="6" stroke-linecap="round" fill="none" opacity="0.32" stroke-dasharray="2 9" />
   </svg>
 
-  <!-- top notice — eta highlight -->
-  <div style="position: absolute; top: 56px; left: var(--l); right: var(--l); z-index: 3;
-              background: var(--ink); color: #FFF;
-              border-radius: var(--r-pill); padding: 10px var(--l);
-              display: flex; align-items: center; gap: 10px;
-              box-shadow: 0 6px 16px rgba(0,0,0,0.18);">
-    <span style="display: inline-block; width: 10px; height: 10px; background: var(--success); border-radius: 50%; box-shadow: 0 0 0 4px rgba(46,162,101,0.3);"></span>
-    <span style="font-weight: 600; font-size: 14px;">Driver arrives in</span>
-    <span style="font-weight: 700; font-size: 16px;">2 min</span>
-    <span style="margin-left: auto; opacity: 0.7;">→</span>
-  </div>
-
-  <!-- driver info bottom sheet -->
+  <!-- Driver info sheet -->
   <div class="sheet">
     <div class="handle"></div>
 
@@ -52,15 +67,18 @@
     <div class="gap-l"></div>
 
     <div style="display: flex; align-items: center; gap: var(--m);">
-      <div class="pill success live"><span class="dot"></span> Driver on the way</div>
-      <div style="margin-left: auto;" class="t-title-m">4 min</div>
+      <div class="phase-label">Driver on the way</div>
+      <div style="margin-left: auto;" class="t-title-l">4 min</div>
     </div>
 
     <div class="gap-m"></div>
 
     <div style="display: flex; align-items: center; gap: var(--m);">
-      <div style="width: 52px; height: 52px; border-radius: 50%; background: var(--surface-2);
-                  display: flex; align-items: center; justify-content: center; font-size: 22px;">👤</div>
+      <div style="width: 56px; height: 56px; border-radius: 50%;
+                  background: var(--grad-ink);
+                  display: flex; align-items: center; justify-content: center;
+                  font-size: 22px; color: var(--accent);
+                  box-shadow: var(--sh-card);">👤</div>
       <div style="flex: 1;">
         <div class="t-title-l">Giorgi Maisuradze</div>
         <div class="t-body" style="margin-top: 2px;">
@@ -68,21 +86,28 @@
         </div>
       </div>
       <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--surface-2);
-                  display: flex; align-items: center; justify-content: center;">💬</div>
-      <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--seed);
-                  display: flex; align-items: center; justify-content: center; color: #FFF; font-size: 18px;">📞</div>
+                  display: flex; align-items: center; justify-content: center;
+                  box-shadow: var(--sh-card);">💬</div>
+      <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--grad-primary);
+                  display: flex; align-items: center; justify-content: center;
+                  color: #FFF; font-size: 18px;
+                  box-shadow: var(--sh-hero-green);">📞</div>
     </div>
 
     <div class="gap-m"></div>
 
     <div class="card-soft" style="display: flex; align-items: center; gap: var(--m);">
+      <div style="width: 36px; height: 36px; border-radius: 8px;
+                  background: var(--ink); color: var(--accent);
+                  display: flex; align-items: center; justify-content: center; font-size: 16px;">🛵</div>
       <div style="flex: 1;">
         <div class="t-label">Vehicle</div>
         <div class="t-title-m" style="margin-top: 2px;">Xiaomi Mi Pro 2 · Black</div>
       </div>
       <div style="background: #FFF; padding: 6px 10px; border-radius: 6px;
-                  font-family: monospace; font-weight: 700; font-size: 14px;
-                  border: 1px solid var(--outline-subtle);">
+                  font-family: monospace; font-weight: 800; font-size: 14px;
+                  border: 1px solid var(--outline-subtle);
+                  letter-spacing: 1px;">
         TB-4291
       </div>
     </div>
