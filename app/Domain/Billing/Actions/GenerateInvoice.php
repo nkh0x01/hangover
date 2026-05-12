@@ -50,11 +50,10 @@ class GenerateInvoice
             foreach ($reservation->nightsBreakdown as $night) {
                 $lines[] = [
                     'invoice_id'  => $invoice->id,
-                    'description' => sprintf(
-                        'Room %s — night of %s',
-                        $reservation->room?->number ?? '—',
-                        $night->date->toDateString(),
-                    ),
+                    'description' => __(':room — night of :date', [
+                        'room' => __('Room').' '.($reservation->room?->number ?? '—'),
+                        'date' => $night->date->toDateString(),
+                    ]),
                     'quantity'    => 1,
                     'unit_price'  => (float) $night->nightly_rate,
                     'total'       => (float) $night->nightly_rate,
@@ -89,7 +88,7 @@ class GenerateInvoice
             if ($discountTotal > 0) {
                 $lines[] = [
                     'invoice_id'  => $invoice->id,
-                    'description' => 'Discount',
+                    'description' => __('Discount'),
                     'quantity'    => 1,
                     'unit_price'  => -$discountTotal,
                     'total'       => -$discountTotal,
@@ -104,7 +103,7 @@ class GenerateInvoice
             if ($taxTotal > 0) {
                 $lines[] = [
                     'invoice_id'  => $invoice->id,
-                    'description' => 'Taxes',
+                    'description' => __('Tax'),
                     'quantity'    => 1,
                     'unit_price'  => $taxTotal,
                     'total'       => $taxTotal,
