@@ -46,6 +46,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'idempotent'   => EnsureIdempotency::class,
             'role'         => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission'   => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'ability'      => \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
+            'abilities'    => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
         ]);
 
         // Sanctum stateful domains for SPA / admin panel sessions.

@@ -5,13 +5,22 @@ declare(strict_types=1);
 namespace App\Modules\Driver\Models;
 
 use App\Modules\Identity\Models\User;
+use Database\Factories\DriverFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Driver extends Model
 {
+    use HasFactory;
+
     protected $table = 'drivers';
+
+    protected static function newFactory(): DriverFactory
+    {
+        return DriverFactory::new();
+    }
 
     protected $fillable = [
         'user_id',
@@ -72,5 +81,10 @@ class Driver extends Model
     public function shifts(): HasMany
     {
         return $this->hasMany(DriverShift::class);
+    }
+
+    public function rides(): HasMany
+    {
+        return $this->hasMany(\App\Modules\Riding\Models\Ride::class);
     }
 }

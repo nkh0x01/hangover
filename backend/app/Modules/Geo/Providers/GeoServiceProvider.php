@@ -6,6 +6,7 @@ namespace App\Modules\Geo\Providers;
 
 use App\Modules\Geo\Contracts\MapProvider;
 use App\Modules\Geo\Services\NearbyDriverIndex;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use RuntimeException;
 
@@ -29,5 +30,10 @@ final class GeoServiceProvider extends ServiceProvider
 
             return new $cls(...array_values(array_diff_key($cfg, ['class' => null])));
         });
+    }
+
+    public function boot(): void
+    {
+        Route::middleware('api')->group(__DIR__.'/../routes/api.php');
     }
 }

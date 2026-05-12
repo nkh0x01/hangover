@@ -6,4 +6,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 uses(TestCase::class)->in('Feature');
-uses(TestCase::class, RefreshDatabase::class)->in('Feature/DatabaseBacked');
+uses(TestCase::class, RefreshDatabase::class)->in('Feature/Riding');
+uses(TestCase::class, RefreshDatabase::class)->in('Feature/Pricing');
+uses(TestCase::class, RefreshDatabase::class)->in('Feature/Driver');

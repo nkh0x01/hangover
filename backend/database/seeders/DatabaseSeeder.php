@@ -13,6 +13,7 @@ final class DatabaseSeeder extends Seeder
         $this->call([
             RolesAndPermissionsSeeder::class,
             CitiesSeeder::class,
+            FareRulesSeeder::class,
             SuperAdminSeeder::class,
         ]);
     }

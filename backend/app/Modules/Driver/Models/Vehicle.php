@@ -4,15 +4,23 @@ declare(strict_types=1);
 
 namespace App\Modules\Driver\Models;
 
+use Database\Factories\VehicleFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Vehicle extends Model
 {
+    use HasFactory;
     use SoftDeletes;
 
     protected $table = 'vehicles';
+
+    protected static function newFactory(): VehicleFactory
+    {
+        return VehicleFactory::new();
+    }
 
     protected $fillable = [
         'driver_id',
