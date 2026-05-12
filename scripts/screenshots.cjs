@@ -1,5 +1,5 @@
-// One-shot screenshot capture for the Hotel PMS UI.
-// Run: PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node scripts/screenshots.js
+// Comprehensive UI capture for the Phase 1 reception interface.
+// Run: NODE_PATH=/opt/node22/lib/node_modules node scripts/screenshots.cjs
 const { chromium } = require('playwright');
 const fs = require('fs');
 
@@ -8,17 +8,8 @@ const OUT  = 'docs/screenshots';
 const EMAIL = 'admin@example.test';
 const PASSWORD = 'password';
 
-const pages = [
-  { name: '01-login',                  url: '/login',                auth: false },
-  { name: '02-dashboard',              url: '/dashboard',            auth: true  },
-  { name: '03-calendar',               url: '/calendar',             auth: true  },
-  { name: '04-rooms',                  url: '/rooms',                auth: true  },
-  { name: '05-reservations-list',      url: '/reservations',         auth: true  },
-  { name: '06-reservation-wizard',     url: '/reservations/create',  auth: true  },
-  { name: '07-reservation-detail',     url: '/reservations/1',       auth: true  },
-  { name: '08-invoice',                url: '/invoices/1',           auth: true,  optional: true },
-  { name: '09-guests',                 url: '/guests',               auth: true  },
-];
+const DESKTOP = { width: 1440, height: 900, deviceScaleFactor: 2 };
+const MOBILE  = { width: 390,  height: 844, deviceScaleFactor: 2 };
 
 (async () => {
   fs.mkdirSync(OUT, { recursive: true });
@@ -28,22 +19,153 @@ const pages = [
     args: ['--no-sandbox'],
   });
 
-  // Desktop pass
-  await capture(browser, { width: 1440, height: 900, deviceScaleFactor: 2 }, '');
-  // Mobile pass — just key screens
-  await capture(browser, { width: 390, height: 844, deviceScaleFactor: 2 }, 'mobile-', [
-    '02-dashboard', '03-calendar', '04-rooms', '07-reservation-detail',
-  ]);
+  await runDesktop(browser);
+  await runMobile(browser);
 
   await browser.close();
   console.log('done');
 })();
 
-async function capture(browser, viewport, prefix, only = null) {
-  const context = await browser.newContext({ viewport });
-  const page = await context.newPage();
+async function runDesktop(browser) {
+  // 1. Login (guest context)
+  {
+    const ctx = await browser.newContext({ viewport: DESKTOP });
+    const p = await ctx.newPage();
+    await p.goto(BASE + '/login', { waitUntil: 'networkidle' });
+    await save(p, '01-login.png');
+    await ctx.close();
+  }
 
-  // Login once and reuse session.
+  // Authenticated pages
+  const ctx = await browser.newContext({ viewport: DESKTOP });
+  const page = await ctx.newPage();
+  await login(page);
+
+  // 2. Dashboard
+  await page.goto(BASE + '/dashboard', { waitUntil: 'networkidle' });
+  await settle(page);
+  await save(page, '02-dashboard.png');
+
+  // 3. Calendar
+  await page.goto(BASE + '/calendar', { waitUntil: 'networkidle' });
+  await settle(page);
+  await save(page, '03-calendar.png');
+
+  // 4. Rooms
+  await page.goto(BASE + '/rooms', { waitUntil: 'networkidle' });
+  await settle(page);
+  await save(page, '04-rooms.png');
+
+  // 5. Reservations list
+  await page.goto(BASE + '/reservations', { waitUntil: 'networkidle' });
+  await settle(page);
+  await save(page, '05-reservations-list.png');
+
+  // 6. Wizard step 1 — dates (uses mount() defaults: today, today+2, 2 adults)
+  await page.goto(BASE + '/reservations/create', { waitUntil: 'networkidle' });
+  await settle(page);
+  await save(page, '06-wizard-step-1-dates.png');
+
+  await advanceWizard(page);
+  await page.waitForSelector('text=nights from', { timeout: 15000 });
+  await settle(page);
+
+  // 7. Wizard step 2 — room selection (initial, nothing picked)
+  await save(page, '07-wizard-step-2-room.png');
+
+  // Pick the first room with a wire:click="pickRoom" handler that's enabled.
+  const card = page.locator('button[wire\\:click^="pickRoom"]:not([disabled])').first();
+  await card.click();
+  await page.waitForLoadState('networkidle');
+  await settle(page);
+  await save(page, '07b-wizard-step-2-room-picked.png');
+
+  await advanceWizard(page);
+  await page.waitForSelector('text=First name', { timeout: 15000 });
+  await settle(page);
+
+  // 8. Wizard step 3 — guest details
+  await page.locator('input[wire\\:model\\.live\\.debounce\\.300ms="firstName"]').fill('Demo');
+  await page.locator('input[wire\\:model\\.live\\.debounce\\.300ms="lastName"]').fill('Guest');
+  await page.locator('input[wire\\:model\\.live\\.debounce\\.300ms="phone"]').fill('+995 555 000 000');
+  await page.locator('input[wire\\:model="email"]').fill('demo@example.test');
+  await page.locator('input[wire\\:model="country"]').fill('GE');
+  await page.locator('input[wire\\:model="docNumber"]').fill('AB123456');
+  await page.waitForLoadState('networkidle');
+  await settle(page);
+  await save(page, '08-wizard-step-3-guest.png');
+
+  await advanceWizard(page);
+  await page.waitForSelector('text=Create reservation', { timeout: 15000 });
+  await settle(page);
+
+  // 9. Wizard step 4 — confirm
+  await save(page, '09-wizard-step-4-confirm.png');
+
+  // 10. Reservation detail in CONFIRMED state (Check in button visible)
+  await page.goto(BASE + '/reservations/1', { waitUntil: 'networkidle' });
+  await settle(page);
+  await save(page, '10-reservation-detail-confirmed.png');
+
+  // 11. Payment modal (use r2 which is checked-in with balance remaining)
+  await page.goto(BASE + '/reservations/2', { waitUntil: 'networkidle' });
+  await settle(page);
+  await page.getByRole('button', { name: '+ Payment' }).click();
+  await page.waitForSelector('text=Record payment', { state: 'visible' });
+  await page.waitForTimeout(400);
+  await save(page, '11-payment-modal.png');
+
+  // 12. Reservation in CHECKED_IN state — fresh page load so modal isn't open.
+  await page.goto(BASE + '/reservations/2', { waitUntil: 'networkidle' });
+  await settle(page);
+  await save(page, '12-reservation-detail-checked-in.png');
+
+  // 13. Reservation in CHECKED_OUT state
+  await page.goto(BASE + '/reservations/3', { waitUntil: 'networkidle' });
+  await settle(page);
+  await save(page, '13-reservation-detail-checked-out.png');
+
+  // 14. Invoice page
+  await page.goto(BASE + '/invoices/1', { waitUntil: 'networkidle' });
+  await settle(page);
+  await save(page, '14-invoice.png');
+
+  await ctx.close();
+}
+
+async function runMobile(browser) {
+  const ctx = await browser.newContext({ viewport: MOBILE, isMobile: true, hasTouch: true });
+  const page = await ctx.newPage();
+  await login(page);
+
+  // 15. Mobile dashboard
+  await page.goto(BASE + '/dashboard', { waitUntil: 'networkidle' });
+  await settle(page);
+  await save(page, '15-mobile-dashboard.png');
+
+  // 16. Mobile sidebar open (hamburger)
+  await page.locator('button:has-text("☰")').first().click();
+  await page.waitForTimeout(400);
+  await save(page, '16-mobile-sidebar-open.png');
+
+  // close menu
+  await page.locator('button:has-text("✕")').first().click();
+  await page.waitForTimeout(200);
+
+  // 17. Mobile calendar
+  await page.goto(BASE + '/calendar', { waitUntil: 'networkidle' });
+  await settle(page);
+  await save(page, '17-mobile-calendar.png');
+
+  await ctx.close();
+}
+
+async function advanceWizard(page) {
+  await page.getByRole('button', { name: 'Next →' }).click();
+  await page.waitForLoadState('networkidle');
+}
+
+async function login(page) {
   await page.goto(BASE + '/login', { waitUntil: 'networkidle' });
   await page.fill('input[name=email]', EMAIL);
   await page.fill('input[name=password]', PASSWORD);
@@ -51,31 +173,14 @@ async function capture(browser, viewport, prefix, only = null) {
     page.waitForURL('**/dashboard'),
     page.click('button[type=submit]'),
   ]);
-  console.log(prefix + 'logged in');
+}
 
-  for (const p of pages) {
-    if (only && !only.includes(p.name)) continue;
-    const file = `${OUT}/${prefix}${p.name}.png`;
-    try {
-      if (!p.auth) {
-        // Use a fresh incognito context for /login screenshot
-        const guestCtx = await browser.newContext({ viewport });
-        const gp = await guestCtx.newPage();
-        await gp.goto(BASE + p.url, { waitUntil: 'networkidle' });
-        await gp.screenshot({ path: file, fullPage: true });
-        await guestCtx.close();
-      } else {
-        await page.goto(BASE + p.url, { waitUntil: 'networkidle' });
-        // wait for Livewire to settle
-        await page.waitForTimeout(400);
-        await page.screenshot({ path: file, fullPage: true });
-      }
-      console.log('  saved', file);
-    } catch (e) {
-      if (p.optional) { console.log('  skipped', file, e.message); continue; }
-      throw e;
-    }
-  }
+async function settle(page) {
+  await page.waitForTimeout(450);
+}
 
-  await context.close();
+async function save(page, name) {
+  const file = `${OUT}/${name}`;
+  await page.screenshot({ path: file, fullPage: true });
+  console.log('  saved', file);
 }

@@ -42,12 +42,12 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-slate-700">Adults</label>
-                    <input type="number" min="1" max="8" wire:model="adults"
+                    <input type="number" min="1" max="8" wire:model.live="adults"
                            class="mt-1 w-full rounded-md border-slate-300">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-slate-700">Children</label>
-                    <input type="number" min="0" max="8" wire:model="children"
+                    <input type="number" min="0" max="8" wire:model.live="children"
                            class="mt-1 w-full rounded-md border-slate-300">
                 </div>
             </div>
