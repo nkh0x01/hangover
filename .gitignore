@@ -24,6 +24,9 @@ backend/storage/app/private/*
 !backend/storage/app/private/.gitkeep
 backend/storage/app/public/*
 !backend/storage/app/public/.gitkeep
+backend/storage/framework/cache/*
+!backend/storage/framework/cache/data/
+!backend/storage/framework/cache/.gitkeep
 backend/storage/framework/cache/data/*
 !backend/storage/framework/cache/data/.gitkeep
 backend/storage/framework/sessions/*
