@@ -12,6 +12,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 /**
  * The first dispatch tick for a freshly-created ride. Subsequent ticks
@@ -45,6 +46,15 @@ final class DispatchRide implements ShouldQueue, ShouldBeUnique
         if (! $ride) {
             return;
         }
-        $dispatch->dispatchTick($ride);
+        try {
+            $dispatch->dispatchTick($ride);
+        } catch (\Throwable $e) {
+            Log::channel('dispatch')->error('DispatchRide failed', [
+                'ride_id' => $this->rideId,
+                'attempt' => $this->attempts(),
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
     }
 }

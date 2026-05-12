@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Riding\Http\Controllers\Customer\RideController as CustomerRideController;
+use App\Modules\Riding\Http\Controllers\Driver\ActiveOfferController;
 use App\Modules\Riding\Http\Controllers\Driver\OfferController as DriverOfferController;
 use App\Modules\Riding\Http\Controllers\Driver\RideController as DriverRideController;
 use Illuminate\Support\Facades\Route;
@@ -61,6 +62,10 @@ Route::prefix('v1/driver')
         Route::patch('/rides/{ulid}/cancel', [DriverRideController::class, 'cancel'])
             ->middleware('throttle:api.write')
             ->name('driver.rides.cancel');
+
+        Route::get('/offers/active', ActiveOfferController::class)
+            ->middleware('throttle:api.default')
+            ->name('driver.offers.active');
 
         Route::post('/offers/{ulid}/accept', [DriverOfferController::class, 'accept'])
             ->middleware('throttle:api.write')

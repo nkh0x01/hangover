@@ -13,6 +13,7 @@ use App\Modules\Riding\StateMachine\RideStatus;
 use App\Support\Geo\Point;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Accept one GPS sample from the driver app. Plausibility-checks the
@@ -40,6 +41,11 @@ final readonly class IngestLocationHeartbeat
         // Plausibility: implausibly fast samples are dropped.
         $maxSpeed = (float) config('geo.plausibility.max_speed_kmh', 80);
         if ($speedKmh > $maxSpeed) {
+            Log::channel('realtime')->warning('Heartbeat dropped: implausible speed', [
+                'driver_id' => $driver->id,
+                'speed_kmh' => $speedKmh,
+                'max_speed_kmh' => $maxSpeed,
+            ]);
             return;
         }
 

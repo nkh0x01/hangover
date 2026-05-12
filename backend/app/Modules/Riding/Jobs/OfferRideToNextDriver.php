@@ -11,6 +11,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Re-enter the dispatch loop after a rejection, a timeout, or a
@@ -35,6 +36,15 @@ final class OfferRideToNextDriver implements ShouldQueue
         if (! $ride) {
             return;
         }
-        $dispatch->dispatchTick($ride);
+        try {
+            $dispatch->dispatchTick($ride);
+        } catch (\Throwable $e) {
+            Log::channel('dispatch')->error('OfferRideToNextDriver failed', [
+                'ride_id' => $this->rideId,
+                'attempt' => $this->attempts(),
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
     }
 }

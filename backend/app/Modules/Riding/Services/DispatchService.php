@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Riding\Services;
 
+use App\Modules\Driver\Models\Driver;
 use App\Modules\Riding\Events\RideOffered;
 use App\Modules\Riding\Jobs\ExpireRideOffer;
 use App\Modules\Riding\Jobs\OfferRideToNextDriver;
@@ -54,8 +55,6 @@ final readonly class DispatchService
         }
 
         $radiusKm = $this->resolveRadiusKm($ride);
-        $pickup = new Point((float) $ride->pickup_lat ?: $this->pickupFromGeometry($ride)->lat, (float) $ride->pickup_lng ?: $this->pickupFromGeometry($ride)->lng);
-        // Fallback path: pickup_lat/lng aren't columns — recover from POINT.
         $pickup = $this->pickupFromGeometry($ride);
 
         $candidates = $this->candidates->resolve($ride, $pickup, $radiusKm);
@@ -68,7 +67,7 @@ final readonly class DispatchService
         $this->offerToDriver($ride, $best['driver'], (int) round($best['distance_m']));
     }
 
-    private function offerToDriver(Ride $ride, $driver, int $distanceM): void
+    private function offerToDriver(Ride $ride, Driver $driver, int $distanceM): void
     {
         $expiry = (int) config('realtime.offer.expiry_seconds', 12);
         $expiresAt = CarbonImmutable::now()->addSeconds($expiry);
@@ -105,7 +104,10 @@ final readonly class DispatchService
         ]);
     }
 
-    private function buildOfferedEventArgs(Ride $ride, $driver, int $distanceM, CarbonImmutable $expiresAt): array
+    /**
+     * @return array{0: string, 1: string, 2: array<string, mixed>}
+     */
+    private function buildOfferedEventArgs(Ride $ride, Driver $driver, int $distanceM, CarbonImmutable $expiresAt): array
     {
         $event = RideOffered::build($ride, $driver, $distanceM, $expiresAt);
 
