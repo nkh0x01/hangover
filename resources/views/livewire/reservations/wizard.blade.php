@@ -236,23 +236,30 @@
         @endif
 
         <div class="mt-6 flex items-center justify-between">
-            <div>
+            <div class="flex items-center gap-3">
                 @if ($step > 1)
                     <button type="button" wire:click="prevStep"
                             class="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium hover:bg-slate-50">← Back</button>
                 @endif
+                <a href="{{ route('reservations.index') }}"
+                   class="text-xs text-slate-400 hover:text-slate-600 underline-offset-2 hover:underline"
+                   onclick="return confirm('Discard this reservation and go back?');">Discard</a>
             </div>
-            <div class="flex items-center gap-2">
-                <a href="{{ route('reservations.index') }}" class="text-sm text-slate-500 hover:text-slate-700">Cancel</a>
+            <div>
                 @if ($step < 4)
                     <button type="button" wire:click="nextStep"
-                            class="rounded-md bg-slate-900 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-800">Next →</button>
+                            wire:loading.attr="disabled" wire:target="nextStep"
+                            class="inline-flex items-center gap-2 rounded-md bg-slate-900 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60">
+                        <x-spinner wire:loading wire:target="nextStep" class="h-4 w-4 -ml-1" />
+                        <span>Next →</span>
+                    </button>
                 @else
                     <button type="button" wire:click="create"
-                            wire:loading.attr="disabled"
-                            class="rounded-md bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60">
-                        <span wire:loading.remove>Create reservation</span>
-                        <span wire:loading>Creating…</span>
+                            wire:loading.attr="disabled" wire:target="create"
+                            class="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60">
+                        <x-spinner wire:loading wire:target="create" class="h-4 w-4 -ml-1" />
+                        <span wire:loading.remove wire:target="create">Create reservation</span>
+                        <span wire:loading wire:target="create">Creating…</span>
                     </button>
                 @endif
             </div>

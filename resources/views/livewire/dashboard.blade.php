@@ -45,7 +45,7 @@
                                 Room {{ $r->room?->number ?? '—' }} · {{ $r->nights }} night{{ $r->nights === 1 ? '' : 's' }} · {{ $r->code }}
                             </div>
                         </div>
-                        <span class="rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700">{{ $r->status }}</span>
+                        <x-status-pill :value="$r->status" />
                     </li>
                 @empty
                     <li class="px-5 py-6 text-center text-sm text-slate-400">No arrivals today.</li>
@@ -65,10 +65,10 @@
                                 {{ $r->leadGuest?->full_name ?? '—' }}
                             </a>
                             <div class="text-xs text-slate-500">
-                                Room {{ $r->room?->number ?? '—' }} · {{ $r->payment_status }}
+                                Room {{ $r->room?->number ?? '—' }} · {{ str_replace('_', ' ', $r->payment_status) }}
                             </div>
                         </div>
-                        <span class="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">{{ $r->status }}</span>
+                        <x-status-pill :value="$r->status" />
                     </li>
                 @empty
                     <li class="px-5 py-6 text-center text-sm text-slate-400">No departures today.</li>

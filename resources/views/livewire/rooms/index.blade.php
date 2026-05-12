@@ -16,21 +16,22 @@
     <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
         @foreach ($rooms as $room)
             @php $t = $tones[$room->status] ?? $tones['available']; @endphp
-            <div class="relative rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div class="relative rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-slate-300">
                 <div class="flex items-start justify-between">
                     <div>
                         <div class="text-2xl font-bold text-slate-900">{{ $room->number }}</div>
                         <div class="text-xs text-slate-500">Floor {{ $room->floor }} · {{ $room->roomType?->name }}</div>
                     </div>
                     <button type="button"
-                            class="text-slate-400 hover:text-slate-600"
+                            class="text-slate-400 hover:text-slate-600 rounded p-1 hover:bg-slate-100"
+                            aria-label="Change status for room {{ $room->number }}"
                             @click="openMenu === {{ $room->id }} ? openMenu = null : openMenu = {{ $room->id }}">
                         ⋯
                     </button>
                 </div>
                 <div class="mt-4 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium ring-1 ring-inset {{ $t['bg'] }} {{ $t['text'] }} {{ $t['ring'] }}">
                     <span class="inline-block h-1.5 w-1.5 rounded-full {{ $t['dot'] }}"></span>
-                    {{ $room->status }}
+                    {{ str_replace('_', ' ', $room->status) }}
                 </div>
 
                 <div x-show="openMenu === {{ $room->id }}" x-cloak
@@ -50,12 +51,5 @@
         @endforeach
     </div>
 
-    {{-- minimal toast --}}
-    <div x-data="{ msg: '', tone: 'ok' }"
-         @toast.window="msg = $event.detail.message; tone = $event.detail.tone; setTimeout(() => msg = '', 2500)"
-         x-show="msg" x-cloak x-transition
-         :class="tone === 'warn' ? 'bg-amber-600' : 'bg-emerald-600'"
-         class="fixed bottom-6 right-6 rounded-md px-4 py-2 text-sm font-medium text-white shadow-lg">
-        <span x-text="msg"></span>
-    </div>
+    {{-- toasts come from the app-wide x-toast-stack in layouts/app.blade.php --}}
 </div>

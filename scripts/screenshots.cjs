@@ -130,6 +130,15 @@ async function runDesktop(browser) {
   await settle(page);
   await save(page, '14-invoice.png');
 
+  // 18. Keyboard shortcuts overlay
+  await page.goto(BASE + '/dashboard', { waitUntil: 'networkidle' });
+  await settle(page);
+  await page.keyboard.press('?');
+  await page.waitForTimeout(400);
+  await save(page, '18-keyboard-help.png');
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+
   await ctx.close();
 }
 

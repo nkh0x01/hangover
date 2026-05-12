@@ -56,7 +56,7 @@
     </aside>
 
     {{-- Mobile backdrop --}}
-    <div x-show="sidebar" x-transition.opacity class="fixed inset-0 z-30 bg-black/40 lg:hidden" @click="sidebar = false" x-cloak></div>
+    <div x-show="sidebar" x-transition.opacity class="fixed inset-0 z-30 bg-slate-900/70 backdrop-blur-sm lg:hidden" @click="sidebar = false" x-cloak></div>
 
     {{-- Main content --}}
     <div class="flex-1 flex flex-col min-w-0">
@@ -64,6 +64,13 @@
             <button type="button" class="lg:hidden text-slate-500" @click="sidebar = true">☰</button>
             <div class="text-lg font-semibold">{{ $header ?? ($title ?? '') }}</div>
             <div class="ml-auto flex items-center gap-3 text-sm text-slate-500">
+                <button type="button"
+                        @click="$dispatch('open-keyboard-help')"
+                        class="hidden h-7 items-center gap-1.5 rounded-md border border-slate-200 px-2 text-xs text-slate-500 hover:border-slate-300 hover:text-slate-700 sm:inline-flex"
+                        aria-label="Keyboard shortcuts">
+                    <kbd class="font-mono">?</kbd>
+                    <span class="hidden md:inline">Shortcuts</span>
+                </button>
                 <span>{{ now()->format('D, M j') }}</span>
             </div>
         </header>
@@ -79,6 +86,9 @@
         </main>
     </div>
 </div>
+
+<x-toast-stack />
+<x-keyboard-help />
 
 @livewireScripts
 </body>

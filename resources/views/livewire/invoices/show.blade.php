@@ -58,12 +58,26 @@
                     @endforeach
                 </tbody>
                 <tfoot>
+                    @php
+                        $vatRate = (float) ($invoice->property->vat_rate_default ?? 0);
+                        $taxTotal = (float) $invoice->tax_total;
+                        $showTax = $taxTotal > 0 || $vatRate > 0;
+                        // Phase 1 prices are tax-inclusive; show the implied VAT for receipts.
+                        if ($showTax && $taxTotal == 0 && $vatRate > 0) {
+                            $taxTotal = round((float) $invoice->subtotal * $vatRate / (100 + $vatRate), 2);
+                        }
+                    @endphp
                     <tr><td colspan="3" class="pt-3 text-right text-slate-500">Subtotal</td><td class="pt-3 text-right">{{ number_format((float) $invoice->subtotal, 2) }}</td></tr>
                     @if ((float) $invoice->discount_total > 0)
                         <tr><td colspan="3" class="text-right text-slate-500">Discount</td><td class="text-right text-emerald-700">−{{ number_format((float) $invoice->discount_total, 2) }}</td></tr>
                     @endif
-                    @if ((float) $invoice->tax_total > 0)
-                        <tr><td colspan="3" class="text-right text-slate-500">Tax</td><td class="text-right">{{ number_format((float) $invoice->tax_total, 2) }}</td></tr>
+                    @if ($showTax)
+                        <tr>
+                            <td colspan="3" class="text-right text-slate-500">
+                                Tax{{ $vatRate > 0 ? ' (VAT '.rtrim(rtrim(number_format($vatRate, 2), '0'), '.').'%, included)' : '' }}
+                            </td>
+                            <td class="text-right">{{ number_format($taxTotal, 2) }}</td>
+                        </tr>
                     @endif
                     <tr class="border-t border-slate-200 font-semibold"><td colspan="3" class="pt-2 text-right">Total</td><td class="pt-2 text-right">{{ number_format((float) $invoice->total, 2) }} {{ $invoice->currency }}</td></tr>
                     <tr><td colspan="3" class="text-right text-slate-500">Paid</td><td class="text-right">{{ number_format((float) $invoice->paid_total, 2) }} {{ $invoice->currency }}</td></tr>

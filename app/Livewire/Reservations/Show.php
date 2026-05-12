@@ -40,7 +40,11 @@ class Show extends Component
     public string $cancelReason = '';
 
     public ?string $error = null;
-    public ?string $flash = null;
+
+    private function toast(string $message, string $tone = 'ok'): void
+    {
+        $this->dispatch('toast', tone: $tone, message: $message);
+    }
 
     public function mount(Reservation $reservation): void
     {
@@ -60,9 +64,9 @@ class Show extends Component
     {
         try {
             app(CheckInReservation::class)->execute($this->reservation, auth()->user());
-            $this->flash = 'Checked in.';
+            $this->toast('Checked in.');
         } catch (DomainException $e) {
-            $this->error = $e->getMessage();
+            $this->toast($e->getMessage(), 'error');
         }
         $this->refreshReservation();
     }
@@ -71,9 +75,9 @@ class Show extends Component
     {
         try {
             $invoice = app(CheckOutReservation::class)->execute($this->reservation, auth()->user());
-            $this->flash = "Checked out. Invoice {$invoice->number}.";
+            $this->toast("Checked out · Invoice {$invoice->number}");
         } catch (DomainException $e) {
-            $this->error = $e->getMessage();
+            $this->toast($e->getMessage(), 'error');
         }
         $this->refreshReservation();
     }
@@ -93,10 +97,10 @@ class Show extends Component
                 $this->cancelReason,
                 auth()->user(),
             );
-            $this->flash = 'Reservation cancelled.';
+            $this->toast('Reservation cancelled.', 'warn');
             $this->showCancelModal = false;
         } catch (DomainException $e) {
-            $this->error = $e->getMessage();
+            $this->toast($e->getMessage(), 'error');
         }
         $this->refreshReservation();
     }
@@ -126,10 +130,10 @@ class Show extends Component
                 auth()->user(),
                 $this->payReference ?: null,
             );
-            $this->flash = 'Payment recorded.';
+            $this->toast('Payment recorded.');
             $this->showPaymentModal = false;
         } catch (\Throwable $e) {
-            $this->error = $e->getMessage();
+            $this->toast($e->getMessage(), 'error');
         }
         $this->refreshReservation();
     }
@@ -164,7 +168,7 @@ class Show extends Component
 
         app(ReservationTotals::class)->recompute($this->reservation);
         $this->showChargeModal = false;
-        $this->flash = 'Charge added.';
+        $this->toast('Charge added.');
         $this->refreshReservation();
     }
 
