@@ -1,7 +1,9 @@
 import 'package:auth/auth.dart';
 import 'package:core/core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:maps/maps.dart';
 import 'package:network/network.dart';
+import 'package:rides/rides.dart';
 import 'package:uuid/uuid.dart';
 
 final envProvider = Provider<EnvConfig>((ref) {
@@ -37,6 +39,12 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
     tokenStore: ref.watch(tokenStoreProvider),
   );
 });
+
+final driverRideRepositoryProvider = Provider<DriverRideRepository>((ref) {
+  return DriverRideRepository(client: ref.watch(apiClientProvider));
+});
+
+final mapProviderProvider = Provider<MapProvider>((ref) => GoogleMapsProvider());
 
 Future<ProviderContainer> buildContainer(EnvConfig env) async {
   return ProviderContainer(

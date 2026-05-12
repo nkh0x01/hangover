@@ -1,7 +1,9 @@
 import 'package:auth/auth.dart';
 import 'package:core/core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:maps/maps.dart';
 import 'package:network/network.dart';
+import 'package:rides/rides.dart';
 import 'package:uuid/uuid.dart';
 
 final envProvider = Provider<EnvConfig>((ref) {
@@ -19,7 +21,7 @@ final apiClientProvider = Provider<ApiClient>((ref) {
   return ApiClient(
     env: env,
     tokenStore: tokens,
-    appPlatform: _platformName(),
+    appPlatform: 'mobile',
     appVersion: '0.1.0',
     deviceUuidProvider: () async {
       final existing = await tokens.readDeviceUuid();
@@ -38,16 +40,18 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   );
 });
 
+final rideRepositoryProvider = Provider<RideRepository>((ref) {
+  return RideRepository(client: ref.watch(apiClientProvider));
+});
+
+final mapProviderProvider = Provider<MapProvider>((ref) => GoogleMapsProvider());
+
+final rideEventStreamProvider = Provider<RideEventStream>((ref) {
+  return RideEventStream(repository: ref.watch(rideRepositoryProvider));
+});
+
 Future<ProviderContainer> buildContainer(EnvConfig env) async {
   return ProviderContainer(
-    overrides: [
-      envProvider.overrideWithValue(env),
-    ],
+    overrides: [envProvider.overrideWithValue(env)],
   );
-}
-
-String _platformName() {
-  // Avoid importing dart:io here — feature/di-level platform decisions
-  // happen elsewhere. For now we mark dev / unknown.
-  return 'mobile';
 }

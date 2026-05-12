@@ -27,6 +27,9 @@ dependencies:
     path: ../../packages/network
   realtime:
     path: ../../packages/realtime
+  rides:
+    path: ../../packages/rides
+  google_maps_flutter: ^2.9.0
   riverpod_annotation: ^2.3.5
   ui_kit:
     path: ../../packages/ui_kit

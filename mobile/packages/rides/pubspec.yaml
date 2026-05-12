@@ -1,5 +1,5 @@
-name: maps
-description: MapProvider abstraction over Google Maps / Mapbox.
+name: rides
+description: Ride domain models, repositories, and realtime event stream.
 version: 0.1.0
 publish_to: 'none'
 
@@ -12,7 +12,12 @@ dependencies:
     path: ../core
   flutter:
     sdk: flutter
-  google_maps_flutter: ^2.9.0
+  maps:
+    path: ../maps
+  network:
+    path: ../network
+  realtime:
+    path: ../realtime
 
 dev_dependencies:
   flutter_lints: ^4.0.0
