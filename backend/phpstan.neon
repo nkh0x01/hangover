@@ -1,0 +1,22 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app
+        - database/seeders
+        - database/factories
+        - routes
+
+    level: 6
+    # Phase 0 baseline at level 6; tighten to 8 once full ride logic lands.
+
+    checkMissingIterableValueType: false
+    checkGenericClassInNonGenericObjectType: false
+
+    excludePaths:
+        - app/Modules/*/Filament/Resources/*/Pages/*.php
+
+    ignoreErrors:
+        - '#PHPDoc tag @var#'
+        - '#with no value type specified#'
