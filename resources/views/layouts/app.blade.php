@@ -33,6 +33,8 @@
                     ['route' => 'reservations.index', 'label' => 'Reservations', 'icon' => '🧾'],
                     ['route' => 'rooms.index',        'label' => 'Rooms',        'icon' => '🛏'],
                     ['route' => 'guests.index',       'label' => 'Guests',       'icon' => '👤'],
+                    ['route' => 'inventory.index',    'label' => 'Inventory',    'icon' => '📦'],
+                    ['route' => 'inventory.pos',      'label' => 'POS',          'icon' => '💳'],
                 ];
             @endphp
             @foreach ($links as $link)

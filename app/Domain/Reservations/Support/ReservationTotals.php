@@ -21,7 +21,8 @@ class ReservationTotals
      */
     public function recompute(Reservation $reservation): Reservation
     {
-        $reservation->loadMissing(['nightsBreakdown', 'charges', 'payments']);
+        // Force-reload to pick up rows written since this $reservation was first loaded.
+        $reservation->load(['nightsBreakdown', 'charges', 'payments']);
 
         $roomTotal = (float) $reservation->nightsBreakdown
             ->sum(fn ($n) => (float) $n->nightly_rate);

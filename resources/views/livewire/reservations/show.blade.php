@@ -38,6 +38,8 @@
             </button>
             <button wire:click="openChargeModal"
                     class="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">{{ __('+ Charge') }}</button>
+            <button wire:click="openSellModal"
+                    class="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">{{ __('+ Product') }}</button>
         @endif
 
         @if ($r->invoice)
@@ -303,6 +305,58 @@
                         class="inline-flex items-center gap-2 rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60">
                     <x-spinner wire:loading wire:target="addCharge" class="h-4 w-4 -ml-1" />
                     {{ __('Add') }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- Sell-product modal --}}
+    <div x-cloak x-show="$wire.showSellModal"
+         @keydown.window.escape="$wire.showSellModal = false"
+         x-transition.opacity
+         class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+        <div x-show="$wire.showSellModal"
+             x-transition:enter="transition ease-out duration-150"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             @click.outside="$wire.showSellModal = false"
+             class="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+            <div class="flex items-start justify-between">
+                <h3 class="text-lg font-semibold text-slate-900">{{ __('Sell product to guest') }}</h3>
+                <span class="text-xs text-slate-400">{{ __('Esc to close') }}</span>
+            </div>
+            <div class="mt-4 space-y-3 text-sm">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700">{{ __('Product') }}</label>
+                    <select wire:model="sellProductId" class="mt-1 w-full rounded-md border-slate-300">
+                        <option value="">{{ __('— Pick a product —') }}</option>
+                        @foreach ($sellProducts as $p)
+                            <option value="{{ $p->id }}">{{ $p->name }} · {{ number_format((float) $p->sale_price, 2) }} {{ $r->currency }}</option>
+                        @endforeach
+                    </select>
+                    @error('sellProductId') <p class="text-xs text-red-600">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700">{{ __('From location') }}</label>
+                    <select wire:model="sellLocationId" class="mt-1 w-full rounded-md border-slate-300">
+                        @foreach ($sellLocations as $loc)
+                            <option value="{{ $loc->id }}">{{ $loc->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700">{{ __('Quantity') }}</label>
+                    <input type="number" min="1" max="99" wire:model="sellQuantity" class="mt-1 w-full rounded-md border-slate-300">
+                    @error('sellQuantity') <p class="text-xs text-red-600">{{ $message }}</p> @enderror
+                </div>
+            </div>
+            <div class="mt-5 flex justify-end gap-2">
+                <button wire:click="$set('showSellModal', false)" class="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium hover:bg-slate-50">{{ __('Cancel') }}</button>
+                <button wire:click="sellProduct"
+                        wire:loading.attr="disabled" wire:target="sellProduct"
+                        class="inline-flex items-center gap-2 rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60">
+                    <x-spinner wire:loading wire:target="sellProduct" class="h-4 w-4 -ml-1" />
+                    {{ __('Add to folio') }}
                 </button>
             </div>
         </div>

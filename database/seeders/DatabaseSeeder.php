@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
             PropertySeeder::class,
             AvailabilityCalendarSeeder::class,
             AdminUserSeeder::class,
+            InventorySeeder::class,
         ]);
     }
 }

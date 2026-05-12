@@ -39,6 +39,9 @@ class Payment extends Model implements AuditableContract
         self::STATUS_FAILED,
     ];
 
+    public const SOURCE_RESERVATION = 'reservation';
+    public const SOURCE_POS         = 'pos';
+
     protected $fillable = [
         'property_id',
         'reservation_id',
@@ -46,6 +49,7 @@ class Payment extends Model implements AuditableContract
         'amount',
         'currency',
         'status',
+        'source',
         'reference',
         'note',
         'paid_at',

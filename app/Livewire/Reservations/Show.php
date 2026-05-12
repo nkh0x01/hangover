@@ -3,12 +3,15 @@
 namespace App\Livewire\Reservations;
 
 use App\Domain\Exceptions\DomainException;
+use App\Domain\Inventory\Actions\SellToReservation;
 use App\Domain\Reservations\Actions\CancelReservation;
 use App\Domain\Reservations\Actions\CheckInReservation;
 use App\Domain\Reservations\Actions\CheckOutReservation;
 use App\Domain\Reservations\Actions\RecordPayment;
 use App\Domain\Reservations\Support\ReservationTotals;
+use App\Models\InventoryLocation;
 use App\Models\Payment;
+use App\Models\Product;
 use App\Models\Reservation;
 use App\Models\ReservationCharge;
 use Livewire\Attributes\Layout;
@@ -25,6 +28,12 @@ class Show extends Component
     public bool $showPaymentModal = false;
     public bool $showChargeModal  = false;
     public bool $showCancelModal  = false;
+    public bool $showSellModal    = false;
+
+    // Sell product form
+    public ?int $sellProductId = null;
+    public int $sellQuantity = 1;
+    public ?int $sellLocationId = null;
 
     // Payment form
     public string $payMethod = Payment::METHOD_CASH;
@@ -172,6 +181,47 @@ class Show extends Component
         $this->refreshReservation();
     }
 
+    public function openSellModal(): void
+    {
+        $this->reset(['sellProductId', 'sellQuantity', 'sellLocationId', 'error']);
+        $this->sellQuantity = 1;
+        // Default to the reservation's own minibar if there is one, else reception.
+        $minibar = $this->reservation->room?->minibarLocation;
+        if ($minibar) {
+            $this->sellLocationId = $minibar->id;
+        } else {
+            $this->sellLocationId = InventoryLocation::query()
+                ->where('property_id', $this->reservation->property_id)
+                ->where('type', InventoryLocation::TYPE_RECEPTION)
+                ->value('id');
+        }
+        $this->showSellModal = true;
+    }
+
+    public function sellProduct(): void
+    {
+        $this->validate([
+            'sellProductId'  => 'required|integer|exists:products,id',
+            'sellQuantity'   => 'required|integer|min:1|max:99',
+            'sellLocationId' => 'required|integer|exists:inventory_locations,id',
+        ]);
+
+        try {
+            $product = Product::findOrFail($this->sellProductId);
+            $location = InventoryLocation::findOrFail($this->sellLocationId);
+
+            app(SellToReservation::class)->execute(
+                $this->reservation, $product, $location, $this->sellQuantity, auth()->user(),
+            );
+            $this->toast(__('Product added to folio.'));
+            $this->showSellModal = false;
+        } catch (\Throwable $e) {
+            $this->toast($e->getMessage(), 'error');
+        }
+
+        $this->refreshReservation();
+    }
+
     public function render()
     {
         $this->reservation->loadMissing([
@@ -180,8 +230,25 @@ class Show extends Component
             'statusHistory.changedBy', 'invoice',
         ]);
 
+        $products = Product::query()
+            ->where('property_id', $this->reservation->property_id)
+            ->where('active', true)
+            ->orderBy('name')
+            ->get();
+
+        $sellLocations = InventoryLocation::query()
+            ->where('property_id', $this->reservation->property_id)
+            ->where(function ($q) {
+                $q->whereIn('type', [InventoryLocation::TYPE_RECEPTION, InventoryLocation::TYPE_STORAGE])
+                  ->orWhere('room_id', $this->reservation->room_id);
+            })
+            ->orderBy('type')
+            ->get();
+
         return view('livewire.reservations.show', [
             'r' => $this->reservation,
+            'sellProducts' => $products,
+            'sellLocations' => $sellLocations,
         ]);
     }
 }

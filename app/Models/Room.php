@@ -70,4 +70,15 @@ class Room extends Model implements AuditableContract
     {
         return $this->hasMany(ReservationNight::class);
     }
+
+    public function minibarItems(): HasMany
+    {
+        return $this->hasMany(RoomMinibarItem::class);
+    }
+
+    public function minibarLocation()
+    {
+        return $this->hasOne(InventoryLocation::class)
+            ->where('type', InventoryLocation::TYPE_ROOM_MINIBAR);
+    }
 }

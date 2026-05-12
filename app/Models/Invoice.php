@@ -24,6 +24,9 @@ class Invoice extends Model
         self::STATUS_CANCELLED,
     ];
 
+    public const SOURCE_RESERVATION = 'reservation';
+    public const SOURCE_POS         = 'pos';
+
     protected $fillable = [
         'property_id',
         'number',
@@ -37,6 +40,7 @@ class Invoice extends Model
         'balance',
         'currency',
         'status',
+        'source',
         'pdf_path',
         'guest_snapshot',
         'vat_number',

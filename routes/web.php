@@ -5,11 +5,18 @@ use App\Http\Controllers\ProfileController;
 use App\Livewire\Calendar;
 use App\Livewire\Dashboard;
 use App\Livewire\Guests\Index as GuestsIndex;
+use App\Livewire\Inventory\Dashboard as InventoryDashboard;
+use App\Livewire\Inventory\Locations as InventoryLocations;
+use App\Livewire\Inventory\Minibars as InventoryMinibars;
+use App\Livewire\Inventory\Movements as InventoryMovements;
+use App\Livewire\Inventory\Pos as InventoryPos;
 use App\Livewire\Invoices\Show as InvoiceShow;
+use App\Livewire\Products\Index as ProductsIndex;
 use App\Livewire\Reservations\Index as ReservationIndex;
 use App\Livewire\Reservations\Show as ReservationShow;
 use App\Livewire\Reservations\Wizard as ReservationWizard;
 use App\Livewire\Rooms\Index as RoomsIndex;
+use App\Livewire\Rooms\Minibar as RoomMinibar;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('dashboard'));
@@ -26,9 +33,19 @@ Route::middleware('auth')->group(function () {
     Route::get('/reservations/{reservation}',  ReservationShow::class)->name('reservations.show');
 
     Route::get('/rooms',  RoomsIndex::class)->name('rooms.index');
+    Route::get('/rooms/{room}/minibar', RoomMinibar::class)->name('rooms.minibar');
+
     Route::get('/guests', GuestsIndex::class)->name('guests.index');
 
     Route::get('/invoices/{invoice}', InvoiceShow::class)->name('invoices.show');
+
+    // Phase 2: inventory + POS
+    Route::get('/products',             ProductsIndex::class)->name('products.index');
+    Route::get('/inventory',            InventoryDashboard::class)->name('inventory.index');
+    Route::get('/inventory/movements',  InventoryMovements::class)->name('inventory.movements');
+    Route::get('/inventory/locations',  InventoryLocations::class)->name('inventory.locations');
+    Route::get('/inventory/minibars',   InventoryMinibars::class)->name('inventory.minibars');
+    Route::get('/inventory/pos',        InventoryPos::class)->name('inventory.pos');
 
     Route::get('/profile',    [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile',  [ProfileController::class, 'update'])->name('profile.update');
