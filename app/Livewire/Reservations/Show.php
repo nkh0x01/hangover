@@ -64,7 +64,7 @@ class Show extends Component
     {
         try {
             app(CheckInReservation::class)->execute($this->reservation, auth()->user());
-            $this->toast('Checked in.');
+            $this->toast(__('Checked in.'));
         } catch (DomainException $e) {
             $this->toast($e->getMessage(), 'error');
         }
@@ -75,7 +75,7 @@ class Show extends Component
     {
         try {
             $invoice = app(CheckOutReservation::class)->execute($this->reservation, auth()->user());
-            $this->toast("Checked out · Invoice {$invoice->number}");
+            $this->toast(__('Checked out · Invoice :number', ['number' => $invoice->number]));
         } catch (DomainException $e) {
             $this->toast($e->getMessage(), 'error');
         }
@@ -97,7 +97,7 @@ class Show extends Component
                 $this->cancelReason,
                 auth()->user(),
             );
-            $this->toast('Reservation cancelled.', 'warn');
+            $this->toast(__('Reservation cancelled.'), 'warn');
             $this->showCancelModal = false;
         } catch (DomainException $e) {
             $this->toast($e->getMessage(), 'error');
@@ -130,7 +130,7 @@ class Show extends Component
                 auth()->user(),
                 $this->payReference ?: null,
             );
-            $this->toast('Payment recorded.');
+            $this->toast(__('Payment recorded.'));
             $this->showPaymentModal = false;
         } catch (\Throwable $e) {
             $this->toast($e->getMessage(), 'error');
@@ -168,7 +168,7 @@ class Show extends Component
 
         app(ReservationTotals::class)->recompute($this->reservation);
         $this->showChargeModal = false;
-        $this->toast('Charge added.');
+        $this->toast(__('Charge added.'));
         $this->refreshReservation();
     }
 

@@ -36,5 +36,5 @@
 @endphp
 
 <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset {{ $cls }}">
-    {{ str_replace('_', ' ', $value) }}
+    {{ __(str_replace('_', ' ', $value)) }}
 </span>

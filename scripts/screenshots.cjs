@@ -67,13 +67,13 @@ async function runDesktop(browser) {
   await save(page, '06-wizard-step-1-dates.png');
 
   await advanceWizard(page);
-  await page.waitForSelector('text=nights from', { timeout: 15000 });
+  // Step 2 carries a wire:click="pickRoom" button — wait for the first one.
+  await page.waitForSelector('button[wire\\:click^="pickRoom"]', { timeout: 15000 });
   await settle(page);
 
   // 7. Wizard step 2 — room selection (initial, nothing picked)
   await save(page, '07-wizard-step-2-room.png');
 
-  // Pick the first room with a wire:click="pickRoom" handler that's enabled.
   const card = page.locator('button[wire\\:click^="pickRoom"]:not([disabled])').first();
   await card.click();
   await page.waitForLoadState('networkidle');
@@ -81,7 +81,8 @@ async function runDesktop(browser) {
   await save(page, '07b-wizard-step-2-room-picked.png');
 
   await advanceWizard(page);
-  await page.waitForSelector('text=First name', { timeout: 15000 });
+  // Step 3 has the firstName input
+  await page.waitForSelector('input[wire\\:model\\.live\\.debounce\\.300ms="firstName"]', { timeout: 15000 });
   await settle(page);
 
   // 8. Wizard step 3 — guest details
@@ -96,7 +97,8 @@ async function runDesktop(browser) {
   await save(page, '08-wizard-step-3-guest.png');
 
   await advanceWizard(page);
-  await page.waitForSelector('text=Create reservation', { timeout: 15000 });
+  // Step 4 has wire:click="create"
+  await page.waitForSelector('button[wire\\:click="create"]', { timeout: 15000 });
   await settle(page);
 
   // 9. Wizard step 4 — confirm
@@ -110,8 +112,8 @@ async function runDesktop(browser) {
   // 11. Payment modal (use r2 which is checked-in with balance remaining)
   await page.goto(BASE + '/reservations/2', { waitUntil: 'networkidle' });
   await settle(page);
-  await page.getByRole('button', { name: '+ Payment' }).click();
-  await page.waitForSelector('text=Record payment', { state: 'visible' });
+  await page.locator('button[wire\\:click="openPaymentModal"]').click();
+  await page.waitForSelector('input[wire\\:model="payAmount"]', { state: 'visible' });
   await page.waitForTimeout(400);
   await save(page, '11-payment-modal.png');
 
@@ -170,7 +172,8 @@ async function runMobile(browser) {
 }
 
 async function advanceWizard(page) {
-  await page.getByRole('button', { name: 'Next →' }).click();
+  // Button label is localised — match by Livewire action instead.
+  await page.locator('button[wire\\:click="nextStep"]').click();
   await page.waitForLoadState('networkidle');
 }
 

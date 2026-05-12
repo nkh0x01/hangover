@@ -21,20 +21,20 @@
              @click.stop
              class="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
             <div class="flex items-start justify-between">
-                <h3 class="text-lg font-semibold text-slate-900">Keyboard shortcuts</h3>
-                <button @click="open = false" aria-label="Close" class="text-slate-400 hover:text-slate-600">✕</button>
+                <h3 class="text-lg font-semibold text-slate-900">{{ __('Keyboard shortcuts') }}</h3>
+                <button @click="open = false" aria-label="{{ __('Close') }}" class="text-slate-400 hover:text-slate-600">✕</button>
             </div>
-            <p class="mt-1 text-xs text-slate-500">Work without leaving the keyboard.</p>
+            <p class="mt-1 text-xs text-slate-500">{{ __('Work without leaving the keyboard.') }}</p>
 
             <dl class="mt-4 grid grid-cols-1 gap-y-2 text-sm sm:grid-cols-[auto,1fr] sm:gap-x-4">
                 @php
                     $shortcuts = [
-                        ['?', 'Open this help'],
-                        ['Esc', 'Close any modal'],
-                        ['C', 'Check in (reservation page)'],
-                        ['X', 'Check out (reservation page)'],
-                        ['P', 'Record payment (reservation page)'],
-                        ['Enter', 'Submit form / modal'],
+                        ['?', __('Open this help')],
+                        ['Esc', __('Close any modal')],
+                        ['C', __('Check in (reservation page)')],
+                        ['X', __('Check out (reservation page)')],
+                        ['P', __('Record payment (reservation page)')],
+                        ['Enter', __('Submit form / modal')],
                     ];
                 @endphp
                 @foreach ($shortcuts as [$key, $label])

@@ -1,24 +1,24 @@
 <div>
-    <x-slot name="header">Calendar</x-slot>
+    <x-slot name="header">{{ __('Calendar') }}</x-slot>
 
     {{-- Toolbar --}}
     <div class="mb-4 flex flex-wrap items-center gap-2">
-        <button wire:click="shift(-7)" class="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50">← Week</button>
-        <button wire:click="shift(-1)" class="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50">← Day</button>
-        <button wire:click="gotoToday" class="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800">Today</button>
-        <button wire:click="shift(1)" class="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50">Day →</button>
-        <button wire:click="shift(7)" class="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50">Week →</button>
+        <button wire:click="shift(-7)" class="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50">{{ __('← Week') }}</button>
+        <button wire:click="shift(-1)" class="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50">{{ __('← Day') }}</button>
+        <button wire:click="gotoToday" class="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800">{{ __('Today') }}</button>
+        <button wire:click="shift(1)" class="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50">{{ __('Day →') }}</button>
+        <button wire:click="shift(7)" class="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50">{{ __('Week →') }}</button>
         <div class="ml-auto text-sm text-slate-500">
-            {{ $start->format('M j, Y') }} → {{ $start->addDays(count($days))->format('M j, Y') }}
+            {{ $start->isoFormat('MMM D, Y') }} → {{ $start->addDays(count($days))->isoFormat('MMM D, Y') }}
         </div>
     </div>
 
     {{-- Legend --}}
     <div class="mb-3 flex flex-wrap items-center gap-4 text-xs">
-        <span class="flex items-center gap-1.5"><span class="inline-block h-3 w-3 rounded bg-emerald-200 ring-1 ring-emerald-300"></span> open</span>
-        <span class="flex items-center gap-1.5"><span class="inline-block h-3 w-3 rounded bg-indigo-300 ring-1 ring-indigo-400"></span> booked</span>
-        <span class="flex items-center gap-1.5"><span class="inline-block h-3 w-3 rounded bg-zinc-300 ring-1 ring-zinc-400"></span> blocked</span>
-        <span class="flex items-center gap-1.5"><span class="inline-block h-3 w-3 rounded bg-slate-300 ring-1 ring-slate-400"></span> maintenance</span>
+        <span class="flex items-center gap-1.5"><span class="inline-block h-3 w-3 rounded bg-emerald-200 ring-1 ring-emerald-300"></span> {{ __('open') }}</span>
+        <span class="flex items-center gap-1.5"><span class="inline-block h-3 w-3 rounded bg-indigo-300 ring-1 ring-indigo-400"></span> {{ __('booked') }}</span>
+        <span class="flex items-center gap-1.5"><span class="inline-block h-3 w-3 rounded bg-zinc-300 ring-1 ring-zinc-400"></span> {{ __('blocked') }}</span>
+        <span class="flex items-center gap-1.5"><span class="inline-block h-3 w-3 rounded bg-slate-300 ring-1 ring-slate-400"></span> {{ __('maintenance') }}</span>
     </div>
 
     {{-- Grid --}}
@@ -26,13 +26,13 @@
         <table class="min-w-max border-collapse text-xs">
             <thead>
                 <tr>
-                    <th class="sticky left-0 z-10 w-32 border-b border-r border-slate-200 bg-slate-50 px-3 py-2 text-left font-semibold text-slate-700">Room</th>
+                    <th class="sticky left-0 z-10 w-32 border-b border-r border-slate-200 bg-slate-50 px-3 py-2 text-left font-semibold text-slate-700">{{ __('Room') }}</th>
                     @foreach ($days as $d)
                         @php $carbon = \Illuminate\Support\Carbon::parse($d); @endphp
                         <th class="w-14 border-b border-slate-200 px-1 py-1 text-center font-medium text-slate-500
                                    {{ $carbon->isToday() ? 'bg-yellow-50 ring-1 ring-yellow-300' : '' }}
                                    {{ $carbon->isWeekend() ? 'bg-slate-50' : '' }}">
-                            <div class="text-[10px] uppercase">{{ $carbon->format('D') }}</div>
+                            <div class="text-[10px] uppercase">{{ $carbon->isoFormat('dd') }}</div>
                             <div class="text-sm font-semibold text-slate-700">{{ $carbon->format('j') }}</div>
                         </th>
                     @endforeach
@@ -95,7 +95,7 @@
     </div>
 
     <p class="mt-3 text-xs text-slate-500">
-        Click an open cell to start a reservation. Click a booked span to open the reservation detail.
-        <span class="ml-2">Press <kbd class="rounded bg-slate-100 px-1.5 text-[10px] font-mono text-slate-600">?</kbd> for shortcuts.</span>
+        {{ __('Click an open cell to start a reservation. Click a booked span to open the reservation detail.') }}
+        <span class="ml-2">{{ __('Press') }} <kbd class="rounded bg-slate-100 px-1.5 text-[10px] font-mono text-slate-600">?</kbd> {{ __('for shortcuts.') }}</span>
     </p>
 </div>

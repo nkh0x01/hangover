@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $title ?? 'Hotel PMS' }} — {{ config('app.name', 'Hotel PMS') }}</title>
+    <title>{{ $title ?? __('Hotel PMS') }} — {{ __('Hotel PMS') }}</title>
 
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
@@ -21,7 +21,7 @@
         class="fixed inset-y-0 left-0 z-40 w-60 transform bg-slate-900 text-slate-100 transition-transform duration-150 lg:static lg:translate-x-0">
         <div class="flex h-16 items-center justify-between px-5 border-b border-slate-800">
             <a href="{{ route('dashboard') }}" class="text-lg font-semibold tracking-wide text-white">
-                Hotel PMS
+                {{ __('Hotel PMS') }}
             </a>
             <button type="button" class="lg:hidden text-slate-400" @click="sidebar = false">✕</button>
         </div>
@@ -40,7 +40,7 @@
                    class="flex items-center gap-3 rounded-md px-3 py-2 transition-colors
                           {{ request()->routeIs($link['route']) || request()->routeIs($link['route'].'.*') ? 'bg-slate-800 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="text-base">{{ $link['icon'] }}</span>
-                    <span>{{ $link['label'] }}</span>
+                    <span>{{ __($link['label']) }}</span>
                 </a>
             @endforeach
         </nav>
@@ -50,7 +50,7 @@
             <div class="truncate">{{ auth()->user()?->email }}</div>
             <form method="POST" action="{{ route('logout') }}" class="mt-2">
                 @csrf
-                <button type="submit" class="text-slate-400 hover:text-white">Sign out</button>
+                <button type="submit" class="text-slate-400 hover:text-white">{{ __('Sign out') }}</button>
             </form>
         </div>
     </aside>
@@ -64,14 +64,23 @@
             <button type="button" class="lg:hidden text-slate-500" @click="sidebar = true">☰</button>
             <div class="text-lg font-semibold">{{ $header ?? ($title ?? '') }}</div>
             <div class="ml-auto flex items-center gap-3 text-sm text-slate-500">
+                {{-- Language switcher --}}
+                <div class="inline-flex overflow-hidden rounded-md border border-slate-200 text-xs">
+                    @foreach (['ka' => 'KA', 'en' => 'EN'] as $code => $label)
+                        <a href="{{ route('locale.switch', $code) }}"
+                           class="px-2 py-1 transition-colors
+                                  {{ app()->getLocale() === $code ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-50' }}">{{ $label }}</a>
+                    @endforeach
+                </div>
+
                 <button type="button"
                         @click="$dispatch('open-keyboard-help')"
                         class="hidden h-7 items-center gap-1.5 rounded-md border border-slate-200 px-2 text-xs text-slate-500 hover:border-slate-300 hover:text-slate-700 sm:inline-flex"
-                        aria-label="Keyboard shortcuts">
+                        aria-label="{{ __('Keyboard shortcuts') }}">
                     <kbd class="font-mono">?</kbd>
-                    <span class="hidden md:inline">Shortcuts</span>
+                    <span class="hidden md:inline">{{ __('Shortcuts') }}</span>
                 </button>
-                <span>{{ now()->format('D, M j') }}</span>
+                <span>{{ now()->isoFormat('ddd, MMM D') }}</span>
             </div>
         </header>
 

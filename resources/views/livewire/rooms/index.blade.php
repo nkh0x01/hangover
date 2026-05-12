@@ -1,5 +1,5 @@
 <div x-data="{ openMenu: null }">
-    <x-slot name="header">Rooms</x-slot>
+    <x-slot name="header">{{ __('Rooms') }}</x-slot>
 
     @php
         $tones = [
@@ -20,30 +20,30 @@
                 <div class="flex items-start justify-between">
                     <div>
                         <div class="text-2xl font-bold text-slate-900">{{ $room->number }}</div>
-                        <div class="text-xs text-slate-500">Floor {{ $room->floor }} · {{ $room->roomType?->name }}</div>
+                        <div class="text-xs text-slate-500">{{ __('Floor') }} {{ $room->floor }} · {{ $room->roomType?->name }}</div>
                     </div>
                     <button type="button"
                             class="text-slate-400 hover:text-slate-600 rounded p-1 hover:bg-slate-100"
-                            aria-label="Change status for room {{ $room->number }}"
+                            aria-label="{{ __('Change status for room :number', ['number' => $room->number]) }}"
                             @click="openMenu === {{ $room->id }} ? openMenu = null : openMenu = {{ $room->id }}">
                         ⋯
                     </button>
                 </div>
                 <div class="mt-4 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium ring-1 ring-inset {{ $t['bg'] }} {{ $t['text'] }} {{ $t['ring'] }}">
                     <span class="inline-block h-1.5 w-1.5 rounded-full {{ $t['dot'] }}"></span>
-                    {{ str_replace('_', ' ', $room->status) }}
+                    {{ __(str_replace('_', ' ', $room->status)) }}
                 </div>
 
                 <div x-show="openMenu === {{ $room->id }}" x-cloak
                      @click.outside="openMenu = null"
                      class="absolute right-3 top-12 z-10 w-44 rounded-lg border border-slate-200 bg-white shadow-lg">
-                    <div class="border-b border-slate-100 px-3 py-2 text-xs font-medium uppercase tracking-wider text-slate-400">Set status</div>
+                    <div class="border-b border-slate-100 px-3 py-2 text-xs font-medium uppercase tracking-wider text-slate-400">{{ __('Set status') }}</div>
                     @foreach ($statuses as $s)
                         <button type="button"
                                 wire:click="updateStatus({{ $room->id }}, '{{ $s }}')"
                                 @click="openMenu = null"
                                 class="block w-full px-3 py-2 text-left text-sm hover:bg-slate-50">
-                            {{ $s }}
+                            {{ __($s) }}
                         </button>
                     @endforeach
                 </div>

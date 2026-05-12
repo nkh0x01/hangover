@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ProfileController;
 use App\Livewire\Calendar;
 use App\Livewire\Dashboard;
@@ -12,6 +13,9 @@ use App\Livewire\Rooms\Index as RoomsIndex;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('dashboard'));
+
+// Language switching is available to guests AND auth'd users.
+Route::get('/locale/{locale}', [LocaleController::class, 'switch'])->name('locale.switch');
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard',     Dashboard::class)->name('dashboard');

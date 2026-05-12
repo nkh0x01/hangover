@@ -22,14 +22,14 @@ class Index extends Component
         if ($room->status === Room::STATUS_OCCUPIED && $status !== Room::STATUS_OCCUPIED) {
             $this->dispatch('toast',
                 tone: 'warn',
-                message: "Room {$room->number} is occupied — check the guest out before changing status.",
+                message: __('Room :number is occupied — check the guest out before changing status.', ['number' => $room->number]),
             );
             return;
         }
         $room->update(['status' => $status]);
         $this->dispatch('toast',
             tone: 'ok',
-            message: "Room {$room->number} → {$status}",
+            message: __('Room :number → :status', ['number' => $room->number, 'status' => __(str_replace('_', ' ', $status))]),
         );
     }
 

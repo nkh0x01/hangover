@@ -71,7 +71,7 @@ class CreateReservation
                 null,
                 $reservation->status,
                 $data->actor?->id,
-                'Reservation created',
+                'Reservation created', // translated at display time via __()
             );
 
             return $reservation->refresh();

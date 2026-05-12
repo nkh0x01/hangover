@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Sign in — {{ config('app.name', 'Hotel PMS') }}</title>
+    <title>{{ __('Sign in') }} — {{ __('Hotel PMS') }}</title>
 
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
@@ -14,12 +14,12 @@
 <div class="flex min-h-full">
     {{-- Brand panel --}}
     <div class="hidden w-1/2 bg-slate-900 lg:flex lg:flex-col lg:justify-between p-12 text-white">
-        <div class="text-2xl font-bold tracking-wide">Hotel PMS</div>
+        <div class="text-2xl font-bold tracking-wide">{{ __('Hotel PMS') }}</div>
         <div class="space-y-2">
-            <div class="text-3xl font-semibold leading-tight">Reception, calmer.</div>
-            <p class="text-slate-400 max-w-md">Book a room in under 30 seconds. Check in, check out, take payment — without leaving the keyboard.</p>
+            <div class="text-3xl font-semibold leading-tight">{{ __('Reception, calmer.') }}</div>
+            <p class="text-slate-400 max-w-md">{{ __('Book a room in under 30 seconds. Check in, check out, take payment — without leaving the keyboard.') }}</p>
         </div>
-        <div class="text-sm text-slate-500">© {{ now()->year }} Hotel PMS</div>
+        <div class="text-sm text-slate-500">© {{ now()->year }} {{ __('Hotel PMS') }}</div>
     </div>
 
     {{-- Form panel --}}
