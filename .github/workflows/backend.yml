@@ -1,0 +1,99 @@
+name: backend
+
+on:
+  push:
+    branches: [master, "claude/**"]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend.yml"
+  pull_request:
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend.yml"
+
+concurrency:
+  group: backend-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: lint + static + tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: hangover_test
+          MYSQL_USER: hangover
+          MYSQL_PASSWORD: hangover
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -uhangover -phangover"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 30
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: pdo_mysql, redis, intl, mbstring, bcmath, sockets, exif, pcntl, igbinary
+          coverage: pcov
+          tools: composer:v2
+
+      - name: Cache composer
+        uses: actions/cache@v4
+        with:
+          path: backend/vendor
+          key: composer-${{ runner.os }}-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate --force
+          mkdir -p storage/logs storage/framework/{cache,sessions,testing,views} bootstrap/cache
+        env:
+          DB_HOST: 127.0.0.1
+          REDIS_HOST: 127.0.0.1
+
+      - name: Pint (code style)
+        run: ./vendor/bin/pint --test
+
+      - name: PHPStan (static analysis)
+        run: ./vendor/bin/phpstan analyse --memory-limit=1G --no-progress
+
+      - name: Migrate
+        run: php artisan migrate --force
+        env:
+          DB_HOST: 127.0.0.1
+          DB_DATABASE: hangover_test
+          REDIS_HOST: 127.0.0.1
+
+      - name: Pest (unit + feature)
+        run: ./vendor/bin/pest --colors=always --ci
+        env:
+          DB_HOST: 127.0.0.1
+          DB_DATABASE: hangover_test
+          REDIS_HOST: 127.0.0.1

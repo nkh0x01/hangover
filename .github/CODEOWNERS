@@ -1,0 +1,21 @@
+# Default owners — update with team handles when org is set up.
+*                       @nkh0x01
+
+# Architecture is sacred — require careful review.
+/docs/architecture/     @nkh0x01
+
+# Backend boundaries
+/backend/app/Modules/Identity/     @nkh0x01
+/backend/app/Modules/Driver/       @nkh0x01
+/backend/app/Modules/Riding/       @nkh0x01
+/backend/app/Modules/Payment/      @nkh0x01
+/backend/app/Modules/Wallet/       @nkh0x01
+
+# Mobile boundaries
+/mobile/packages/                  @nkh0x01
+/mobile/apps/customer_app/         @nkh0x01
+/mobile/apps/driver_app/           @nkh0x01
+
+# Infra
+/infrastructure/                   @nkh0x01
+/.github/workflows/                @nkh0x01
