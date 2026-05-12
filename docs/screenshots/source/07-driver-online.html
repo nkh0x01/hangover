@@ -2,58 +2,69 @@
 <html><head><meta charset="utf-8"><link rel="stylesheet" href="_shared.css"></head>
 <body>
 <div class="phone">
-  <div class="map"><div class="map-road-h" style="top: 18%;"></div><div class="map-road-h" style="top: 72%;"></div><div class="map-road-v" style="left: 28%;"></div><div class="map-road-v" style="left: 70%;"></div><div class="map-river"></div></div>
+  <div class="map">
+    <div class="map-road-h" style="top: 18%;"></div>
+    <div class="map-road-h" style="top: 72%;"></div>
+    <div class="map-road-v" style="left: 28%;"></div>
+    <div class="map-road-v" style="left: 70%;"></div>
+    <div class="map-river"></div>
+  </div>
 
   <div class="status-bar">
     <span>9:41</span>
     <div class="right"><span>5G</span><span>WiFi</span><span>100%</span></div>
   </div>
 
-  <!-- online/offline toggle bar -->
-  <div class="toggle-bar" style="top: 56px;">
-    <span class="status-dot"></span>
-    <div style="flex: 1;">
-      <div class="body-strong">You are online</div>
-      <div class="caption">Tbilisi · accepting rides</div>
+  <!-- driver self marker (centered, pulsing) -->
+  <div class="pin pin-driver" style="top: 45%; left: 50%; width: 48px; height: 48px;
+       font-size: 22px;
+       box-shadow: 0 0 0 12px rgba(31,143,96,0.18), 0 0 0 24px rgba(31,143,96,0.10);">🛵</div>
+
+  <!-- big online toggle card -->
+  <div style="position: absolute; top: 56px; left: var(--l); right: var(--l); z-index: 3;">
+    <div class="online-card">
+      <div class="lozenge">⚡</div>
+      <div style="flex: 1;">
+        <div class="t-title-l">You are online</div>
+        <div class="t-body" style="margin-top: 2px;">Tbilisi · accepting rides</div>
+      </div>
+      <div class="switch"></div>
     </div>
-    <div class="switch"></div>
+
+    <div style="margin-top: var(--s); display: flex; justify-content: flex-end;">
+      <div class="earnings-badge">
+        <span class="accent-dot"></span>
+        Today · 87.50 GEL
+      </div>
+    </div>
   </div>
 
-  <!-- driver marker (self) -->
-  <div class="pin pin-driver" style="top: 50%; left: 50%; width: 30px; height: 30px;">🛵</div>
+  <!-- waiting sheet -->
+  <div class="sheet">
+    <div class="handle"></div>
 
-  <!-- "earnings today" mini-card top right under toggle -->
-  <div style="position: absolute; top: 136px; right: var(--l);
-              background: #FFF; border-radius: var(--r-m);
-              padding: var(--s) var(--m);
-              box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-              text-align: right;">
-    <div class="caption">Today</div>
-    <div class="body-strong">87.50 GEL</div>
-  </div>
-
-  <!-- waiting for offer sheet -->
-  <div class="sheet" style="background: #FFF;">
     <div style="display: flex; align-items: center; gap: var(--m);">
-      <div class="spinner"></div>
-      <div class="h-m">Waiting for ride requests…</div>
+      <div class="pill success live"><span class="dot"></span> Live</div>
+      <div class="t-title-l">Waiting for ride requests</div>
     </div>
-    <div class="gap-s"></div>
-    <div class="body">12 scooters online nearby · Heatmap suggests Saburtalo</div>
+
+    <div class="gap-xs"></div>
+    <div class="t-body">12 scooters online nearby · Saburtalo is busiest right now.</div>
 
     <div class="gap-l"></div>
-    <div style="display: flex; gap: var(--m);">
-      <div style="flex: 1; padding: var(--m); background: var(--surface-2); border-radius: var(--r-s); text-align: center;">
-        <div class="caption">Trips</div>
-        <div class="body-strong">6</div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--s);">
+      <div class="card-soft" style="text-align: center; padding: var(--m);">
+        <div class="t-label">Trips</div>
+        <div class="t-title-m" style="margin-top: 4px;">6</div>
       </div>
-      <div style="flex: 1; padding: var(--m); background: var(--surface-2); border-radius: var(--r-s); text-align: center;">
-        <div class="caption">Hours</div>
-        <div class="body-strong">3h 12m</div>
+      <div class="card-soft" style="text-align: center; padding: var(--m);">
+        <div class="t-label">Hours</div>
+        <div class="t-title-m" style="margin-top: 4px;">3h 12m</div>
       </div>
-      <div style="flex: 1; padding: var(--m); background: var(--surface-2); border-radius: var(--r-s); text-align: center;">
-        <div class="caption">Rating</div>
-        <div class="body-strong">★ 4.91</div>
+      <div class="card-soft" style="text-align: center; padding: var(--m);">
+        <div class="t-label">Rating</div>
+        <div class="t-title-m" style="margin-top: 4px;">★ 4.91</div>
       </div>
     </div>
   </div>

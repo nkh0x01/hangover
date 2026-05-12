@@ -2,61 +2,68 @@
 <html><head><meta charset="utf-8"><link rel="stylesheet" href="_shared.css"></head>
 <body>
 <div class="phone">
-  <div class="map"><div class="map-road-h" style="top: 18%;"></div><div class="map-road-h" style="top: 72%;"></div><div class="map-road-v" style="left: 28%;"></div><div class="map-road-v" style="left: 70%;"></div><div class="map-river"></div></div>
+  <div class="map">
+    <div class="map-road-h" style="top: 18%;"></div>
+    <div class="map-road-h" style="top: 72%;"></div>
+    <div class="map-road-v" style="left: 28%;"></div>
+    <div class="map-road-v" style="left: 70%;"></div>
+    <div class="map-river"></div>
+  </div>
 
   <div class="status-bar">
     <span>9:41</span>
     <div class="right"><span>5G</span><span>WiFi</span><span>100%</span></div>
   </div>
 
-  <!-- driver self marker + route to pickup -->
-  <div class="pin pin-driver" style="top: 40%; left: 35%; width: 28px; height: 28px;">🛵</div>
-  <div class="pin pin-pickup" style="top: 55%; left: 60%;"></div>
+  <!-- driver self + route -->
+  <div class="pin pin-driver" style="top: 32%; left: 38%; width: 40px; height: 40px; font-size: 18px;">🛵</div>
+  <div class="pin pin-pickup" style="top: 50%; left: 58%;"></div>
 
   <svg style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%;" viewBox="0 0 393 852" xmlns="http://www.w3.org/2000/svg">
-    <path d="M 137 341  C 200 380, 220 440, 236 470" stroke="#1F8F60" stroke-width="6" stroke-linecap="round" fill="none" />
+    <path d="M 149 273  C 200 320, 220 380, 228 425" stroke="#1F8F60" stroke-width="7" stroke-linecap="round" fill="none" />
   </svg>
 
-  <!-- top status bar -->
-  <div style="position: absolute; top: 56px; left: var(--l); right: var(--l);
+  <!-- nav banner -->
+  <div style="position: absolute; top: 56px; left: var(--l); right: var(--l); z-index: 3;
               background: var(--seed); color: #FFF;
               border-radius: var(--r-l);
-              padding: var(--s) var(--l);
-              box-shadow: 0 4px 12px rgba(0,0,0,0.18);
-              display: flex; align-items: center; gap: var(--m);">
-    <span style="font-size: 18px;">🧭</span>
+              padding: var(--m) var(--l);
+              display: flex; align-items: center; gap: var(--m);
+              box-shadow: 0 6px 16px rgba(31,143,96,0.3);">
+    <div style="font-size: 22px;">🧭</div>
     <div>
-      <div style="font-weight: 600; font-size: 15px;">Heading to pickup</div>
+      <div style="font-weight: 700; font-size: 15px;">Heading to pickup</div>
       <div style="font-size: 12px; opacity: 0.85;">320 m · 2 min</div>
     </div>
-    <div style="margin-left: auto; font-size: 22px;">›</div>
+    <div style="margin-left: auto; font-size: 24px;">›</div>
   </div>
 
   <!-- active ride sheet -->
   <div class="sheet">
-    <div class="caption">Pickup</div>
-    <div class="h-m" style="margin-top: 2px;">Marjanishvili 4</div>
-    <div class="gap-s"></div>
-    <div class="caption">Customer · Nino · ★ 4.92</div>
+    <div class="handle"></div>
+
+    <div style="display: flex; align-items: center; gap: var(--m);">
+      <div class="phase-label">Heading to pickup</div>
+      <div style="margin-left: auto;" class="t-body-strong">7.50 GEL · cash</div>
+    </div>
 
     <div class="gap-m"></div>
 
-    <div style="display: flex; gap: var(--m); align-items: center;">
-      <div style="flex: 1; background: var(--surface-2); border-radius: var(--r-s); padding: var(--m); text-align: center;">
-        <div class="caption">Fare</div>
-        <div class="body-strong">7.50 GEL</div>
+    <div style="display: flex; align-items: flex-start; gap: var(--m);">
+      <div style="color: var(--seed); font-size: 18px; margin-top: 2px;">●</div>
+      <div style="flex: 1;">
+        <div class="t-label">Pickup</div>
+        <div class="t-h-m" style="margin-top: 2px;">Marjanishvili 4</div>
       </div>
-      <div style="flex: 1; background: var(--surface-2); border-radius: var(--r-s); padding: var(--m); text-align: center;">
-        <div class="caption">Payment</div>
-        <div class="body-strong">Cash</div>
-      </div>
-      <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--seed); color: #FFF;
-                  display: flex; align-items: center; justify-content: center;">📞</div>
+      <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--surface-2);
+                  display: flex; align-items: center; justify-content: center; color: var(--ink); font-size: 16px;">💬</div>
+      <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--seed);
+                  display: flex; align-items: center; justify-content: center; color: #FFF; font-size: 16px;">📞</div>
     </div>
 
     <div class="gap-l"></div>
 
-    <button class="btn-primary">I'm at the pickup</button>
+    <button class="btn-primary">I'm on the way →</button>
   </div>
 </div>
 </body></html>

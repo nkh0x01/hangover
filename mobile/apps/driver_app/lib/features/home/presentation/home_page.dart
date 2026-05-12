@@ -17,28 +17,33 @@ class HomePage extends ConsumerWidget {
     final mapProvider = ref.watch(mapProviderProvider);
 
     return Scaffold(
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: mapProvider.mapWidget(initialCenter: shift.position),
+      body: Stack(
+        children: [
+          Positioned.fill(child: mapProvider.mapWidget(initialCenter: shift.position)),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(Insets.l, Insets.l, Insets.l, 0),
+              child: Column(
+                children: [
+                  _OnlineToggleBar(shift: shift),
+                  const SizedBox(height: Insets.s),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: _EarningsBadge(amount: 87.50, currency: 'GEL'),
+                  ),
+                ],
+              ),
             ),
-            Positioned(
-              top: Insets.l,
-              left: Insets.l,
-              right: Insets.l,
-              child: _OnlineToggleBar(shift: shift),
-            ),
-            if (shift.activeRide != null && !shift.activeRide!.status.isTerminal)
-              const Align(alignment: Alignment.bottomCenter, child: ActiveRideSheet())
-            else if (shift.activeRide != null && shift.activeRide!.status == RideStatus.completed)
-              Align(alignment: Alignment.bottomCenter, child: _CompletedSheet(ride: shift.activeRide!))
-            else if (shift.online)
-              const Align(alignment: Alignment.bottomCenter, child: _WaitingForRide()),
-            if (shift.pendingOffer != null)
-              Positioned.fill(child: IncomingOfferSheet(offer: shift.pendingOffer!)),
-          ],
-        ),
+          ),
+          if (shift.activeRide != null && !shift.activeRide!.status.isTerminal)
+            const Align(alignment: Alignment.bottomCenter, child: ActiveRideSheet())
+          else if (shift.activeRide != null && shift.activeRide!.status == RideStatus.completed)
+            Align(alignment: Alignment.bottomCenter, child: _CompletedSheet(ride: shift.activeRide!))
+          else if (shift.online)
+            const Align(alignment: Alignment.bottomCenter, child: _WaitingForRide()),
+          if (shift.pendingOffer != null)
+            Positioned.fill(child: IncomingOfferSheet(offer: shift.pendingOffer!)),
+        ],
       ),
     );
   }
@@ -51,30 +56,86 @@ class _OnlineToggleBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Material(
-      color: Theme.of(context).colorScheme.surface,
-      borderRadius: BorderRadius.circular(Radii.l),
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: Insets.l, vertical: Insets.s),
-        child: Row(
-          children: [
-            Icon(
-              shift.online ? Icons.power_settings_new : Icons.power_off,
-              color: shift.online ? Colors.green : Colors.grey,
+    final isOnline = shift.online;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: Insets.l, vertical: Insets.m),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(Radii.l),
+        boxShadow: const [BoxShadow(blurRadius: 16, color: Color(0x14000000))],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: isOnline ? AppColors.seed : AppColors.surfaceVariant,
+              shape: BoxShape.circle,
             ),
-            const SizedBox(width: Insets.m),
-            Expanded(child: Text(shift.online ? 'You are online' : 'You are offline')),
-            Switch(
-              value: shift.online,
-              onChanged: shift.isWorking
-                  ? null
-                  : (v) => v
-                      ? ref.read(shiftProvider.notifier).goOnline()
-                      : ref.read(shiftProvider.notifier).goOffline(),
+            alignment: Alignment.center,
+            child: Icon(
+              isOnline ? Icons.flash_on_rounded : Icons.power_settings_new_rounded,
+              color: isOnline ? Colors.white : AppColors.inkSoft,
+              size: 22,
             ),
-          ],
-        ),
+          ),
+          const SizedBox(width: Insets.m),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isOnline ? 'You are online' : 'Tap to start your shift',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  isOnline ? 'Tbilisi · accepting rides' : "You won't receive offers while offline",
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
+          ),
+          Switch.adaptive(
+            value: isOnline,
+            activeThumbColor: AppColors.seed,
+            onChanged: shift.isWorking
+                ? null
+                : (v) => v
+                    ? ref.read(shiftProvider.notifier).goOnline()
+                    : ref.read(shiftProvider.notifier).goOffline(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EarningsBadge extends StatelessWidget {
+  const _EarningsBadge({required this.amount, required this.currency});
+
+  final double amount;
+  final String currency;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: Insets.m, vertical: Insets.s),
+      decoration: BoxDecoration(
+        color: AppColors.ink,
+        borderRadius: BorderRadius.circular(Radii.pill),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.account_balance_wallet_rounded, color: AppColors.accent, size: 14),
+          const SizedBox(width: 6),
+          Text(
+            'Today · ${amount.toStringAsFixed(2)} $currency',
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
+          ),
+        ],
       ),
     );
   }
@@ -85,20 +146,60 @@ class _WaitingForRide extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.all(Insets.l),
-      padding: const EdgeInsets.all(Insets.l),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(Radii.l),
-        boxShadow: const [BoxShadow(blurRadius: 8, color: Colors.black26)],
-      ),
-      child: const Row(
+    return BottomSheetCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
-          SizedBox(width: Insets.m),
-          Text('Waiting for ride requests…'),
+          Row(
+            children: [
+              const StatusPill(label: 'Live', tone: StatusTone.success, pulse: true),
+              const SizedBox(width: Insets.s),
+              Text('Waiting for ride requests',
+                  style: Theme.of(context).textTheme.titleLarge),
+            ],
+          ),
+          const SizedBox(height: Insets.xs),
+          Text('12 scooters online nearby · Saburtalo is busiest right now.',
+              style: Theme.of(context).textTheme.bodyMedium),
+          const SizedBox(height: Insets.l),
+          Row(
+            children: const [
+              _ShiftStat(label: 'Trips', value: '6'),
+              SizedBox(width: Insets.s),
+              _ShiftStat(label: 'Hours', value: '3h 12m'),
+              SizedBox(width: Insets.s),
+              _ShiftStat(label: 'Rating', value: '★ 4.91'),
+            ],
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _ShiftStat extends StatelessWidget {
+  const _ShiftStat({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: Insets.m),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceVariant,
+          borderRadius: BorderRadius.circular(Radii.m),
+        ),
+        child: Column(
+          children: [
+            Text(label, style: Theme.of(context).textTheme.labelMedium),
+            const SizedBox(height: 2),
+            Text(value, style: Theme.of(context).textTheme.titleMedium),
+          ],
+        ),
       ),
     );
   }
@@ -112,22 +213,18 @@ class _CompletedSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final amount = ride.finalAmount ?? ride.quotedAmount;
-    return Container(
-      margin: const EdgeInsets.all(Insets.l),
-      padding: const EdgeInsets.all(Insets.l),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(Radii.l),
-        boxShadow: const [BoxShadow(blurRadius: 8, color: Colors.black26)],
-      ),
+    return BottomSheetCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('Ride completed', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: Insets.s),
-          Text('Earned ${amount.toStringAsFixed(2)} ${ride.currency}'),
-          const SizedBox(height: Insets.l),
+          SuccessState(
+            headline: 'Ride complete',
+            body: 'Earnings paid to wallet',
+            amount: amount,
+            currency: ride.currency,
+          ),
+          const SizedBox(height: Insets.m),
           PrimaryButton(
             label: 'Continue',
             onPressed: () => ref.read(shiftProvider.notifier).dismissCompletedRide(),

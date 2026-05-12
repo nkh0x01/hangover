@@ -2,34 +2,58 @@
 <html><head><meta charset="utf-8"><link rel="stylesheet" href="_shared.css"></head>
 <body>
 <div class="phone">
-  <div class="map"><div class="map-road-h" style="top: 18%;"></div><div class="map-road-h" style="top: 72%;"></div><div class="map-road-v" style="left: 28%;"></div><div class="map-road-v" style="left: 70%;"></div><div class="map-river"></div></div>
+  <div class="map">
+    <div class="map-road-h" style="top: 18%;"></div>
+    <div class="map-road-h" style="top: 72%;"></div>
+    <div class="map-road-v" style="left: 28%;"></div>
+    <div class="map-road-v" style="left: 70%;"></div>
+    <div class="map-river"></div>
+  </div>
 
   <div class="status-bar">
     <span>9:41</span>
     <div class="right"><span>5G</span><span>WiFi</span><span>100%</span></div>
   </div>
 
-  <!-- pickup pin pulsing -->
-  <div class="pin pin-pickup" style="top: 40%; left: 45%;"></div>
-  <div class="pin pin-dropoff" style="top: 68%; left: 60%;"></div>
+  <!-- pulsing pickup pin -->
+  <div class="pin pin-pickup" style="top: 38%; left: 48%;
+       box-shadow: 0 0 0 12px rgba(31,143,96,0.15), 0 0 0 24px rgba(31,143,96,0.08);"></div>
 
-  <!-- route polyline drawn with SVG -->
-  <svg style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%;" viewBox="0 0 393 852" xmlns="http://www.w3.org/2000/svg">
-    <path d="M 177 341  C 220 380, 200 480, 235 580" stroke="#1F8F60" stroke-width="5" stroke-linecap="round" fill="none" stroke-dasharray="2 8" />
-  </svg>
+  <!-- dropoff -->
+  <div class="pin pin-dropoff" style="top: 65%; left: 62%;"></div>
+
+  <!-- nearby scooters animating in -->
+  <div class="pin pin-driver" style="top: 25%; left: 30%; width: 30px; height: 30px;">🛵</div>
+  <div class="pin pin-driver" style="top: 52%; left: 25%; width: 30px; height: 30px;">🛵</div>
+  <div class="pin pin-driver" style="top: 42%; left: 75%; width: 30px; height: 30px;">🛵</div>
 
   <!-- searching sheet -->
   <div class="sheet">
-    <div style="display: flex; align-items: center; gap: var(--m);">
-      <div class="spinner"></div>
-      <div class="h-m">Looking for a driver…</div>
+    <div class="handle"></div>
+
+    <div class="phase-progress">
+      <div class="seg on"></div>
+      <div class="seg"></div>
+      <div class="seg"></div>
+      <div class="seg"></div>
     </div>
-    <div class="gap-s"></div>
-    <div class="body">We are checking nearby scooters.</div>
+
     <div class="gap-l"></div>
-    <div style="display: flex; justify-content: flex-start;">
-      <button class="btn-text" style="color: var(--danger);">Cancel request</button>
+
+    <div style="display: flex; align-items: center; gap: var(--m);">
+      <div class="pill info live"><span class="dot"></span> Searching</div>
+      <div style="margin-left: auto;" class="t-caption">avg 38 s</div>
     </div>
+
+    <div class="gap-m"></div>
+
+    <div class="t-h-m">Looking for a driver nearby</div>
+    <div class="gap-xs"></div>
+    <div class="t-body">5 scooters are within 1.5 km. Most rides match in under a minute.</div>
+
+    <div class="gap-l"></div>
+
+    <button class="btn-outline danger">Cancel request</button>
   </div>
 </div>
 </body></html>

@@ -45,23 +45,48 @@ class _PhonePageState extends ConsumerState<PhonePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Sign in')),
-      body: Padding(
-        padding: const EdgeInsets.all(Insets.xl),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const SizedBox(height: Insets.xxl),
-            Text('ტელეფონის ნომერი', style: Theme.of(context).textTheme.headlineSmall),
-            const SizedBox(height: Insets.l),
-            AppTextField(controller: _controller, label: 'Phone', keyboardType: TextInputType.phone),
-            if (_error != null) ...[
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(Insets.xl),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: Insets.l),
+              const BrandLogo(size: BrandLogoSize.m),
+              const SizedBox(height: Insets.xxl),
+              Text('მოგესალმებით', style: Theme.of(context).textTheme.headlineLarge),
+              const SizedBox(height: Insets.xs),
+              Text(
+                'Tbilisi-ში სკუტერი ერთი დაკაკუნებით.\nQuick scooter rides across Tbilisi.',
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              const SizedBox(height: Insets.xxl),
+              Text(
+                'ტელეფონის ნომერი',
+                style: Theme.of(context).textTheme.labelMedium,
+              ),
               const SizedBox(height: Insets.s),
-              Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              AppTextField(
+                controller: _controller,
+                keyboardType: TextInputType.phone,
+                helper: 'ბმულს გამოგიგზავნით 6-ციფრიან კოდს',
+              ),
+              if (_error != null) ...[
+                const SizedBox(height: Insets.s),
+                Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              ],
+              const Spacer(),
+              PrimaryButton(label: 'კოდის გაგზავნა / Send code', onPressed: _send, busy: _busy),
+              const SizedBox(height: Insets.m),
+              Center(
+                child: Text(
+                  'By continuing you agree to our Terms and Privacy Policy',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.labelMedium,
+                ),
+              ),
             ],
-            const Spacer(),
-            PrimaryButton(label: 'Send code', onPressed: _send, busy: _busy),
-          ],
+          ),
         ),
       ),
     );

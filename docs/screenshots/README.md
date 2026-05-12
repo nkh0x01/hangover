@@ -1,7 +1,12 @@
 # Hangover Platform — Screenshots
 
-Visual previews of every Phase 1.5 screen in the customer app, driver
+Visual previews of every Phase 1.6 screen in the customer app, driver
 app, and Filament admin panel.
+
+**Phase 1.6 update:** the screens have been redesigned for brand,
+trust, and one-handed use. See [`../phase-1.6/ux-report.md`](../phase-1.6/ux-report.md)
+for the full before/after comparison; the pre-1.6 baselines are
+preserved under [`before-phase-1.6/`](before-phase-1.6/).
 
 ## ⚠️ How these were generated
 
@@ -13,14 +18,17 @@ not real Flutter frames.
 Every preview mirrors the real Flutter widget tree byte-for-byte where
 it counts:
 
-- All colours come from the locked design tokens in
-  `mobile/packages/ui_kit/lib/src/theme/` — same seed (`#1F8F60`),
-  same surface (`#FAFAFA`), same danger / warning / success.
-- All spacing uses the `Insets.xs|s|m|l|xl|xxl` and `Radii.s|m|l`
-  values defined in `ui_kit`.
+- All colours come from the design tokens in
+  `mobile/packages/ui_kit/lib/src/theme/` — emerald seed (`#1F8F60`),
+  terracotta accent (`#E07A3C`), warm cream surface (`#FBF8F2`),
+  explicit ink / inkSoft / inkMuted text ramp.
+- All spacing uses the `Insets.xs|s|m|l|xl|xxl|xxxl` and
+  `Radii.xs|s|m|l|xl|pill` values defined in `ui_kit`.
+- Reusable widgets (`BrandLogo`, `StatusPill`, `RideStatusChip`,
+  `BottomSheetCard`, `PrimaryButton`, `SecondaryButton`,
+  `EmptyState`, `ErrorStateView`, `SuccessState`, `Skeleton`) all
+  ship in `mobile/packages/ui_kit/lib/src/` and back these screens.
 - The phone frame is 393×852 (iPhone 14 viewport).
-- Each HTML file under `source/` cross-references the Flutter screen
-  it represents in its filename and structure.
 
 When Flutter SDK becomes available in CI/sandbox, the `mobile.yml`
 workflow can generate real `flutter integration_test` screenshots that
@@ -36,8 +44,8 @@ will replace these one-to-one — UI structure won't change.
 | 2 | [`02-customer-otp.png`](02-customer-otp.png) | `apps/customer_app/lib/features/auth/presentation/otp_page.dart` |
 | 3 | [`03-customer-home.png`](03-customer-home.png) | `apps/customer_app/lib/features/home/presentation/home_page.dart` |
 | 4 | [`04-customer-fare-estimate.png`](04-customer-fare-estimate.png) | `apps/customer_app/lib/features/ride/presentation/fare_estimate_page.dart` |
-| 5 | [`05-customer-searching.png`](05-customer-searching.png) | `apps/customer_app/lib/features/ride/presentation/ride_tracking_page.dart` — `_SearchingContent` |
-| 6 | [`06-customer-active-ride.png`](06-customer-active-ride.png) | `apps/customer_app/lib/features/ride/presentation/ride_tracking_page.dart` — `_DriverAssignedContent` |
+| 5 | [`05-customer-searching.png`](05-customer-searching.png) | `apps/customer_app/lib/features/ride/presentation/ride_tracking_page.dart` — `_searching` |
+| 6 | [`06-customer-active-ride.png`](06-customer-active-ride.png) | `apps/customer_app/lib/features/ride/presentation/ride_tracking_page.dart` — `_driverAssigned` |
 
 ### Driver app
 
@@ -52,6 +60,12 @@ will replace these one-to-one — UI structure won't change.
 | # | File | Filament page |
 |---|---|---|
 | 10 | [`10-admin-live-monitor.png`](10-admin-live-monitor.png) | `backend/app/Modules/Riding/Filament/Pages/LiveRidesPage.php` + `Riding/Filament/Widgets/ActiveRidesWidget.php` + `Driver/Filament/Widgets/OnlineDriversWidget.php` |
+
+## Baselines (pre-1.6)
+
+The exact previous-design screenshots are kept under
+[`before-phase-1.6/`](before-phase-1.6/) so the UX report can render
+honest before/after pairs that won't drift over time.
 
 ## Regenerating
 
@@ -89,9 +103,10 @@ render.sh                              wkhtmltoimage driver script
 
 `_shared.css` is the closest you can get to seeing the entire UI kit in
 one file: it implements every reusable Flutter widget (`PrimaryButton`,
-`AppTextField`, `LoadingState`, bottom-sheet pattern, status badges,
-online/offline toggle, modal scrim, map background) in CSS using
-exactly the tokens declared in `mobile/packages/ui_kit/lib/src/theme/`.
+`SecondaryButton`, `StatusPill`, `BottomSheetCard`, `RideStatusChip`,
+bilingual brand logo, online/offline toggle, modal scrim, map
+background) in CSS using exactly the tokens declared in
+`mobile/packages/ui_kit/lib/src/theme/`.
 
 ## Known visual gaps vs the real Flutter build
 

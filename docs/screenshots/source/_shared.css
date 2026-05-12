@@ -1,34 +1,51 @@
-/* Design tokens lifted verbatim from mobile/packages/ui_kit/lib/src/theme.
-   These are what the real Flutter app paints with. */
+/* Design tokens lifted from mobile/packages/ui_kit/lib/src/theme.
+   Phase 1.6 redesign: warm surface, ink/inkSoft text ramp, terracotta
+   accent for "live" / surge / Tbilisi feel, taller primary action,
+   pill-shaped status chips with leading dots. */
 
 :root {
-  /* Colors */
+  /* ---- Brand --------------------------------------------------------- */
   --seed: #1F8F60;
-  --on-primary: #FFFFFF;
-  --surface: #FAFAFA;
-  --surface-2: #F1F4F2;
-  --on-surface: #1B1F1D;
-  --on-surface-variant: #424A45;
-  --outline: #C3C8C5;
+  --seed-soft: #DCEFE3;
+  --seed-deep: #19704B;
+  --accent: #E07A3C;
+  --accent-soft: #FCE4D5;
+
+  /* ---- Text ramp ----------------------------------------------------- */
+  --ink: #1A2421;
+  --ink-soft: #515955;
+  --ink-muted: #8B928D;
+
+  /* ---- Surfaces ------------------------------------------------------ */
+  --surface: #FBF8F2;
+  --surface-2: #EFEAE0;
+  --outline: #D6D1C5;
+  --outline-subtle: #E9E4D6;
+
+  /* ---- Semantic ------------------------------------------------------ */
   --danger: #D7263D;
+  --danger-soft: #F7D8DD;
   --warning: #E6B23A;
+  --warning-soft: #FBEFD0;
   --success: #2EA265;
+  --success-soft: #DCEFE3;
+  --info: #2C7BE5;
+  --info-soft: #D6E4F1;
 
-  /* Spacing — Insets.xs|s|m|l|xl|xxl = 4 8 12 16 24 32 */
-  --xs: 4px;
-  --s: 8px;
-  --m: 12px;
-  --l: 16px;
-  --xl: 24px;
-  --xxl: 32px;
+  /* ---- Spacing ------------------------------------------------------- */
+  --xs: 4px;  --s: 8px;  --m: 12px;  --l: 16px;  --xl: 24px;  --xxl: 32px;
+  --xxxl: 48px;
 
-  /* Radii */
+  /* ---- Radii --------------------------------------------------------- */
+  --r-xs: 6px;
   --r-s: 8px;
   --r-m: 12px;
   --r-l: 16px;
+  --r-xl: 24px;
+  --r-pill: 999px;
 
-  /* Type */
-  --font: -apple-system, "Inter", "Noto Sans Georgian", Roboto, system-ui, sans-serif;
+  /* ---- Font ---------------------------------------------------------- */
+  --font: "Inter", "Noto Sans Georgian", -apple-system, Roboto, system-ui, sans-serif;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -36,20 +53,18 @@
 html, body {
   font-family: var(--font);
   font-size: 14px;
-  color: var(--on-surface);
+  color: var(--ink);
   background: #DDD;
   -webkit-font-smoothing: antialiased;
 }
 
-/* iPhone 14-style frame: 393 × 852 viewport
-   The frame adds a 12px bezel + 30px top status bar. */
+/* ---- Phone frame ---------------------------------------------------- */
 .phone {
-  width: 393px;
-  height: 852px;
+  width: 393px; height: 852px;
   background: var(--surface);
   position: relative;
   overflow: hidden;
-  border-radius: 36px;
+  border-radius: 38px;
   border: 1px solid #D0D5D2;
   margin: 0 auto;
 }
@@ -62,269 +77,415 @@ html, body {
   padding: 0 var(--xl);
   font-size: 13px;
   font-weight: 600;
-  color: var(--on-surface);
-  background: transparent;
+  color: var(--ink);
   position: relative;
   z-index: 4;
 }
-
 .status-bar .right { display: flex; gap: var(--s); align-items: center; }
-.status-bar .right .signal,
-.status-bar .right .wifi,
-.status-bar .right .battery { font-size: 11px; }
+.status-bar .right span { font-size: 11px; }
 
 .app-bar {
   height: 56px;
   display: flex;
   align-items: center;
   padding: 0 var(--l);
-  color: var(--on-surface);
-  font-weight: 500;
-  font-size: 18px;
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 17px;
   background: var(--surface);
-  border-bottom: 1px solid var(--outline);
   position: relative;
   z-index: 3;
 }
+.app-bar .back { margin-right: var(--m); font-size: 22px; line-height: 1; }
 
-.app-bar .back { margin-right: var(--m); font-size: 22px; line-height: 1; color: var(--on-surface); }
+/* ---- Brand logo (recreated for HTML) -------------------------------- */
+.brand {
+  display: flex; align-items: center; gap: 8px;
+}
+.brand .mark {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--seed);
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+.brand .mark::before {
+  content: '';
+  width: 25px; height: 25px; border-radius: 50%;
+  background: var(--surface);
+  position: absolute;
+}
+.brand .mark .h {
+  position: relative; z-index: 2;
+  width: 14px; height: 14px;
+  border-left: 3px solid var(--seed);
+  border-right: 3px solid var(--seed);
+  border-radius: 2px;
+}
+.brand .mark .h::before {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; top: 50%;
+  height: 3px; background: var(--seed);
+  transform: translateY(-50%);
+  border-radius: 2px;
+}
+.brand .mark .dot {
+  position: absolute;
+  bottom: 4px; right: 4px;
+  width: 6px; height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  z-index: 3;
+}
+.brand .wordmark {
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: -0.2px;
+}
 
-/* Filled / "primary" button — matches PrimaryButton widget */
+/* ---- Buttons -------------------------------------------------------- */
 .btn-primary {
   width: 100%;
-  height: 52px;
+  height: 60px;
   background: var(--seed);
-  color: var(--on-primary);
+  color: #FFF;
   border: none;
   border-radius: var(--r-m);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   font-family: var(--font);
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: default;
+  gap: 8px;
 }
-.btn-primary[disabled] { background: #BFC4C1; color: #FFF; }
+.btn-primary[disabled] { background: #BFC4C1; }
+.btn-primary.accept { background: var(--seed); }
+.btn-primary.accent { background: var(--accent); }
 
 .btn-outline {
   width: 100%;
-  height: 52px;
+  height: 60px;
   background: transparent;
-  color: var(--seed);
-  border: 1.5px solid var(--seed);
+  border: 1.5px solid var(--outline);
+  color: var(--ink-soft);
   border-radius: var(--r-m);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   font-family: var(--font);
   display: flex;
   align-items: center;
   justify-content: center;
 }
+.btn-outline.danger { color: var(--danger); border-color: var(--danger); }
 
 .btn-text {
   background: transparent;
   border: none;
   color: var(--seed);
-  font-weight: 500;
+  font-weight: 600;
   font-size: 14px;
   padding: var(--s) var(--m);
 }
 
-/* Text input — matches AppTextField */
+/* ---- Text field ----------------------------------------------------- */
 .field {
   width: 100%;
-  height: 56px;
   background: #FFF;
-  border: 1px solid var(--outline);
-  border-radius: var(--r-s);
-  padding: 0 var(--l);
-  font-size: 15px;
-  color: var(--on-surface);
+  border: 1.5px solid var(--outline);
+  border-radius: var(--r-m);
+  padding: 14px var(--l);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ink);
   font-family: var(--font);
-  display: flex;
-  align-items: center;
 }
-.field .label {
-  position: absolute;
-  font-size: 12px;
-  color: var(--on-surface-variant);
-  background: #FFF;
-  padding: 0 4px;
-  transform: translateY(-30px);
+.field.focused { border-color: var(--seed); border-width: 2px; padding: 13px 15px; }
+.field-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  margin-bottom: var(--s);
 }
-.field-wrap { position: relative; }
+.helper { font-size: 12px; color: var(--ink-muted); margin-top: var(--s); }
 
-/* Bottom sheet card pattern used by every ride state. */
+/* ---- Bottom sheet --------------------------------------------------- */
 .sheet {
   position: absolute;
-  left: var(--l);
-  right: var(--l);
-  bottom: var(--l);
+  left: 0; right: 0; bottom: 0;
   background: var(--surface);
-  border-radius: var(--r-l);
-  padding: var(--l);
-  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  border-top-left-radius: var(--r-xl);
+  border-top-right-radius: var(--r-xl);
+  padding: var(--l) var(--l) var(--xl);
+  box-shadow: 0 -8px 30px rgba(0,0,0,0.12);
   z-index: 2;
 }
+.sheet .handle {
+  width: 40px; height: 4px;
+  background: var(--outline);
+  border-radius: var(--r-pill);
+  margin: 0 auto var(--m);
+}
 
-.h-l { font-size: 24px; font-weight: 600; line-height: 1.2; }
-.h-m { font-size: 17px; font-weight: 500; line-height: 1.25; }
-.body  { font-size: 14px; color: var(--on-surface-variant); }
-.body-strong { font-size: 14px; color: var(--on-surface); font-weight: 500; }
-.caption { font-size: 12px; color: var(--on-surface-variant); }
+/* ---- Type styles ---------------------------------------------------- */
+.t-display  { font-size: 36px; font-weight: 700; letter-spacing: -0.5px; line-height: 1.0; color: var(--ink); }
+.t-h-l      { font-size: 28px; font-weight: 700; letter-spacing: -0.3px; line-height: 1.15; color: var(--ink); }
+.t-h-m      { font-size: 22px; font-weight: 600; line-height: 1.2; color: var(--ink); }
+.t-title-l  { font-size: 17px; font-weight: 600; line-height: 1.25; color: var(--ink); }
+.t-title-m  { font-size: 15px; font-weight: 600; line-height: 1.3; color: var(--ink); }
+.t-body     { font-size: 14px; font-weight: 400; line-height: 1.4; color: var(--ink-soft); }
+.t-body-strong { font-size: 14px; font-weight: 600; line-height: 1.4; color: var(--ink); }
+.t-caption  { font-size: 12px; font-weight: 500; line-height: 1.3; color: var(--ink-muted); letter-spacing: 0.1px; }
+.t-label    { font-size: 11px; font-weight: 600; line-height: 1.3; color: var(--ink-muted); letter-spacing: 0.6px; text-transform: uppercase; }
 
-/* Stack helpers (mirroring Flutter spacing constants) */
+/* spacing helpers */
 .gap-xs { height: var(--xs); }
 .gap-s  { height: var(--s);  }
 .gap-m  { height: var(--m);  }
 .gap-l  { height: var(--l);  }
 .gap-xl { height: var(--xl); }
+.gap-xxl { height: var(--xxl); }
 
-/* "Fake" but believable map background. wkhtmltoimage ships an older
-   QtWebKit so we keep this to widely-supported syntax: solid colour
-   base + repeating linear-gradients on background-size, no `inset`
-   shorthand, no pseudo-elements with rotation. */
+/* ---- Status pills --------------------------------------------------- */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+.pill .dot { width: 6px; height: 6px; border-radius: 50%; }
+.pill.success { background: var(--success-soft); color: #1F6A48; }
+.pill.success .dot { background: #1F6A48; }
+.pill.warning { background: var(--warning-soft); color: #7B5B14; }
+.pill.warning .dot { background: #7B5B14; }
+.pill.danger  { background: var(--danger-soft); color: #8E1827; }
+.pill.danger  .dot { background: #8E1827; }
+.pill.info    { background: var(--info-soft); color: #1C3D5C; }
+.pill.info    .dot { background: #1C3D5C; }
+.pill.accent  { background: var(--accent-soft); color: var(--accent); }
+.pill.accent  .dot { background: var(--accent); }
+.pill.neutral { background: var(--surface-2); color: var(--ink-soft); }
+
+/* live pulse — a halo behind the dot */
+.pill.live .dot {
+  box-shadow: 0 0 0 4px rgba(31,143,96,0.18);
+}
+
+/* ---- Phase progress chip -------------------------------------------- */
+.phase-progress {
+  display: flex;
+  gap: 3px;
+}
+.phase-progress .seg {
+  flex: 1;
+  height: 4px;
+  border-radius: var(--r-pill);
+  background: var(--outline-subtle);
+}
+.phase-progress .seg.on { background: var(--seed); }
+
+/* ---- Ride phase label (driver app) ---------------------------------- */
+.phase-label {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: var(--r-pill);
+  background: var(--seed);
+  color: #FFF;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+/* ---- Map ------------------------------------------------------------ */
 .map {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background-color: #C9D3CB;
+  background-color: #D7DBC8;
   background-image:
-    linear-gradient(rgba(120,140,130,0.45) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(120,140,130,0.45) 1px, transparent 1px),
-    linear-gradient(rgba(160,180,170,0.4) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(160,180,170,0.4) 1px, transparent 1px);
+    linear-gradient(rgba(140,150,130,0.45) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(140,150,130,0.45) 1px, transparent 1px),
+    linear-gradient(rgba(180,190,170,0.4) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(180,190,170,0.4) 1px, transparent 1px);
   background-size: 80px 80px, 80px 80px, 20px 20px, 20px 20px;
-  background-position: 0 0, 0 0, 0 0, 0 0;
 }
 .map-river {
   position: absolute;
-  left: -50px;
-  right: -50px;
-  top: 56%;
-  height: 18px;
-  background-color: #8FBDDD;
-  opacity: 0.7;
+  left: -50px; right: -50px;
+  top: 56%; height: 22px;
+  background-color: #99C0DD;
+  opacity: 0.78;
   -webkit-transform: rotate(-7deg);
   transform: rotate(-7deg);
 }
 .map-road-h {
   position: absolute;
-  height: 12px;
-  background-color: #E2E6E4;
-  opacity: 0.85;
-  left: -10px;
-  right: -10px;
+  height: 16px;
+  background-color: #F1EDE2;
+  opacity: 0.95;
+  left: -10px; right: -10px;
 }
 .map-road-v {
   position: absolute;
-  width: 12px;
-  background-color: #E2E6E4;
-  opacity: 0.85;
-  top: -10px;
-  bottom: -10px;
+  width: 16px;
+  background-color: #F1EDE2;
+  opacity: 0.95;
+  top: -10px; bottom: -10px;
 }
 
-/* Map pin */
+/* ---- Map pins ------------------------------------------------------- */
 .pin {
   position: absolute;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 3px solid #FFF;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.35);
   transform: translate(-50%, -50%);
 }
-.pin-pickup   { background: var(--seed); }
-.pin-dropoff  { background: var(--danger); }
+.pin-pickup {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--seed); border: 4px solid #FFF;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.pin-dropoff {
+  width: 24px; height: 24px; border-radius: 4px 24px 24px 24px;
+  background: var(--danger);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  border: 2px solid #FFF;
+  transform: translate(-50%, -100%) rotate(-45deg);
+}
 .pin-driver {
-  background: #FFF;
-  border: 3px solid var(--seed);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-}
-
-/* Tiny "polyline" overlay drawn with an SVG element */
-
-.list-tile {
-  display: flex;
-  align-items: center;
-  gap: var(--m);
-  padding: var(--m) 0;
-  border-bottom: 1px solid #ECEEEC;
-}
-.list-tile .icon {
-  width: 36px; height: 36px; border-radius: 50%;
-  background: var(--surface-2);
+  width: 36px; height: 36px;
+  background: var(--ink);
+  border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  color: var(--on-surface-variant);
+  color: var(--accent);
+  font-size: 16px;
+  border: 3px solid #FFF;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
 }
-.list-tile:last-child { border-bottom: none; }
 
-/* "Card" container */
+/* ---- Round map controls --------------------------------------------- */
+.circle-ctrl {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: #FFF;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ink);
+  font-size: 18px;
+}
+.circle-ctrl.accent { color: var(--seed); }
+.fab {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: #FFF;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--seed);
+  font-size: 22px;
+}
+
+/* ---- Online indicator pill (top of customer home) ------------------- */
+.live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--r-pill);
+  background: #FFF;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.live-pill::before {
+  content: '';
+  width: 8px; height: 8px;
+  background: var(--success);
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(46,162,101,0.18);
+}
+
+/* ---- Cards & rows --------------------------------------------------- */
 .card {
+  background: #FFF;
+  border-radius: var(--r-l);
+  border: 1px solid var(--outline-subtle);
+  padding: var(--l);
+}
+.card-soft {
   background: var(--surface-2);
   border-radius: var(--r-m);
   padding: var(--l);
 }
 
-/* Segmented control mirroring SegmentedButton */
-.seg {
+.route-row {
   display: flex;
-  border: 1.5px solid var(--seed);
-  border-radius: var(--r-m);
-  overflow: hidden;
-  height: 44px;
+  align-items: flex-start;
+  gap: var(--m);
 }
-.seg > button {
-  flex: 1;
-  background: transparent;
-  border: none;
-  color: var(--seed);
-  font-weight: 500;
-  font-size: 14px;
+.route-row .dotty {
+  margin-left: 8px;
+  width: 3px;
+  height: 16px;
+  background-image: linear-gradient(to bottom, var(--outline) 50%, transparent 50%);
+  background-size: 3px 6px;
+  background-repeat: repeat-y;
+}
+
+/* ---- Payment selector ---------------------------------------------- */
+.pay-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s);
+}
+.pay-option {
+  border: 1.5px solid var(--outline);
+  border-radius: var(--r-m);
+  background: #FFF;
+  padding: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  font-family: var(--font);
+  gap: 8px;
+  font-weight: 600;
+  font-size: 15px;
 }
-.seg > button.active {
+.pay-option.selected {
   background: var(--seed);
+  border-color: var(--seed);
   color: #FFF;
 }
 
-/* Online/offline toggle bar for driver app */
-.toggle-bar {
-  position: absolute;
-  top: var(--l);
-  left: var(--l);
-  right: var(--l);
-  background: var(--surface);
+/* ---- Driver online toggle card ------------------------------------- */
+.online-card {
+  background: #FFF;
   border-radius: var(--r-l);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.16);
-  padding: var(--s) var(--l);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+  padding: var(--m) var(--l);
   display: flex;
   align-items: center;
   gap: var(--m);
-  z-index: 3;
 }
-.toggle-bar .status-dot {
-  width: 10px; height: 10px; border-radius: 50%;
-  background: var(--success);
+.online-card .lozenge {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--seed);
+  color: #FFF;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
 }
-.toggle-bar .status-dot.off { background: #BFC4C1; }
-.toggle-bar .switch {
-  margin-left: auto;
-  width: 44px;
-  height: 26px;
+.online-card .lozenge.off { background: var(--surface-2); color: var(--ink-soft); }
+.switch {
+  width: 44px; height: 26px;
   background: var(--seed);
   border-radius: 13px;
   position: relative;
 }
-.toggle-bar .switch::after {
+.switch::after {
   content: '';
   position: absolute;
   width: 22px; height: 22px;
@@ -333,36 +494,70 @@ html, body {
   top: 2px; right: 2px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
-.toggle-bar .switch.off { background: #C3C8C5; }
-.toggle-bar .switch.off::after { right: auto; left: 2px; }
+.switch.off { background: #C3C8C5; }
+.switch.off::after { right: auto; left: 2px; }
 
-/* Modal scrim for incoming offer */
+/* ---- Earnings badge (driver, top right) ---------------------------- */
+.earnings-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--ink);
+  color: #FFF;
+  border-radius: var(--r-pill);
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+}
+.earnings-badge .accent-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+
+/* ---- Modal scrim --------------------------------------------------- */
 .modal-scrim {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.55);
+  background: rgba(0,0,0,0.6);
   z-index: 5;
   display: flex;
   align-items: flex-end;
 }
 
-.spinner {
-  width: 18px; height: 18px;
-  border-radius: 50%;
-  border: 2px solid var(--outline);
-  border-top-color: var(--seed);
+/* ---- Countdown ring (driver offer) --------------------------------- */
+.ring {
+  position: relative;
+  width: 56px; height: 56px;
+}
+.ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+.ring .label {
+  position: absolute;
+  inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--seed);
 }
 
-/* Badge / pill */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 500;
+/* ---- Skeleton ------------------------------------------------------ */
+.skeleton {
+  background: linear-gradient(90deg, var(--outline-subtle) 0%, #E0DCC9 50%, var(--outline-subtle) 100%);
+  border-radius: var(--r-s);
 }
-.badge.success { background: #DCEFE3; color: #1F6A48; }
-.badge.warning { background: #FBEFD0; color: #7B5B14; }
-.badge.danger  { background: #F7D8DD; color: #8E1827; }
-.badge.info    { background: #D6E4F1; color: #1C3D5C; }
+
+/* ---- Spinner ------------------------------------------------------- */
+.spinner {
+  width: 18px; height: 18px;
+  border: 2.5px solid var(--outline-subtle);
+  border-top-color: var(--seed);
+  border-radius: 50%;
+}
+
+/* ---- Success state visual (used on Complete) ----------------------- */
+.success-icon {
+  width: 72px; height: 72px;
+  background: var(--success-soft);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--success);
+  font-size: 32px;
+  margin: 0 auto;
+}

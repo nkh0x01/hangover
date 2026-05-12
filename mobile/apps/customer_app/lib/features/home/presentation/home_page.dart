@@ -71,60 +71,209 @@ class _HomePageState extends ConsumerState<HomePage> {
     ];
 
     return Scaffold(
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: mapProvider.mapWidget(
-                initialCenter: flow.pickup ?? const LatLng(41.7151, 44.8271),
-                markers: markers,
-                onTap: (point) => ref.read(rideFlowProvider.notifier).setPickup(point),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: mapProvider.mapWidget(
+              initialCenter: flow.pickup ?? const LatLng(41.7151, 44.8271),
+              markers: markers,
+              onTap: (point) => ref.read(rideFlowProvider.notifier).setPickup(point),
+            ),
+          ),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: Insets.l),
+              child: _TopBar(driversNearby: _nearby.length),
+            ),
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.all(Insets.l),
+                child: _WhereToCard(
+                  driversNearby: _nearby.length,
+                  onTap: () => context.push('/ride/destination'),
+                ),
               ),
             ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: _DestinationCard(
-                onTap: () async {
-                  await context.push('/ride/destination');
-                  // Destination page sets the dropoff on the controller
-                  // itself and then routes the user forward.
-                },
+          ),
+          Positioned(
+            right: Insets.l,
+            bottom: 160,
+            child: _LocateFab(onTap: _refreshNearby),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TopBar extends StatelessWidget {
+  const _TopBar({required this.driversNearby});
+
+  final int driversNearby;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        _CircleControl(icon: Icons.menu_rounded),
+        const Spacer(),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: Insets.m, vertical: Insets.s - 2),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(Radii.pill),
+            boxShadow: const [BoxShadow(blurRadius: 8, color: Color(0x14000000))],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const _Pulse(),
+              const SizedBox(width: 6),
+              Text(
+                '$driversNearby online nearby',
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(color: AppColors.ink),
               ),
-            ),
-          ],
+            ],
+          ),
+        ),
+        const Spacer(),
+        _CircleControl(icon: Icons.notifications_none_rounded),
+      ],
+    );
+  }
+}
+
+class _CircleControl extends StatelessWidget {
+  const _CircleControl({required this.icon});
+
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+        boxShadow: const [BoxShadow(blurRadius: 8, color: Color(0x14000000))],
+      ),
+      child: Icon(icon, size: 20, color: AppColors.ink),
+    );
+  }
+}
+
+class _LocateFab extends StatelessWidget {
+  const _LocateFab({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: TouchTargets.fab,
+      height: TouchTargets.fab,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+        boxShadow: const [BoxShadow(blurRadius: 10, color: Color(0x1F000000))],
+      ),
+      child: const Icon(Icons.my_location_rounded, color: AppColors.seed, size: 24),
+    );
+  }
+}
+
+class _Pulse extends StatelessWidget {
+  const _Pulse();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 8,
+      height: 8,
+      decoration: const BoxDecoration(color: AppColors.success, shape: BoxShape.circle),
+    );
+  }
+}
+
+class _WhereToCard extends StatelessWidget {
+  const _WhereToCard({required this.onTap, required this.driversNearby});
+
+  final VoidCallback onTap;
+  final int driversNearby;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(Radii.xl),
+      elevation: 0,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(Radii.xl),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(Insets.l),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.search_rounded, color: AppColors.inkSoft),
+                  const SizedBox(width: Insets.m),
+                  Expanded(
+                    child: Text(
+                      'სად მიდიხართ? / Where to?',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right_rounded, color: AppColors.inkSoft),
+                ],
+              ),
+              const SizedBox(height: Insets.s),
+              const Divider(),
+              const SizedBox(height: Insets.s),
+              Row(
+                children: [
+                  _QuickChip(icon: Icons.home_rounded, label: 'Home'),
+                  const SizedBox(width: Insets.s),
+                  _QuickChip(icon: Icons.work_rounded, label: 'Work'),
+                  const SizedBox(width: Insets.s),
+                  _QuickChip(icon: Icons.history_rounded, label: 'Recent'),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _DestinationCard extends StatelessWidget {
-  const _DestinationCard({required this.onTap});
+class _QuickChip extends StatelessWidget {
+  const _QuickChip({required this.icon, required this.label});
 
-  final VoidCallback onTap;
+  final IconData icon;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(Insets.l),
-      child: Material(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(Radii.l),
-        elevation: 4,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(Radii.l),
-          onTap: onTap,
-          child: const Padding(
-            padding: EdgeInsets.all(Insets.l),
-            child: Row(
-              children: [
-                Icon(Icons.search),
-                SizedBox(width: Insets.m),
-                Expanded(child: Text('Where to?')),
-              ],
-            ),
-          ),
-        ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: Insets.m, vertical: Insets.s - 2),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(Radii.pill),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: AppColors.inkSoft),
+          const SizedBox(width: 6),
+          Text(label, style: Theme.of(context).textTheme.labelMedium?.copyWith(color: AppColors.ink)),
+        ],
       ),
     );
   }

@@ -45,23 +45,39 @@ class _PhonePageState extends ConsumerState<PhonePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Driver sign in')),
-      body: Padding(
-        padding: const EdgeInsets.all(Insets.xl),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const SizedBox(height: Insets.xxl),
-            Text('Enter your phone', style: Theme.of(context).textTheme.headlineSmall),
-            const SizedBox(height: Insets.l),
-            AppTextField(controller: _controller, label: 'Phone', keyboardType: TextInputType.phone),
-            if (_error != null) ...[
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(Insets.xl),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: Insets.l),
+              Row(
+                children: [
+                  const BrandLogo(size: BrandLogoSize.m),
+                  const Spacer(),
+                  StatusPill(label: 'Driver', tone: StatusTone.accent),
+                ],
+              ),
+              const SizedBox(height: Insets.xxl),
+              Text('Drive Tbilisi with us', style: Theme.of(context).textTheme.headlineLarge),
+              const SizedBox(height: Insets.xs),
+              Text(
+                'მართე Tbilisi-ში და მიიღე გადახდა ყოველდღე.\nDaily payouts. Flexible hours.',
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              const SizedBox(height: Insets.xxl),
+              Text('ტელეფონის ნომერი', style: Theme.of(context).textTheme.labelMedium),
               const SizedBox(height: Insets.s),
-              Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              AppTextField(controller: _controller, keyboardType: TextInputType.phone),
+              if (_error != null) ...[
+                const SizedBox(height: Insets.s),
+                Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              ],
+              const Spacer(),
+              PrimaryButton(label: 'კოდის გაგზავნა / Send code', onPressed: _send, busy: _busy),
             ],
-            const Spacer(),
-            PrimaryButton(label: 'Send code', onPressed: _send, busy: _busy),
-          ],
+          ),
         ),
       ),
     );

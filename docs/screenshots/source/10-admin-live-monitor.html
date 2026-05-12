@@ -1,33 +1,70 @@
 <!doctype html>
 <html><head><meta charset="utf-8"><link rel="stylesheet" href="_shared.css">
 <style>
-  body { background: #F1F4F2; }
+  body { background: var(--surface); }
   .admin {
     width: 1280px;
     min-height: 800px;
-    background: #F1F4F2;
+    background: var(--surface);
     margin: 0 auto;
     display: flex;
   }
   .sidebar {
-    width: 240px;
-    background: #111418;
+    width: 260px;
+    background: #0E1518;
     color: #C8CFCD;
     padding: var(--xl) var(--l);
   }
-  .sidebar .brand {
+  .sidebar .brand-row {
+    display: flex; align-items: center; gap: 10px;
     color: #FFF;
     font-weight: 700;
-    font-size: 18px;
-    display: flex; align-items: center; gap: 8px;
+    font-size: 17px;
     margin-bottom: var(--xl);
   }
+  .sidebar .brand-row .mark {
+    width: 32px; height: 32px;
+    background: var(--seed); border-radius: 50%;
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .sidebar .brand-row .mark::before {
+    content: ''; position: absolute;
+    width: 25px; height: 25px;
+    background: #0E1518;
+    border-radius: 50%;
+  }
+  .sidebar .brand-row .mark .h {
+    position: relative; z-index: 2;
+    width: 14px; height: 14px;
+    border-left: 3px solid var(--seed);
+    border-right: 3px solid var(--seed);
+    border-radius: 2px;
+  }
+  .sidebar .brand-row .mark .h::before {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; top: 50%;
+    height: 3px; background: var(--seed);
+    transform: translateY(-50%);
+    border-radius: 2px;
+  }
+  .sidebar .brand-row .mark .dot {
+    position: absolute;
+    bottom: 4px; right: 4px;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    z-index: 3;
+  }
+
   .sidebar .group-title {
     text-transform: uppercase;
-    font-size: 11px;
+    font-size: 10px;
     letter-spacing: 0.08em;
     color: #6E7773;
     margin: var(--l) var(--s) var(--s);
+    font-weight: 600;
   }
   .sidebar .nav-item {
     padding: 10px var(--m);
@@ -38,123 +75,151 @@
     font-size: 14px;
   }
   .sidebar .nav-item.active {
-    background: rgba(31,143,96,0.16);
+    background: rgba(31,143,96,0.18);
     color: #FFF;
+    font-weight: 600;
   }
-  .sidebar .nav-item .dot {
-    width: 6px; height: 6px; border-radius: 50%; background: var(--seed);
-  }
+  .sidebar .nav-item.active .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  .sidebar .nav-item .icon { width: 18px; text-align: center; opacity: 0.6; }
 
-  .main { flex: 1; padding: var(--xxl); }
-  .main h1 { font-size: 22px; margin-bottom: var(--xs); }
-  .main .subtitle { color: #677570; font-size: 13px; margin-bottom: var(--xl); }
+  .main { flex: 1; padding: var(--xxl); background: var(--surface); }
+  .main h1 { font-size: 26px; margin-bottom: var(--xs); color: var(--ink); font-weight: 700; }
+  .main .subtitle { color: var(--ink-soft); font-size: 13px; margin-bottom: var(--xl); }
 
   .stats { display: flex; gap: var(--l); margin-bottom: var(--xl); }
   .stat-card {
-    flex: 1; background: #FFF; border-radius: var(--r-m);
+    flex: 1;
+    background: #FFF;
+    border-radius: var(--r-l);
     padding: var(--l);
-    border: 1px solid #E2E6E4;
+    border: 1px solid var(--outline-subtle);
+    position: relative;
   }
-  .stat-card .label { font-size: 12px; color: #677570; text-transform: uppercase; letter-spacing: 0.04em; }
-  .stat-card .value { font-size: 28px; font-weight: 600; margin-top: 4px; }
-  .stat-card .trend { font-size: 12px; margin-top: 4px; }
+  .stat-card .label {
+    font-size: 11px; color: var(--ink-muted);
+    text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;
+  }
+  .stat-card .value {
+    font-size: 32px; font-weight: 700; margin-top: var(--xs);
+    letter-spacing: -0.3px;
+  }
+  .stat-card .trend { font-size: 12px; margin-top: var(--xs); font-weight: 600; }
   .stat-card .trend.up { color: var(--success); }
   .stat-card .trend.down { color: var(--danger); }
+  .stat-card .icon {
+    position: absolute; top: var(--l); right: var(--l);
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 16px;
+  }
+  .stat-card.warning .icon { background: var(--warning-soft); }
+  .stat-card.success .icon { background: var(--success-soft); }
+  .stat-card.info    .icon { background: var(--info-soft); }
+  .stat-card.accent  .icon { background: var(--accent-soft); }
 
   table {
     width: 100%;
     background: #FFF;
-    border-radius: var(--r-m);
+    border-radius: var(--r-l);
     border-collapse: collapse;
     overflow: hidden;
-    border: 1px solid #E2E6E4;
+    border: 1px solid var(--outline-subtle);
     font-size: 13px;
   }
-  thead { background: #F7FAF8; }
+  thead { background: var(--surface); }
   th {
     text-align: left;
-    padding: 12px var(--l);
-    font-weight: 500;
+    padding: 14px var(--l);
+    font-weight: 600;
     font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: #677570;
-    border-bottom: 1px solid #E2E6E4;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft);
+    border-bottom: 1px solid var(--outline-subtle);
   }
   td {
     padding: 14px var(--l);
-    border-bottom: 1px solid #F0F3F1;
+    border-bottom: 1px solid var(--outline-subtle);
+    color: var(--ink);
   }
   tr:last-child td { border-bottom: none; }
-  tr:hover td { background: #F9FBFA; }
-  .mono { font-family: monospace; font-size: 12px; color: #5C6B65; }
-  .since { color: #677570; font-size: 12px; }
+  tr:hover td { background: var(--surface); }
+  .mono { font-family: monospace; font-size: 12px; color: var(--ink-soft); }
+  .since { color: var(--ink-muted); font-size: 12px; }
 
   .panel-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--m); }
-  .panel-toolbar .live { display: flex; align-items: center; gap: 6px; color: var(--success); font-size: 12px; font-weight: 500;}
-  .panel-toolbar .live .live-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: var(--success);
-  }
+  .panel-toolbar .title { font-weight: 600; font-size: 15px; color: var(--ink); }
 </style>
 </head>
 <body>
 <div class="admin">
 
   <aside class="sidebar">
-    <div class="brand">🛵 Hangover Mobility</div>
+    <div class="brand-row">
+      <div class="mark"><div class="h"></div><div class="dot"></div></div>
+      Hangover Mobility
+    </div>
 
     <div class="group-title">Operations</div>
-    <div class="nav-item active"><span class="dot"></span> Active rides</div>
-    <div class="nav-item">▢ Live driver map</div>
-    <div class="nav-item">▢ Live ride map</div>
-    <div class="nav-item">▢ Dispatcher console</div>
-    <div class="nav-item">▢ SOS board</div>
+    <div class="nav-item active"><span class="icon">⚡</span> Active rides <span class="dot" style="margin-left: auto;"></span></div>
+    <div class="nav-item"><span class="icon">🗺️</span> Live driver map</div>
+    <div class="nav-item"><span class="icon">🚀</span> Live ride map</div>
+    <div class="nav-item"><span class="icon">🎯</span> Dispatcher console</div>
+    <div class="nav-item"><span class="icon">🆘</span> SOS board</div>
 
     <div class="group-title">Drivers</div>
-    <div class="nav-item">▢ Approval queue <span style="margin-left:auto; background: var(--warning); color: #FFF; font-size: 11px; padding: 1px 6px; border-radius: 999px;">3</span></div>
-    <div class="nav-item">▢ All drivers</div>
-    <div class="nav-item">▢ Vehicles</div>
+    <div class="nav-item"><span class="icon">✅</span> Approval queue
+      <span style="margin-left:auto; background: var(--warning); color: #FFF; font-size: 11px; padding: 1px 7px; border-radius: 999px;">3</span>
+    </div>
+    <div class="nav-item"><span class="icon">👥</span> All drivers</div>
+    <div class="nav-item"><span class="icon">🛵</span> Vehicles</div>
 
     <div class="group-title">Rides</div>
-    <div class="nav-item">▢ All rides</div>
-    <div class="nav-item">▢ Ride offers</div>
+    <div class="nav-item"><span class="icon">📋</span> All rides</div>
+    <div class="nav-item"><span class="icon">💬</span> Ride offers</div>
 
     <div class="group-title">Finance</div>
-    <div class="nav-item">▢ Payments</div>
-    <div class="nav-item">▢ Payouts</div>
+    <div class="nav-item"><span class="icon">💳</span> Payments</div>
+    <div class="nav-item"><span class="icon">💰</span> Payouts</div>
   </aside>
 
   <div class="main">
     <h1>Active rides</h1>
-    <div class="subtitle">Auto-refreshes every 5 s. Click any row to drill into the ride. WebSocket-driven monitor lands in Phase 4.</div>
+    <div class="subtitle">
+      <span class="pill success live" style="display: inline-flex; vertical-align: middle; margin-right: 8px;">
+        <span class="dot"></span> Live · refreshing every 5s
+      </span>
+      Auto-refreshes every 5 s. Click any row to drill into the ride. WebSocket-driven monitor lands in Phase 4.
+    </div>
 
     <div class="stats">
-      <div class="stat-card">
+      <div class="stat-card warning">
+        <div class="icon">⚡</div>
         <div class="label">Active rides</div>
         <div class="value" style="color: var(--warning);">28</div>
         <div class="trend up">▲ 4 vs 5min ago</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card success">
+        <div class="icon">🛵</div>
         <div class="label">Online drivers</div>
         <div class="value" style="color: var(--success);">142</div>
         <div class="trend up">▲ 11 vs 5min ago</div>
       </div>
-      <div class="stat-card">
-        <div class="label">Completed 24h</div>
+      <div class="stat-card info">
+        <div class="icon">✅</div>
+        <div class="label">Completed · 24h</div>
         <div class="value">1,284</div>
         <div class="trend up">▲ 9% vs yesterday</div>
       </div>
-      <div class="stat-card">
-        <div class="label">Cancellation rate 24h</div>
+      <div class="stat-card accent">
+        <div class="icon">↩</div>
+        <div class="label">Cancellation rate · 24h</div>
         <div class="value">3.7%</div>
         <div class="trend down">▼ 0.4 pp vs yesterday</div>
       </div>
     </div>
 
     <div class="panel-toolbar">
-      <div style="font-weight: 500; font-size: 14px;">In-flight rides</div>
-      <div class="live"><span class="live-dot"></span> Live · refreshing every 5s</div>
+      <div class="title">In-flight rides</div>
     </div>
 
     <table>
@@ -173,72 +238,72 @@
       <tbody>
         <tr>
           <td class="mono">01KRF3FX18</td>
-          <td><span class="badge success">in_progress</span></td>
+          <td><span class="pill success"><span class="dot"></span> IN PROGRESS</span></td>
           <td>+995 555 12 34 56</td>
           <td>Giorgi M.</td>
           <td>Marjanishvili 4</td>
           <td>Vake Park</td>
-          <td>7.50 GEL</td>
+          <td><b>7.50 GEL</b></td>
           <td class="since">3 min ago</td>
         </tr>
         <tr>
           <td class="mono">01KRF3G8Y5</td>
-          <td><span class="badge warning">driver_arriving</span></td>
+          <td><span class="pill warning"><span class="dot"></span> DRIVER ARRIVING</span></td>
           <td>+995 599 22 11 09</td>
           <td>Nika T.</td>
           <td>Rustaveli Ave 2</td>
           <td>Tbilisi Mall</td>
-          <td>12.20 GEL</td>
+          <td><b>12.20 GEL</b></td>
           <td class="since">2 min ago</td>
         </tr>
         <tr>
           <td class="mono">01KRF3GA1C</td>
-          <td><span class="badge warning">accepted</span></td>
+          <td><span class="pill warning"><span class="dot"></span> ACCEPTED</span></td>
           <td>+995 591 87 44 12</td>
           <td>Lasha B.</td>
           <td>Saburtalo</td>
           <td>Old Tbilisi</td>
-          <td>9.80 GEL</td>
+          <td><b>9.80 GEL</b></td>
           <td class="since">1 min ago</td>
         </tr>
         <tr>
           <td class="mono">01KRF3GB2F</td>
-          <td><span class="badge warning">offered</span></td>
+          <td><span class="pill accent"><span class="dot"></span> OFFERED</span></td>
           <td>+995 577 30 12 88</td>
           <td>—</td>
           <td>Vake Park</td>
           <td>Hospital № 5</td>
-          <td>11.40 GEL</td>
+          <td><b>11.40 GEL</b></td>
           <td class="since">12 s ago</td>
         </tr>
         <tr>
           <td class="mono">01KRF3GC4A</td>
-          <td><span class="badge info">searching</span></td>
+          <td><span class="pill info"><span class="dot"></span> SEARCHING</span></td>
           <td>+995 555 99 88 77</td>
           <td>—</td>
           <td>Mtatsminda Park</td>
           <td>Freedom Sq.</td>
-          <td>5.50 GEL</td>
+          <td><b>5.50 GEL</b></td>
           <td class="since">8 s ago</td>
         </tr>
         <tr>
           <td class="mono">01KRF3GD6E</td>
-          <td><span class="badge warning">driver_arrived</span></td>
+          <td><span class="pill warning"><span class="dot"></span> DRIVER ARRIVED</span></td>
           <td>+995 597 12 34 00</td>
           <td>Vakhtang K.</td>
           <td>Marriott Hotel</td>
           <td>Airport TBS</td>
-          <td>22.00 GEL</td>
+          <td><b>22.00 GEL</b></td>
           <td class="since">5 min ago</td>
         </tr>
         <tr>
           <td class="mono">01KRF3GF18</td>
-          <td><span class="badge success">in_progress</span></td>
+          <td><span class="pill success"><span class="dot"></span> IN PROGRESS</span></td>
           <td>+995 595 41 78 90</td>
           <td>Salome Q.</td>
           <td>Lisi Lake</td>
           <td>Vera District</td>
-          <td>8.40 GEL</td>
+          <td><b>8.40 GEL</b></td>
           <td class="since">7 min ago</td>
         </tr>
       </tbody>
