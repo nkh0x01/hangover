@@ -1,0 +1,10 @@
+name: hangover_workspace
+description: Hangover Mobility Platform — Flutter monorepo (Melos).
+publish_to: 'none'
+version: 0.0.0
+
+environment:
+  sdk: '>=3.5.0 <4.0.0'
+
+dev_dependencies:
+  melos: ^6.0.0

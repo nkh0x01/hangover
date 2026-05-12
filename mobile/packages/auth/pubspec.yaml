@@ -1,0 +1,22 @@
+name: auth
+description: Phone-OTP, Google, Apple authentication.
+version: 0.1.0
+publish_to: 'none'
+
+environment:
+  sdk: '>=3.5.0 <4.0.0'
+  flutter: '>=3.24.0'
+
+dependencies:
+  core:
+    path: ../core
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^2.5.1
+  network:
+    path: ../network
+
+dev_dependencies:
+  flutter_lints: ^4.0.0
+  flutter_test:
+    sdk: flutter

@@ -1,0 +1,23 @@
+name: network
+description: Dio-based HTTP client, interceptors, base API surface.
+version: 0.1.0
+publish_to: 'none'
+
+environment:
+  sdk: '>=3.5.0 <4.0.0'
+  flutter: '>=3.24.0'
+
+dependencies:
+  core:
+    path: ../core
+  dio: ^5.7.0
+  flutter:
+    sdk: flutter
+  flutter_secure_storage: ^9.2.2
+  uuid: ^4.5.1
+
+dev_dependencies:
+  build_runner: ^2.4.13
+  flutter_lints: ^4.0.0
+  flutter_test:
+    sdk: flutter
