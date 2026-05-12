@@ -1,0 +1,248 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="_shared.css">
+<style>
+  body { background: #F1F4F2; }
+  .admin {
+    width: 1280px;
+    min-height: 800px;
+    background: #F1F4F2;
+    margin: 0 auto;
+    display: flex;
+  }
+  .sidebar {
+    width: 240px;
+    background: #111418;
+    color: #C8CFCD;
+    padding: var(--xl) var(--l);
+  }
+  .sidebar .brand {
+    color: #FFF;
+    font-weight: 700;
+    font-size: 18px;
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: var(--xl);
+  }
+  .sidebar .group-title {
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: #6E7773;
+    margin: var(--l) var(--s) var(--s);
+  }
+  .sidebar .nav-item {
+    padding: 10px var(--m);
+    border-radius: var(--r-s);
+    display: flex; align-items: center; gap: var(--m);
+    color: #C8CFCD;
+    margin-bottom: 2px;
+    font-size: 14px;
+  }
+  .sidebar .nav-item.active {
+    background: rgba(31,143,96,0.16);
+    color: #FFF;
+  }
+  .sidebar .nav-item .dot {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--seed);
+  }
+
+  .main { flex: 1; padding: var(--xxl); }
+  .main h1 { font-size: 22px; margin-bottom: var(--xs); }
+  .main .subtitle { color: #677570; font-size: 13px; margin-bottom: var(--xl); }
+
+  .stats { display: flex; gap: var(--l); margin-bottom: var(--xl); }
+  .stat-card {
+    flex: 1; background: #FFF; border-radius: var(--r-m);
+    padding: var(--l);
+    border: 1px solid #E2E6E4;
+  }
+  .stat-card .label { font-size: 12px; color: #677570; text-transform: uppercase; letter-spacing: 0.04em; }
+  .stat-card .value { font-size: 28px; font-weight: 600; margin-top: 4px; }
+  .stat-card .trend { font-size: 12px; margin-top: 4px; }
+  .stat-card .trend.up { color: var(--success); }
+  .stat-card .trend.down { color: var(--danger); }
+
+  table {
+    width: 100%;
+    background: #FFF;
+    border-radius: var(--r-m);
+    border-collapse: collapse;
+    overflow: hidden;
+    border: 1px solid #E2E6E4;
+    font-size: 13px;
+  }
+  thead { background: #F7FAF8; }
+  th {
+    text-align: left;
+    padding: 12px var(--l);
+    font-weight: 500;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #677570;
+    border-bottom: 1px solid #E2E6E4;
+  }
+  td {
+    padding: 14px var(--l);
+    border-bottom: 1px solid #F0F3F1;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #F9FBFA; }
+  .mono { font-family: monospace; font-size: 12px; color: #5C6B65; }
+  .since { color: #677570; font-size: 12px; }
+
+  .panel-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--m); }
+  .panel-toolbar .live { display: flex; align-items: center; gap: 6px; color: var(--success); font-size: 12px; font-weight: 500;}
+  .panel-toolbar .live .live-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--success);
+  }
+</style>
+</head>
+<body>
+<div class="admin">
+
+  <aside class="sidebar">
+    <div class="brand">🛵 Hangover Mobility</div>
+
+    <div class="group-title">Operations</div>
+    <div class="nav-item active"><span class="dot"></span> Active rides</div>
+    <div class="nav-item">▢ Live driver map</div>
+    <div class="nav-item">▢ Live ride map</div>
+    <div class="nav-item">▢ Dispatcher console</div>
+    <div class="nav-item">▢ SOS board</div>
+
+    <div class="group-title">Drivers</div>
+    <div class="nav-item">▢ Approval queue <span style="margin-left:auto; background: var(--warning); color: #FFF; font-size: 11px; padding: 1px 6px; border-radius: 999px;">3</span></div>
+    <div class="nav-item">▢ All drivers</div>
+    <div class="nav-item">▢ Vehicles</div>
+
+    <div class="group-title">Rides</div>
+    <div class="nav-item">▢ All rides</div>
+    <div class="nav-item">▢ Ride offers</div>
+
+    <div class="group-title">Finance</div>
+    <div class="nav-item">▢ Payments</div>
+    <div class="nav-item">▢ Payouts</div>
+  </aside>
+
+  <div class="main">
+    <h1>Active rides</h1>
+    <div class="subtitle">Auto-refreshes every 5 s. Click any row to drill into the ride. WebSocket-driven monitor lands in Phase 4.</div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="label">Active rides</div>
+        <div class="value" style="color: var(--warning);">28</div>
+        <div class="trend up">▲ 4 vs 5min ago</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Online drivers</div>
+        <div class="value" style="color: var(--success);">142</div>
+        <div class="trend up">▲ 11 vs 5min ago</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Completed 24h</div>
+        <div class="value">1,284</div>
+        <div class="trend up">▲ 9% vs yesterday</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Cancellation rate 24h</div>
+        <div class="value">3.7%</div>
+        <div class="trend down">▼ 0.4 pp vs yesterday</div>
+      </div>
+    </div>
+
+    <div class="panel-toolbar">
+      <div style="font-weight: 500; font-size: 14px;">In-flight rides</div>
+      <div class="live"><span class="live-dot"></span> Live · refreshing every 5s</div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Ride</th>
+          <th>Status</th>
+          <th>Customer</th>
+          <th>Driver</th>
+          <th>Pickup</th>
+          <th>Dropoff</th>
+          <th>Fare</th>
+          <th>Requested</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="mono">01KRF3FX18</td>
+          <td><span class="badge success">in_progress</span></td>
+          <td>+995 555 12 34 56</td>
+          <td>Giorgi M.</td>
+          <td>Marjanishvili 4</td>
+          <td>Vake Park</td>
+          <td>7.50 GEL</td>
+          <td class="since">3 min ago</td>
+        </tr>
+        <tr>
+          <td class="mono">01KRF3G8Y5</td>
+          <td><span class="badge warning">driver_arriving</span></td>
+          <td>+995 599 22 11 09</td>
+          <td>Nika T.</td>
+          <td>Rustaveli Ave 2</td>
+          <td>Tbilisi Mall</td>
+          <td>12.20 GEL</td>
+          <td class="since">2 min ago</td>
+        </tr>
+        <tr>
+          <td class="mono">01KRF3GA1C</td>
+          <td><span class="badge warning">accepted</span></td>
+          <td>+995 591 87 44 12</td>
+          <td>Lasha B.</td>
+          <td>Saburtalo</td>
+          <td>Old Tbilisi</td>
+          <td>9.80 GEL</td>
+          <td class="since">1 min ago</td>
+        </tr>
+        <tr>
+          <td class="mono">01KRF3GB2F</td>
+          <td><span class="badge warning">offered</span></td>
+          <td>+995 577 30 12 88</td>
+          <td>—</td>
+          <td>Vake Park</td>
+          <td>Hospital № 5</td>
+          <td>11.40 GEL</td>
+          <td class="since">12 s ago</td>
+        </tr>
+        <tr>
+          <td class="mono">01KRF3GC4A</td>
+          <td><span class="badge info">searching</span></td>
+          <td>+995 555 99 88 77</td>
+          <td>—</td>
+          <td>Mtatsminda Park</td>
+          <td>Freedom Sq.</td>
+          <td>5.50 GEL</td>
+          <td class="since">8 s ago</td>
+        </tr>
+        <tr>
+          <td class="mono">01KRF3GD6E</td>
+          <td><span class="badge warning">driver_arrived</span></td>
+          <td>+995 597 12 34 00</td>
+          <td>Vakhtang K.</td>
+          <td>Marriott Hotel</td>
+          <td>Airport TBS</td>
+          <td>22.00 GEL</td>
+          <td class="since">5 min ago</td>
+        </tr>
+        <tr>
+          <td class="mono">01KRF3GF18</td>
+          <td><span class="badge success">in_progress</span></td>
+          <td>+995 595 41 78 90</td>
+          <td>Salome Q.</td>
+          <td>Lisi Lake</td>
+          <td>Vera District</td>
+          <td>8.40 GEL</td>
+          <td class="since">7 min ago</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</body></html>

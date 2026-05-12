@@ -1,0 +1,49 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="_shared.css">
+<style>
+  .otp { display: flex; gap: var(--m); justify-content: space-between; }
+  .otp .cell {
+    width: 48px; height: 56px;
+    border: 1.5px solid var(--outline);
+    border-radius: var(--r-s);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 600;
+    color: var(--on-surface);
+    background: #FFF;
+  }
+  .otp .cell.active { border-color: var(--seed); }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="status-bar">
+    <span>9:41</span>
+    <div class="right"><span>5G</span><span>WiFi</span><span>100%</span></div>
+  </div>
+
+  <div class="app-bar">
+    <span class="back">←</span>
+    <span>Verify code</span>
+  </div>
+
+  <div style="padding: var(--xl);">
+    <div class="gap-xl"></div>
+    <div class="h-m">Code sent to <strong>+995 555 123 456</strong></div>
+    <div class="gap-l"></div>
+    <div class="otp">
+      <div class="cell">4</div>
+      <div class="cell">2</div>
+      <div class="cell">4</div>
+      <div class="cell">2</div>
+      <div class="cell active">_</div>
+      <div class="cell"></div>
+    </div>
+    <div class="gap-m"></div>
+    <div class="caption">Didn't get the code? <span style="color: var(--seed); font-weight: 500;">Resend in 47s</span></div>
+  </div>
+
+  <div style="position: absolute; left: var(--xl); right: var(--xl); bottom: var(--xxl);">
+    <button class="btn-primary">Verify</button>
+  </div>
+</div>
+</body></html>
