@@ -36,6 +36,7 @@
                     ['route' => 'inventory.index',    'label' => 'Inventory',    'icon' => '📦'],
                     ['route' => 'inventory.pos',      'label' => 'POS',          'icon' => '💳'],
                     ['route' => 'pricing.calendar',   'label' => 'Pricing',      'icon' => '💲'],
+                    ['route' => 'channels.index',     'label' => 'Channels',     'icon' => '🔗'],
                 ];
             @endphp
             @foreach ($links as $link)

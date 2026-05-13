@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             AdminUserSeeder::class,
             InventorySeeder::class,
             PricingSeeder::class,
+            ChannelSeeder::class,
         ]);
     }
 }

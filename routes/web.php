@@ -3,6 +3,11 @@
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ProfileController;
 use App\Livewire\Calendar;
+use App\Livewire\Channels\Conflicts as ChannelConflicts;
+use App\Livewire\Channels\Index as ChannelsIndex;
+use App\Livewire\Channels\Logs as ChannelLogs;
+use App\Livewire\Channels\Mappings as ChannelMappings;
+use App\Livewire\Channels\Show as ChannelShow;
 use App\Livewire\Dashboard;
 use App\Livewire\Guests\Index as GuestsIndex;
 use App\Livewire\Inventory\Dashboard as InventoryDashboard;
@@ -56,6 +61,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/pricing/calendar',     PricingCalendar::class)->name('pricing.calendar');
     Route::get('/pricing/bulk',         PricingBulk::class)->name('pricing.bulk');
     Route::get('/pricing/restrictions', PricingRestrictions::class)->name('pricing.restrictions');
+
+    // Phase 4: channel manager
+    Route::get('/channels',                          ChannelsIndex::class)->name('channels.index');
+    Route::get('/channels/conflicts',                ChannelConflicts::class)->name('channels.conflicts');
+    Route::get('/channels/{connection}',             ChannelShow::class)->name('channels.show');
+    Route::get('/channels/{connection}/mappings',    ChannelMappings::class)->name('channels.mappings');
+    Route::get('/channels/{connection}/logs',        ChannelLogs::class)->name('channels.logs');
 
     Route::get('/profile',    [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile',  [ProfileController::class, 'update'])->name('profile.update');
