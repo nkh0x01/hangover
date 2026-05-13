@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             InventorySeeder::class,
             PricingSeeder::class,
             ChannelSeeder::class,
+            DemoReservationsSeeder::class,
         ]);
     }
 }

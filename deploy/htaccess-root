@@ -1,0 +1,26 @@
+# Place this file as `.htaccess` at the PROJECT ROOT (one level above
+# /public). It only matters if your cPanel/Plesk forces you to expose the
+# project root via public_html (Option B in README). On a correct setup
+# (Option A — doc root = .../public) this file is harmless redundancy.
+
+# Deny everything by default.
+Require all denied
+
+# …except the /public child, which Laravel needs.
+<Directory "public">
+    Require all granted
+</Directory>
+
+# Refuse to serve any sensitive file even if doc-root is misconfigured.
+<FilesMatch "(?i)^(\.env.*|composer\.(json|lock)|package(-lock)?\.json|artisan|.*\.sqlite)$">
+    Require all denied
+</FilesMatch>
+
+# Block direct access to vendor/, storage/, bootstrap/, .git/, node_modules/
+RedirectMatch 404 /\.git
+RedirectMatch 404 /storage(/|$)
+RedirectMatch 404 /vendor(/|$)
+RedirectMatch 404 /bootstrap(/|$)
+RedirectMatch 404 /node_modules(/|$)
+RedirectMatch 404 /tests(/|$)
+RedirectMatch 404 /database/migrations(/|$)
