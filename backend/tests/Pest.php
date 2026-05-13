@@ -16,4 +16,5 @@ uses(RefreshDatabase::class)->in(
     __DIR__.'/Feature/Driver',
     __DIR__.'/Feature/Identity',
     __DIR__.'/Feature/Geo',
+    __DIR__.'/Feature/Payment',
 );

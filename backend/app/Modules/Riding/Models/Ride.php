@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Riding\Models;
 
 use App\Modules\Driver\Models\Driver;
+use App\Modules\Geo\Models\City;
 use App\Modules\Identity\Models\User;
 use App\Modules\Riding\StateMachine\RideStatus;
 use App\Support\Ulid;
@@ -125,6 +126,11 @@ class Ride extends Model
     public function driver(): BelongsTo
     {
         return $this->belongsTo(Driver::class);
+    }
+
+    public function city(): BelongsTo
+    {
+        return $this->belongsTo(City::class);
     }
 
     public function statusLogs(): HasMany
