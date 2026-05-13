@@ -12,7 +12,16 @@ plugins {
     id("com.android.application")
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
-    id("com.google.gms.google-services")
+    // google-services is applied below only when google-services.json is
+    // actually present, so Phase 2.6 QA builds work without Firebase wiring.
+    id("com.google.gms.google-services") apply false
+}
+
+val hasGoogleServices = file("google-services.json").exists()
+if (hasGoogleServices) {
+    apply(plugin = "com.google.gms.google-services")
+} else {
+    logger.lifecycle("[hangover] google-services.json not found — Firebase plugin skipped, app will run without FCM push.")
 }
 
 val keystoreProperties = Properties().apply {
@@ -106,7 +115,9 @@ flutter {
 
 dependencies {
     implementation("androidx.multidex:multidex:2.0.1")
-    implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
-    implementation("com.google.firebase:firebase-messaging-ktx")
-    implementation("com.google.firebase:firebase-analytics-ktx")
+    if (hasGoogleServices) {
+        implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
+        implementation("com.google.firebase:firebase-messaging-ktx")
+        implementation("com.google.firebase:firebase-analytics-ktx")
+    }
 }

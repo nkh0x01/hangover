@@ -64,12 +64,12 @@ class DemoModeController extends Notifier<DemoModeState> {
   @override
   DemoModeState build() => const DemoModeState();
 
-  /// Allowed only in the dev flavor. Returns true if demo mode was
-  /// entered; false if the build is non-dev (silently refused so the
-  /// caller never has to know about flavors).
+  /// Allowed in any non-prod flavor (dev + staging). Returns true if
+  /// demo mode was entered; false if the build is prod (silently
+  /// refused so the caller never has to know about flavors).
   bool activate() {
     final env = ref.read(envProvider);
-    if (!env.flavor.isDev) return false;
+    if (env.isProd) return false;
     state = const DemoModeState(enabled: true, stage: CustomerDemoStage.homeIdle);
     // Prime the ride flow with the canned pickup so the home map has
     // something to centre on without GPS permission.

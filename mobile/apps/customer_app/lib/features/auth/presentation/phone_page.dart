@@ -120,9 +120,10 @@ class _PhonePageState extends ConsumerState<PhonePage> {
                 ),
               ),
 
-              // Dev-flavor preview entry. Hidden in staging/prod builds
-              // by the env.flavor.isDev gate below.
-              if (ref.watch(envProvider).flavor.isDev)
+              // Preview entry. Available in dev AND staging so QA can
+              // demo from an installed staging APK without backend
+              // round-trips. Hidden in prod by the env.isProd gate.
+              if (!ref.watch(envProvider).isProd)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(Insets.xl, 0, Insets.xl, Insets.s),
                   child: OutlinedButton.icon(

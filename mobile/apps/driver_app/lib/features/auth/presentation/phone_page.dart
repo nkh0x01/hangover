@@ -77,7 +77,10 @@ class _PhonePageState extends ConsumerState<PhonePage> {
               ],
               const Spacer(),
               PrimaryButton(label: 'კოდის გაგზავნა / Send code', onPressed: _send, busy: _busy),
-              if (ref.watch(envProvider).flavor.isDev) ...[
+              // Preview entry. Available in dev AND staging so QA can
+              // demo from an installed staging APK without backend
+              // round-trips. Hidden in prod by the env.isProd gate.
+              if (!ref.watch(envProvider).isProd) ...[
                 const SizedBox(height: Insets.s),
                 OutlinedButton.icon(
                   onPressed: () {

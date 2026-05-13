@@ -46,9 +46,12 @@ class DriverDemoController extends Notifier<DriverDemoState> {
   @override
   DriverDemoState build() => const DriverDemoState();
 
+  /// Allowed in any non-prod flavor (dev + staging) so QA can drive
+  /// the canned flow from an installed staging APK without a backend
+  /// driver profile.
   bool activate() {
     final env = ref.read(envProvider);
-    if (!env.flavor.isDev) return false;
+    if (env.isProd) return false;
     state = const DriverDemoState(enabled: true, stage: DriverDemoStage.offlineIdle);
     ref.read(shiftProvider.notifier).demoEnterOffline();
     return true;

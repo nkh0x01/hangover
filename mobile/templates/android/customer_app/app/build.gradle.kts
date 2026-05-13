@@ -16,7 +16,21 @@ plugins {
     id("com.android.application")
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
-    id("com.google.gms.google-services")
+    // google-services is declared at the project level (settings.gradle.kts)
+    // but only applied here when google-services.json is actually present.
+    // This keeps Phase 2.6 QA builds working on a fresh machine that hasn't
+    // wired up Firebase yet.
+    id("com.google.gms.google-services") apply false
+}
+
+// Conditionally apply the google-services plugin so the build doesn't error
+// out when google-services.json is missing — push delivery just becomes a
+// no-op (Dart side already falls back to NullPushService).
+val hasGoogleServices = file("google-services.json").exists()
+if (hasGoogleServices) {
+    apply(plugin = "com.google.gms.google-services")
+} else {
+    logger.lifecycle("[hangover] google-services.json not found — Firebase plugin skipped, app will run without FCM push.")
 }
 
 val keystoreProperties = Properties().apply {
@@ -112,7 +126,12 @@ flutter {
 
 dependencies {
     implementation("androidx.multidex:multidex:2.0.1")
-    implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
-    implementation("com.google.firebase:firebase-messaging-ktx")
-    implementation("com.google.firebase:firebase-analytics-ktx")
+    // Firebase libs link against the BOM but stay dormant when
+    // google-services.json isn't present. The Dart-side push provider
+    // already catches the missing-config case and uses NullPushService.
+    if (hasGoogleServices) {
+        implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
+        implementation("com.google.firebase:firebase-messaging-ktx")
+        implementation("com.google.firebase:firebase-analytics-ktx")
+    }
 }
