@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             AvailabilityCalendarSeeder::class,
             AdminUserSeeder::class,
             InventorySeeder::class,
+            PricingSeeder::class,
         ]);
     }
 }

@@ -2,6 +2,7 @@
 
 use App\Domain\Availability\Period;
 use App\Domain\Pricing\PricingService;
+use App\Models\PricingRule;
 use App\Models\Property;
 use App\Models\RoomType;
 
@@ -10,6 +11,17 @@ beforeEach(function () {
     $this->type = RoomType::factory()->create([
         'property_id' => $this->property->id,
         'base_price'  => 100,
+    ]);
+    // Seed the +15% Fri/Sat uplift as a real rule (Phase 1 had it hardcoded).
+    PricingRule::create([
+        'property_id' => $this->property->id,
+        'name' => 'Weekend',
+        'type' => PricingRule::TYPE_WEEKEND,
+        'priority' => 100,
+        'scope' => PricingRule::SCOPE_PROPERTY,
+        'conditions' => ['days' => [5, 6]],
+        'action' => ['type' => 'percent', 'value' => 15],
+        'active' => true,
     ]);
     $this->pricing = new PricingService();
 });
@@ -21,7 +33,7 @@ it('returns base price for a weekday night', function () {
         ->and($rate->weekendUplift)->toBeFalse();
 });
 
-it('applies 15% uplift on Friday and Saturday', function () {
+it('applies 15% uplift on Friday and Saturday via the weekend rule', function () {
     // 2026-05-15 = Friday
     $fri = $this->pricing->priceForNight($this->type, '2026-05-15');
     // 2026-05-16 = Saturday

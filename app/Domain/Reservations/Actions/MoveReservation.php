@@ -62,6 +62,12 @@ class MoveReservation
 
             $room = $newRoom ?? Room::query()->findOrFail($reservation->room_id);
 
+            // Restriction check on the NEW period before we release the old hold.
+            $restrictions = $this->pricing->restrictionsForStay($room->roomType, $period, $room);
+            if ($violation = $restrictions->violatedBy($period)) {
+                throw \App\Domain\Exceptions\StayRestrictionViolated::from($violation);
+            }
+
             // Step 1: release the current hold.
             $this->availability->release($reservation);
 

@@ -132,6 +132,18 @@ it('rejects guests outside the property', function () {
 });
 
 it('snapshots nightly rates exactly as priced', function () {
+    // Phase 3: weekend uplift is now a pricing_rules row, not hardcoded.
+    \App\Models\PricingRule::create([
+        'property_id' => $this->p->property->id,
+        'name' => 'Weekend',
+        'type' => \App\Models\PricingRule::TYPE_WEEKEND,
+        'priority' => 100,
+        'scope' => \App\Models\PricingRule::SCOPE_PROPERTY,
+        'conditions' => ['days' => [5, 6]],
+        'action' => ['type' => 'percent', 'value' => 15],
+        'active' => true,
+    ]);
+
     $period = new Period('2026-05-14', '2026-05-18'); // Thu→Mon: 100,115,115,100
     $reservation = $this->p->createReservation(period: $period);
 

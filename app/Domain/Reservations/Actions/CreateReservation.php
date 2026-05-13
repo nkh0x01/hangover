@@ -33,7 +33,13 @@ class CreateReservation
         return DB::transaction(function () use ($data): Reservation {
             $room = $this->resolveRoom($data);
 
-            $quote = $this->pricing->priceForStay($data->roomType, $data->period);
+            // Enforce per-day restrictions (min_stay / CTA / CTD).
+            $restrictions = $this->pricing->restrictionsForStay($data->roomType, $data->period, $room);
+            if ($violation = $restrictions->violatedBy($data->period)) {
+                throw \App\Domain\Exceptions\StayRestrictionViolated::from($violation);
+            }
+
+            $quote = $this->pricing->priceForStay($data->roomType, $data->period, $room);
 
             $reservation = Reservation::create([
                 'code'             => $this->codes->generate($data->property),
