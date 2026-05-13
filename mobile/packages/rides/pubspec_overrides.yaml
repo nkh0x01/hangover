@@ -1,0 +1,10 @@
+# melos_managed_dependency_overrides: core,maps,network,realtime
+dependency_overrides:
+  core:
+    path: ../core
+  maps:
+    path: ../maps
+  network:
+    path: ../network
+  realtime:
+    path: ../realtime
