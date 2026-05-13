@@ -25,6 +25,9 @@ use Illuminate\Support\Carbon;
  * @property string $rating_avg
  * @property User $user
  * @property Vehicle|null $currentVehicle
+ * @property ?Carbon $verified_at
+ * @property string $verification_status
+ * @property ?string $verification_notes
  */
 class Driver extends Model
 {
@@ -44,6 +47,9 @@ class Driver extends Model
         'approval_notes',
         'approved_at',
         'approved_by_user_id',
+        'verification_status',
+        'verified_at',
+        'verification_notes',
         'online',
         'online_since',
         'current_vehicle_id',
@@ -61,6 +67,7 @@ class Driver extends Model
             'online' => 'boolean',
             'online_since' => 'datetime',
             'approved_at' => 'datetime',
+            'verified_at' => 'datetime',
             'rating_avg' => 'decimal:2',
             'commission_rate_override' => 'decimal:4',
             'id_number_encrypted' => 'encrypted',

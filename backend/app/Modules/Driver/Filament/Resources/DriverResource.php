@@ -62,6 +62,15 @@ final class DriverResource extends Resource
                         'success' => 'approved',
                         'danger' => fn ($state) => in_array($state, ['rejected', 'suspended'], true),
                     ]),
+                Tables\Columns\TextColumn::make('verification_status')
+                    ->label('Verification')
+                    ->badge()
+                    ->color(fn (string $state) => match ($state) {
+                        'verified' => 'success',
+                        'in_review' => 'warning',
+                        'rejected' => 'danger',
+                        default => 'gray',
+                    }),
                 Tables\Columns\IconColumn::make('online')->boolean(),
                 Tables\Columns\TextColumn::make('rating_avg')->sortable(),
                 Tables\Columns\TextColumn::make('trips_completed')->sortable(),
@@ -74,6 +83,12 @@ final class DriverResource extends Resource
                     'approved' => 'Approved',
                     'rejected' => 'Rejected',
                     'suspended' => 'Suspended',
+                ]),
+                Tables\Filters\SelectFilter::make('verification_status')->options([
+                    'pending' => 'Pending',
+                    'in_review' => 'In review',
+                    'verified' => 'Verified',
+                    'rejected' => 'Rejected',
                 ]),
                 Tables\Filters\TernaryFilter::make('online'),
             ])

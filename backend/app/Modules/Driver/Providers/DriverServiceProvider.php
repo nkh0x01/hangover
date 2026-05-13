@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace App\Modules\Driver\Providers;
 
+use App\Modules\Driver\Actions\ReviewDriverDocument;
+use App\Modules\Driver\Actions\SubmitDriverDocument;
+use App\Modules\Driver\Actions\VerifyVehicle;
+use App\Modules\Driver\Services\DriverVerificationPresenter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
@@ -11,7 +15,10 @@ final class DriverServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        // No singletons yet — Phase 1 part 2 adds DriverApprovalService.
+        $this->app->singleton(SubmitDriverDocument::class);
+        $this->app->singleton(ReviewDriverDocument::class);
+        $this->app->singleton(VerifyVehicle::class);
+        $this->app->singleton(DriverVerificationPresenter::class);
     }
 
     public function boot(): void

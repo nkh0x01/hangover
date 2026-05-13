@@ -45,6 +45,9 @@ class User extends Authenticatable implements FilamentUser
         'avatar_path',
         'locale',
         'status',
+        'suspended_at',
+        'suspension_reason',
+        'suspended_by_user_id',
         'referral_code',
         'referred_by_user_id',
         'last_seen_at',
@@ -109,5 +112,15 @@ class User extends Authenticatable implements FilamentUser
     public function driver(): HasOne
     {
         return $this->hasOne(Driver::class);
+    }
+
+    public function fraudFlags(): HasMany
+    {
+        return $this->hasMany(\App\Modules\Support\Models\FraudFlag::class);
+    }
+
+    public function isBlocked(): bool
+    {
+        return in_array($this->status, ['suspended', 'banned'], true);
     }
 }

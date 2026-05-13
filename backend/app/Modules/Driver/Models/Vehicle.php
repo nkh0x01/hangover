@@ -34,6 +34,9 @@ class Vehicle extends Model
         'is_active',
         'photos',
         'telemetry_supported',
+        'verified_at',
+        'verified_by_user_id',
+        'verification_notes',
     ];
 
     protected function casts(): array
@@ -42,6 +45,7 @@ class Vehicle extends Model
             'is_active' => 'boolean',
             'telemetry_supported' => 'boolean',
             'photos' => 'array',
+            'verified_at' => 'datetime',
         ];
     }
 

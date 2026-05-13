@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Middleware\EnforceAppVersion;
 use App\Http\Middleware\EnsureDeviceBound;
 use App\Http\Middleware\EnsureIdempotency;
+use App\Http\Middleware\EnsureNotBlocked;
 use App\Http\Middleware\LocalizeRequest;
 use App\Http\Middleware\LogRequestId;
 use App\Support\Exceptions\DomainException;
@@ -49,6 +50,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'device.bound' => EnsureDeviceBound::class,
             'app.version' => EnforceAppVersion::class,
             'idempotent' => EnsureIdempotency::class,
+            'not_blocked' => EnsureNotBlocked::class,
             'role' => RoleMiddleware::class,
             'permission' => PermissionMiddleware::class,
             'ability' => CheckForAnyAbility::class,

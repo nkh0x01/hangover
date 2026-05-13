@@ -6,7 +6,17 @@ namespace App\Modules\Driver\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property string $doc_type
+ * @property string $status
+ * @property ?Carbon $expires_on
+ * @property ?Carbon $reviewed_at
+ * @property ?string $review_notes
+ * @property int $driver_id
+ * @property ?Driver $driver
+ */
 class DriverDocument extends Model
 {
     protected $table = 'driver_documents';
