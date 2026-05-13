@@ -10,16 +10,28 @@ import 'di/locator.dart';
 Future<void> bootstrap(EnvConfig env) async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await runZonedGuarded<Future<void>>(() async {
-    final container = await buildContainer(env);
+  await CrashReporter.bootstrap(
+    env: env,
+    appRunner: () async {
+      final container = await buildContainer(env);
 
-    runApp(
-      UncontrolledProviderScope(
-        container: container,
-        child: const HangoverDriverApp(),
-      ),
-    );
-  }, (error, stack) {
-    // Forward to Sentry in Phase 4.
-  });
+      try {
+        final push = container.read(pushServiceProvider);
+        await push.initialize();
+      } catch (e, st) {
+        await CrashReporter.captureException(
+          e,
+          stackTrace: st,
+          hint: 'push init failed (non-fatal)',
+        );
+      }
+
+      runApp(
+        UncontrolledProviderScope(
+          container: container,
+          child: const HangoverDriverApp(),
+        ),
+      );
+    },
+  );
 }

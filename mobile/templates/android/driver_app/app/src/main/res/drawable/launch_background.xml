@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Static splash. The dynamic gradient + animated brand mark is
+     painted by Flutter once the framework is up; this drawable just
+     bridges the pre-Flutter window. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/launch_background" />
+    <item android:gravity="center">
+        <bitmap
+            android:src="@mipmap/ic_launcher"
+            android:gravity="center" />
+    </item>
+</layer-list>

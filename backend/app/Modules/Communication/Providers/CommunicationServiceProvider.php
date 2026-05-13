@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace App\Modules\Communication\Providers;
 
+use App\Modules\Communication\Contracts\PushGateway;
 use App\Modules\Communication\Contracts\SmsGateway;
+use App\Modules\Communication\Push\FirebasePushGateway;
+use App\Modules\Communication\Push\NullPushGateway;
 use Illuminate\Support\ServiceProvider;
+use Kreait\Firebase\Contract\Messaging;
 use RuntimeException;
+use Throwable;
 
 final class CommunicationServiceProvider extends ServiceProvider
 {
@@ -32,10 +37,28 @@ final class CommunicationServiceProvider extends ServiceProvider
                 default => new $cls,
             };
         });
+
+        $this->app->singleton(PushGateway::class, function (): PushGateway {
+            // Resolve only if kreait/laravel-firebase is configured.
+            // Test + local-dev environments fall back to the null gateway.
+            $driver = (string) config('push.driver', 'null');
+            if ($driver !== 'firebase') {
+                return new NullPushGateway;
+            }
+
+            try {
+                /** @var Messaging $messaging */
+                $messaging = $this->app->make(Messaging::class);
+
+                return new FirebasePushGateway($messaging);
+            } catch (Throwable) {
+                // Firebase creds not configured — degrade gracefully so a
+                // misconfigured staging deploy doesn't take ride dispatch
+                // down with it.
+                return new NullPushGateway;
+            }
+        });
     }
 
-    public function boot(): void
-    {
-        // Push channel + notification templates land here in Phase 4.
-    }
+    public function boot(): void {}
 }

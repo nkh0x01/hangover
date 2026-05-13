@@ -73,5 +73,24 @@ return Application::configure(basePath: dirname(__DIR__))
                 default => JsonErrorRenderer::unexpected($e),
             };
         });
+
+        // Forward non-domain exceptions to Sentry when the package is
+        // installed and a DSN is configured. The integration is opt-in
+        // via env so tests and local dev never report.
+        $exceptions->reportable(function (Throwable $e): bool {
+            if (! function_exists('\Sentry\captureException')) {
+                return true; // let the default reporter run
+            }
+            if ($e instanceof ValidationException
+                || $e instanceof AuthenticationException
+                || $e instanceof AuthorizationException
+                || $e instanceof DomainException) {
+                // These are expected client errors, not ops alerts.
+                return true;
+            }
+            \Sentry\captureException($e);
+
+            return true;
+        });
     })
     ->create();

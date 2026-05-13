@@ -54,6 +54,13 @@ return [
             'days' => 14,
         ],
 
+        'push' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/push.log'),
+            'level' => env('LOG_LEVEL', 'info'),
+            'days' => 14,
+        ],
+
         'payment' => [
             'driver' => 'daily',
             'path' => storage_path('logs/payment.log'),

@@ -1,0 +1,17 @@
+# Copy this to mobile/apps/<app>/android/key.properties
+# (gitignored) and fill in the values from the upload keystore.
+#
+# Generate a fresh keystore (do this ONCE per app):
+#
+#   keytool -genkey -v \
+#     -keystore hangover-upload.jks \
+#     -keyalg RSA -keysize 2048 -validity 10000 \
+#     -alias upload
+#
+# Then store the .jks somewhere safe (Bitwarden / 1Password) and add
+# the path below. Do NOT commit the .jks itself.
+
+storeFile=../hangover-upload.jks
+storePassword=REPLACE_ME
+keyAlias=upload
+keyPassword=REPLACE_ME

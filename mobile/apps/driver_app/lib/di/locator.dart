@@ -46,6 +46,19 @@ final driverRideRepositoryProvider = Provider<DriverRideRepository>((ref) {
 
 final mapProviderProvider = Provider<MapProvider>((ref) => GoogleMapsProvider());
 
+final appLoggerProvider = Provider<AppLogger>((ref) => AppLogger());
+
+/// Push service for the driver app. Returns [NullPushService] when
+/// Firebase isn't initialized; otherwise [FirebasePushService] for FCM.
+/// Driver app subscribes to `rideOffered` here to drive the incoming-offer modal.
+final pushServiceProvider = Provider<PushService>((ref) {
+  try {
+    return FirebasePushService(logger: ref.watch(appLoggerProvider));
+  } catch (_) {
+    return NullPushService();
+  }
+});
+
 Future<ProviderContainer> buildContainer(EnvConfig env) async {
   return ProviderContainer(
     overrides: [envProvider.overrideWithValue(env)],

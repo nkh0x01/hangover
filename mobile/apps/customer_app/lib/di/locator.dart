@@ -50,6 +50,19 @@ final rideEventStreamProvider = Provider<RideEventStream>((ref) {
   return RideEventStream(repository: ref.watch(rideRepositoryProvider));
 });
 
+final appLoggerProvider = Provider<AppLogger>((ref) => AppLogger());
+
+/// Push service for the customer app. Returns [NullPushService] when
+/// Firebase isn't initialized (e.g. local dev without `google-services.json`),
+/// otherwise wires up a real [FirebasePushService] backed by FCM.
+final pushServiceProvider = Provider<PushService>((ref) {
+  try {
+    return FirebasePushService(logger: ref.watch(appLoggerProvider));
+  } catch (_) {
+    return NullPushService();
+  }
+});
+
 Future<ProviderContainer> buildContainer(EnvConfig env) async {
   return ProviderContainer(
     overrides: [envProvider.overrideWithValue(env)],

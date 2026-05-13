@@ -27,6 +27,7 @@
         "spatie/laravel-health": "^1.30",
         "dedoc/scramble": "^0.11",
         "predis/predis": "^2.2",
+        "sentry/sentry-laravel": "^4.10",
         "symfony/uid": "^7.1",
         "guzzlehttp/guzzle": "^7.9"
     },
