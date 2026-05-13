@@ -32,6 +32,9 @@ class MockChannelService implements ChannelProviderInterface
     /** @var array<int, bool> next call should throw (by connection_id) */
     public static array $shouldFail = [];
 
+    /** @var array<int, array<int, string>> queued cancellations by connection_id */
+    public static array $cancellations = [];
+
     public function key(): string
     {
         return ChannelConnection::CHANNEL_MOCK;
@@ -76,6 +79,19 @@ class MockChannelService implements ChannelProviderInterface
         }
     }
 
+    public function pullCancellations(ChannelConnection $connection, Period $window): iterable
+    {
+        $this->maybeFail($connection);
+        foreach (self::$cancellations[$connection->id] ?? [] as $externalId) {
+            yield $externalId;
+        }
+    }
+
+    public static function seedCancellation(ChannelConnection $connection, string $externalId): void
+    {
+        self::$cancellations[$connection->id][] = $externalId;
+    }
+
     public function pushAvailability(ChannelConnection $connection, array $rows): void
     {
         $this->maybeFail($connection);
@@ -117,6 +133,7 @@ class MockChannelService implements ChannelProviderInterface
         self::$lastPush = [];
         self::$health = [];
         self::$shouldFail = [];
+        self::$cancellations = [];
     }
 
     /**

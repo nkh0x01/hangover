@@ -18,6 +18,9 @@ use App\Models\ChannelRateMapping;
 use App\Models\ChannelRoomMapping;
 use App\Models\ChannelSyncLog;
 use App\Models\DailyRoomPrice;
+use App\Models\User;
+use App\Notifications\ChannelSyncFailed;
+use Illuminate\Support\Facades\Notification;
 use Throwable;
 
 /**
@@ -87,6 +90,19 @@ class ChannelSyncService
                     in_array($staged->status, ['processed'], true)
                         ? $processed++
                         : ($staged->status === 'conflict' || $staged->status === 'failed' ? $failed++ : $processed++);
+                }
+
+                // OTA cancellations come down the same pull. Each external_id
+                // is routed through CancelReservation so the availability
+                // ledger gets released — no logic duplicated locally.
+                foreach ($provider->pullCancellations($connection, $window) as $externalId) {
+                    $cancelled = $this->importer->cancelByExternalId($connection, $externalId);
+                    $items[] = [
+                        'external_id' => $externalId,
+                        'action' => 'cancel',
+                        'cancelled' => $cancelled,
+                    ];
+                    $processed++;
                 }
 
                 $connection->update(['last_pull_at' => now()]);
@@ -360,12 +376,31 @@ class ChannelSyncService
 
     private function recordFailure(ChannelConnection $connection, string $error): void
     {
+        $previousCount = (int) $connection->error_count;
+        $newCount = $previousCount + 1;
+
         $connection->update([
             'last_error' => $error,
-            'error_count' => $connection->error_count + 1,
-            'status' => $connection->error_count + 1 >= 5
+            'error_count' => $newCount,
+            'status' => $newCount >= 5
                 ? ChannelConnection::STATUS_ERROR
                 : $connection->status,
         ]);
+
+        // Only fire the notification on the threshold crossing — not on every
+        // subsequent failure — so a single broken provider doesn't flood the
+        // duty manager's inbox.
+        if ($previousCount < ChannelSyncFailed::FAILURE_THRESHOLD
+            && $newCount >= ChannelSyncFailed::FAILURE_THRESHOLD
+        ) {
+            $managers = User::query()
+                ->where('property_id', $connection->property_id)
+                ->whereHas('roles', fn ($q) => $q->whereIn('name', ['super_admin', 'manager']))
+                ->get();
+
+            if ($managers->isNotEmpty()) {
+                Notification::send($managers, ChannelSyncFailed::from($connection->fresh(), $error));
+            }
+        }
     }
 }

@@ -14,6 +14,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\SetLocale::class,
         ]);
+        // Booking.com webhooks are POST from outside our CSRF cookie cycle.
+        // Authenticated instead by HMAC signature in the controller.
+        $middleware->validateCsrfTokens(except: [
+            'webhooks/channels/*',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

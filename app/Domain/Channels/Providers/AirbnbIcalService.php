@@ -59,6 +59,11 @@ class AirbnbIcalService implements ChannelProviderInterface
         throw $this->notImplemented(__FUNCTION__);
     }
 
+    public function pullCancellations(ChannelConnection $connection, Period $window): iterable
+    {
+        throw $this->notImplemented(__FUNCTION__);
+    }
+
     public function pushAvailability(ChannelConnection $connection, array $rows): void
     {
         throw $this->notImplemented(__FUNCTION__);

@@ -5,7 +5,9 @@ namespace App\Domain\Channels\Services;
 use App\Domain\Availability\AvailabilityService;
 use App\Domain\Channels\Data\ChannelReservationDTO;
 use App\Domain\Channels\Exceptions\ChannelMappingException;
+use App\Domain\Exceptions\InvalidReservationState;
 use App\Domain\Exceptions\RoomNotAvailable;
+use App\Domain\Reservations\Actions\CancelReservation;
 use App\Domain\Reservations\Actions\CreateReservation;
 use App\Domain\Reservations\Data\CreateReservationData;
 use App\Models\ChannelConnection;
@@ -34,8 +36,58 @@ class ChannelReservationImportService
     public function __construct(
         private readonly ChannelMappingService $mapper,
         private readonly CreateReservation $createReservation,
+        private readonly CancelReservation $cancelReservation,
         private readonly AvailabilityService $availability,
     ) {
+    }
+
+    /**
+     * Handle an OTA-side cancellation: locate the local Reservation for the
+     * given external_id and route it through CancelReservation so the
+     * availability ledger is released. Returns true if a real reservation
+     * was cancelled, false if there was nothing to cancel (already cancelled,
+     * never imported, etc.).
+     */
+    public function cancelByExternalId(ChannelConnection $connection, string $externalId, string $reason = 'Cancelled by channel'): bool
+    {
+        $channelRow = ChannelReservation::query()
+            ->where('channel_connection_id', $connection->id)
+            ->where('external_id', $externalId)
+            ->first();
+
+        if (! $channelRow || ! $channelRow->reservation_id) {
+            return false;
+        }
+
+        $reservation = Reservation::query()->find($channelRow->reservation_id);
+        if (! $reservation || $reservation->status === Reservation::STATUS_CANCELLED) {
+            $channelRow->update([
+                'status' => ChannelReservation::STATUS_PROCESSED,
+                'error' => null,
+                'processed_at' => now(),
+            ]);
+            return false;
+        }
+
+        try {
+            $this->cancelReservation->execute($reservation, $reason);
+        } catch (InvalidReservationState $e) {
+            // Cancelling a checked-out reservation is a no-op for the channel.
+            $channelRow->update([
+                'status' => ChannelReservation::STATUS_FAILED,
+                'error' => $e->getMessage(),
+                'processed_at' => now(),
+            ]);
+            return false;
+        }
+
+        $channelRow->update([
+            'status' => ChannelReservation::STATUS_PROCESSED,
+            'error' => null,
+            'processed_at' => now(),
+        ]);
+
+        return true;
     }
 
     public function stage(ChannelConnection $connection, ChannelReservationDTO $dto): ChannelReservation

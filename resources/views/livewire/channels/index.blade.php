@@ -5,6 +5,11 @@
         <p class="text-sm text-slate-500 max-w-xl">
             {{ __('Two-way sync between your PMS and external OTAs. Mock provider is enabled by default for development.') }}
         </p>
+        <div class="flex items-center gap-2">
+            <a href="{{ route('channels.booking.index') }}"
+               class="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50">
+                {{ __('Booking.com') }} →
+            </a>
         <a href="{{ route('channels.conflicts') }}"
            class="rounded-md border px-3 py-1.5 text-sm
                   {{ $conflicts > 0
@@ -15,6 +20,7 @@
                 <span class="ml-1 inline-flex items-center rounded-full bg-amber-200 px-2 py-0.5 text-xs font-medium text-amber-900">{{ $conflicts }}</span>
             @endif
         </a>
+        </div>
     </div>
 
     <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">

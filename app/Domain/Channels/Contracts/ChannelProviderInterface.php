@@ -45,6 +45,15 @@ interface ChannelProviderInterface
     public function pullReservations(ChannelConnection $connection, Period $window): iterable;
 
     /**
+     * Returns the external_ids of reservations the OTA has cancelled since
+     * (or within) the given period. The orchestrator turns each id into a
+     * CancelReservation call so the availability ledger is freed correctly.
+     *
+     * @return iterable<int, string>
+     */
+    public function pullCancellations(ChannelConnection $connection, Period $window): iterable;
+
+    /**
      * Push availability (rooms-left counts) for the given period.
      *
      * @param  array<int, AvailabilityDTO>  $rows

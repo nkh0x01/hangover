@@ -32,22 +32,48 @@ class ChannelSeeder extends Seeder
             ],
         );
 
-        // Always have at least one paused real-OTA connection visible in the UI
-        // so the channels list shows the multi-channel intent — even though
-        // their providers throw NotImplemented.
-        ChannelConnection::firstOrCreate(
+        // Phase 5: a Booking.com SANDBOX connection in dry-run mode. The
+        // operator can flip dry_run off to send real sandbox traffic; going
+        // production requires changing settings.sandbox=false.
+        $booking = ChannelConnection::firstOrCreate(
             [
                 'property_id' => $property->id,
                 'channel' => ChannelConnection::CHANNEL_BOOKING,
-                'name' => 'Booking.com (stub)',
+                'name' => 'Booking.com (sandbox)',
             ],
             [
-                'status' => ChannelConnection::STATUS_PAUSED,
-                'credentials' => null,
-                'settings' => ['currency' => $property->base_currency],
+                'status' => ChannelConnection::STATUS_ACTIVE,
+                'dry_run' => true,
+                'credentials' => [
+                    'hotel_id' => 'demo-1234567',
+                    'secret' => 'sandbox-secret-placeholder',
+                    'webhook_secret' => str()->random(48),
+                ],
+                'settings' => [
+                    'sandbox' => true,
+                    'currency' => $property->base_currency,
+                ],
                 'error_count' => 0,
             ],
         );
+
+        // Map the same rooms as the mock connection so the Booking preview
+        // payload page is informative right after seeding.
+        foreach ($property->roomTypes as $type) {
+            app(ChannelMappingService::class)->mapRoom(
+                $booking,
+                $type,
+                'BKG-'.strtoupper(substr($type->slug, 0, 8)),
+                $type->name,
+            );
+            app(ChannelMappingService::class)->mapRate(
+                $booking,
+                $type,
+                'BKG-RATE-'.strtoupper(substr($type->slug, 0, 6)).'-BAR',
+                'BAR',
+                markupPercent: 8,
+            );
+        }
 
         $mapper = app(ChannelMappingService::class);
 

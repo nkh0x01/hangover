@@ -41,6 +41,7 @@ class ChannelConnection extends Model implements AuditableContract
 
     protected $fillable = [
         'property_id', 'channel', 'name', 'status',
+        'dry_run', 'live_confirmed_at',
         'credentials', 'settings',
         'last_pull_at', 'last_push_at',
         'last_error', 'error_count',
@@ -52,8 +53,10 @@ class ChannelConnection extends Model implements AuditableContract
             // Credentials are encrypted on write, decrypted on read.
             'credentials' => 'encrypted:array',
             'settings' => 'array',
+            'dry_run' => 'boolean',
             'last_pull_at' => 'datetime',
             'last_push_at' => 'datetime',
+            'live_confirmed_at' => 'datetime',
             'error_count' => 'integer',
         ];
     }
@@ -86,5 +89,31 @@ class ChannelConnection extends Model implements AuditableContract
     public function isMock(): bool
     {
         return $this->channel === self::CHANNEL_MOCK;
+    }
+
+    public function isBooking(): bool
+    {
+        return $this->channel === self::CHANNEL_BOOKING;
+    }
+
+    public function isDryRun(): bool
+    {
+        return (bool) $this->dry_run;
+    }
+
+    public function isLive(): bool
+    {
+        return ! $this->isDryRun() && $this->status === self::STATUS_ACTIVE;
+    }
+
+    /**
+     * A live push is only allowed within 60 seconds of an explicit user
+     * confirmation. The window is intentionally short so an attacker or
+     * a careless cron can't piggyback on an old confirmation.
+     */
+    public function liveConfirmationActive(): bool
+    {
+        return $this->live_confirmed_at !== null
+            && $this->live_confirmed_at->greaterThan(now()->subSeconds(60));
     }
 }

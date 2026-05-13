@@ -1,8 +1,15 @@
 <?php
 
+use App\Http\Controllers\Channels\BookingWebhookController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ProfileController;
 use App\Livewire\Calendar;
+use App\Livewire\Channels\Booking\Credentials as BookingCredentials;
+use App\Livewire\Channels\Booking\Index as BookingIndex;
+use App\Livewire\Channels\Booking\Logs as BookingLogs;
+use App\Livewire\Channels\Booking\PreviewPayload as BookingPreviewPayload;
+use App\Livewire\Channels\Booking\Show as BookingShow;
+use App\Livewire\Channels\Booking\Test as BookingTest;
 use App\Livewire\Channels\Conflicts as ChannelConflicts;
 use App\Livewire\Channels\Index as ChannelsIndex;
 use App\Livewire\Channels\Logs as ChannelLogs;
@@ -32,6 +39,11 @@ Route::get('/', fn () => redirect()->route('dashboard'));
 
 // Language switching is available to guests AND auth'd users.
 Route::get('/locale/{locale}', [LocaleController::class, 'switch'])->name('locale.switch');
+
+// Phase 5: Booking.com inbound webhook. NOT under auth: providers POST here.
+// Authentication is by HMAC signature against the connection's webhook_secret.
+Route::post('/webhooks/channels/booking/{connection}', BookingWebhookController::class)
+    ->name('webhooks.booking');
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard',     Dashboard::class)->name('dashboard');
@@ -65,6 +77,16 @@ Route::middleware('auth')->group(function () {
     // Phase 4: channel manager
     Route::get('/channels',                          ChannelsIndex::class)->name('channels.index');
     Route::get('/channels/conflicts',                ChannelConflicts::class)->name('channels.conflicts');
+
+    // Phase 5: Booking.com (declared BEFORE the generic show route so
+    // /channels/booking doesn't get swallowed by /channels/{connection}).
+    Route::get('/channels/booking',                              BookingIndex::class)->name('channels.booking.index');
+    Route::get('/channels/booking/{connection}',                 BookingShow::class)->name('channels.booking.show');
+    Route::get('/channels/booking/{connection}/credentials',     BookingCredentials::class)->name('channels.booking.credentials');
+    Route::get('/channels/booking/{connection}/test',            BookingTest::class)->name('channels.booking.test');
+    Route::get('/channels/booking/{connection}/preview-payload', BookingPreviewPayload::class)->name('channels.booking.preview');
+    Route::get('/channels/booking/{connection}/logs',            BookingLogs::class)->name('channels.booking.logs');
+
     Route::get('/channels/{connection}',             ChannelShow::class)->name('channels.show');
     Route::get('/channels/{connection}/mappings',    ChannelMappings::class)->name('channels.mappings');
     Route::get('/channels/{connection}/logs',        ChannelLogs::class)->name('channels.logs');
