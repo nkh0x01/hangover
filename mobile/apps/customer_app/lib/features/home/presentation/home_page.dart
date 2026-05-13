@@ -7,6 +7,8 @@ import 'package:maps/maps.dart';
 import 'package:ui_kit/ui_kit.dart';
 
 import '../../../di/locator.dart';
+import '../../demo/presentation/demo_stepper.dart';
+import '../../demo/state/demo_mode_controller.dart';
 import '../../ride/state/ride_flow_controller.dart';
 
 class HomePage extends ConsumerStatefulWidget {
@@ -33,6 +35,19 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Future<void> _checkActiveAndStart() async {
+    // Preview mode: no backend, so no active-ride lookup and no
+    // nearby-drivers polling. Show a few static markers so the map
+    // still reads as "drivers around me".
+    if (ref.read(rideFlowProvider).demoActive) {
+      if (mounted) {
+        setState(() => _nearby = const [
+              LatLng(41.7180, 44.8290),
+              LatLng(41.7120, 44.8260),
+              LatLng(41.7160, 44.8330),
+            ]);
+      }
+      return;
+    }
     try {
       final active = await ref.read(rideRepositoryProvider).active();
       if (active != null && !active.status.isTerminal && mounted) {
@@ -146,11 +161,26 @@ class _HomePageState extends ConsumerState<HomePage> {
                 padding: const EdgeInsets.all(Insets.l),
                 child: _WhereToCard(
                   driversNearby: _nearby.length,
-                  onTap: () => context.push('/ride/search'),
+                  onTap: () {
+                    // Demo: skip the picker, jump straight to fare
+                    // estimate with canned pickup/dropoff so the
+                    // reviewer sees the full flow without typing.
+                    if (ref.read(demoModeProvider).enabled) {
+                      ref
+                          .read(demoModeProvider.notifier)
+                          .jumpTo(CustomerDemoStage.fareEstimate);
+                      context.push('/ride/estimate');
+                    } else {
+                      context.push('/ride/search');
+                    }
+                  },
                 ),
               ),
             ),
           ),
+
+          // Dev preview overlay (renders nothing in non-demo state).
+          const Align(alignment: Alignment.topCenter, child: DemoStepper()),
         ],
       ),
     );

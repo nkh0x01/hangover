@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ui_kit/ui_kit.dart';
 
 import '../../../di/locator.dart';
+import '../../demo/state/demo_mode_controller.dart';
 
 class PhonePage extends ConsumerStatefulWidget {
   const PhonePage({super.key});
@@ -76,6 +77,23 @@ class _PhonePageState extends ConsumerState<PhonePage> {
               ],
               const Spacer(),
               PrimaryButton(label: 'კოდის გაგზავნა / Send code', onPressed: _send, busy: _busy),
+              if (ref.watch(envProvider).flavor.isDev) ...[
+                const SizedBox(height: Insets.s),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    ref.read(driverDemoProvider.notifier).activate();
+                    context.go('/home');
+                  },
+                  icon: const Icon(Icons.visibility_rounded, size: 18),
+                  label: const Text('Preview app (no backend)'),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(Radii.l),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),

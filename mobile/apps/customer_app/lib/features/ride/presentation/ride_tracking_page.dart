@@ -6,6 +6,8 @@ import 'package:rides/rides.dart';
 import 'package:ui_kit/ui_kit.dart';
 
 import '../../../di/locator.dart';
+import '../../demo/presentation/demo_stepper.dart';
+import '../../demo/state/demo_mode_controller.dart';
 import '../state/ride_flow_controller.dart';
 
 class RideTrackingPage extends ConsumerStatefulWidget {
@@ -54,11 +56,21 @@ class _RideTrackingPageState extends ConsumerState<RideTrackingPage> {
             child: _RideSheet(
               ride: ride,
               onClose: () {
-                ref.read(rideFlowProvider.notifier).reset();
+                // In demo, keep preview mode on and bounce back to home;
+                // out of demo, clear the ride flow and route home.
+                final demo = ref.read(demoModeProvider);
+                if (demo.enabled) {
+                  ref
+                      .read(demoModeProvider.notifier)
+                      .jumpTo(CustomerDemoStage.homeIdle);
+                } else {
+                  ref.read(rideFlowProvider.notifier).reset();
+                }
                 context.go('/home');
               },
             ),
           ),
+          const Align(alignment: Alignment.topCenter, child: DemoStepper()),
         ],
       ),
     );

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ui_kit/ui_kit.dart';
 
+import '../../demo/presentation/demo_stepper.dart';
+import '../../demo/state/demo_mode_controller.dart';
 import '../state/ride_flow_controller.dart';
 
 class FareEstimatePage extends ConsumerStatefulWidget {
@@ -19,12 +21,25 @@ class _FareEstimatePageState extends ConsumerState<FareEstimatePage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(rideFlowProvider.notifier).requestEstimate();
+      // Demo: ensure dropoff + canned fare are populated even if the
+      // reviewer landed here without going through the picker.
+      if (ref.read(demoModeProvider).enabled) {
+        ref.read(rideFlowProvider.notifier).demoEnterFareEstimate();
+      } else {
+        ref.read(rideFlowProvider.notifier).requestEstimate();
+      }
     });
   }
 
   Future<void> _confirm() async {
     final notifier = ref.read(rideFlowProvider.notifier);
+    // Demo: synthesize a "searching" ride and advance the stage in
+    // lockstep so the floating stepper stays accurate.
+    if (ref.read(demoModeProvider).enabled) {
+      ref.read(demoModeProvider.notifier).jumpTo(CustomerDemoStage.searching);
+      if (context.mounted) context.go('/ride/demo-ride-1');
+      return;
+    }
     await notifier.requestRide(paymentMethod: _paymentMethod);
     final ride = ref.read(rideFlowProvider).activeRide;
     if (ride != null && context.mounted) {
@@ -39,7 +54,8 @@ class _FareEstimatePageState extends ConsumerState<FareEstimatePage> {
 
     return Scaffold(
       appBar: AppBar(leading: const BackButton(), title: const Text('Confirm ride')),
-      body: SafeArea(
+      body: Stack(children: [
+        SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(Insets.xl),
           child: Column(
@@ -89,6 +105,8 @@ class _FareEstimatePageState extends ConsumerState<FareEstimatePage> {
           ),
         ),
       ),
+        const Align(alignment: Alignment.topCenter, child: DemoStepper()),
+      ]),
     );
   }
 }

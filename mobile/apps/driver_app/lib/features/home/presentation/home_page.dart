@@ -4,6 +4,7 @@ import 'package:rides/rides.dart';
 import 'package:ui_kit/ui_kit.dart';
 
 import '../../../di/locator.dart';
+import '../../demo/presentation/demo_stepper.dart';
 import '../../ride/presentation/active_ride_sheet.dart';
 import '../../ride/presentation/incoming_offer_sheet.dart';
 import '../../shift/state/shift_controller.dart';
@@ -43,6 +44,7 @@ class HomePage extends ConsumerWidget {
             const Align(alignment: Alignment.bottomCenter, child: _WaitingForRide()),
           if (shift.pendingOffer != null)
             Positioned.fill(child: IncomingOfferSheet(offer: shift.pendingOffer!)),
+          const Align(alignment: Alignment.topCenter, child: DriverDemoStepper()),
         ],
       ),
     );

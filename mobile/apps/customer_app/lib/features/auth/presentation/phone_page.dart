@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ui_kit/ui_kit.dart';
 
 import '../../../di/locator.dart';
+import '../../demo/state/demo_mode_controller.dart';
 
 class PhonePage extends ConsumerStatefulWidget {
   const PhonePage({super.key});
@@ -118,6 +119,28 @@ class _PhonePageState extends ConsumerState<PhonePage> {
                   trailing: const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 18),
                 ),
               ),
+
+              // Dev-flavor preview entry. Hidden in staging/prod builds
+              // by the env.flavor.isDev gate below.
+              if (ref.watch(envProvider).flavor.isDev)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(Insets.xl, 0, Insets.xl, Insets.s),
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      ref.read(demoModeProvider.notifier).activate();
+                      context.go('/home');
+                    },
+                    icon: const Icon(Icons.visibility_rounded, size: 18),
+                    label: const Text('Preview app (no backend)'),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(Radii.l),
+                      ),
+                    ),
+                  ),
+                ),
+
               Padding(
                 padding: const EdgeInsets.only(bottom: Insets.l),
                 child: Text(
