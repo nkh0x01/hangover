@@ -1,0 +1,50 @@
+# Drop-in replacement for public/.htaccess on the staging server.
+# Use this when the document root is set to .../public (Option A in README).
+
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # Force HTTPS (cPanel typically terminates SSL one hop earlier — check
+    # both the direct scheme and the X-Forwarded-Proto header).
+    RewriteCond %{HTTPS} !=on
+    RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Handle X-XSRF-Token Header
+    RewriteCond %{HTTP:x-xsrf-token} .
+    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
+
+    # Redirect Trailing Slashes If Not A Folder...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # Send Requests To Front Controller...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# Defence-in-depth: even though /public is the document root, refuse to
+# serve any file these patterns would match.
+<FilesMatch "(?i)^(\.env|\.env\..*|composer\.(json|lock)|package\.json|package-lock\.json|artisan)$">
+    Require all denied
+</FilesMatch>
+
+# Security headers for the staging preview.
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "geolocation=(), camera=(), microphone=()"
+    # HSTS only after you've confirmed HTTPS is rock solid:
+    # Header always set Strict-Transport-Security "max-age=15552000; includeSubDomains"
+</IfModule>
