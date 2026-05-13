@@ -11,7 +11,9 @@ use App\Livewire\Inventory\Minibars as InventoryMinibars;
 use App\Livewire\Inventory\Movements as InventoryMovements;
 use App\Livewire\Inventory\Pos as InventoryPos;
 use App\Livewire\Invoices\Show as InvoiceShow;
+use App\Livewire\Pricing\Bulk as PricingBulk;
 use App\Livewire\Pricing\Calendar as PricingCalendar;
+use App\Livewire\Pricing\Restrictions as PricingRestrictions;
 use App\Livewire\Pricing\Rules as PricingRules;
 use App\Livewire\Products\Index as ProductsIndex;
 use App\Livewire\Reservations\Index as ReservationIndex;
@@ -50,8 +52,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/inventory/pos',        InventoryPos::class)->name('inventory.pos');
 
     // Phase 3: pricing
-    Route::get('/pricing/rules',    PricingRules::class)->name('pricing.rules');
-    Route::get('/pricing/calendar', PricingCalendar::class)->name('pricing.calendar');
+    Route::get('/pricing/rules',        PricingRules::class)->name('pricing.rules');
+    Route::get('/pricing/calendar',     PricingCalendar::class)->name('pricing.calendar');
+    Route::get('/pricing/bulk',         PricingBulk::class)->name('pricing.bulk');
+    Route::get('/pricing/restrictions', PricingRestrictions::class)->name('pricing.restrictions');
 
     Route::get('/profile',    [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile',  [ProfileController::class, 'update'])->name('profile.update');

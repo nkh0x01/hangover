@@ -387,5 +387,32 @@
     "Closed to departure": "გასვლა აკრძალულია",
     "Override saved.": "ცვლილება შენახულია.",
     "Override removed.": "ცვლილება მოხსნილია.",
-    "Click a cell to set a manual override or per-day restrictions. Amber cells are manual overrides.": "დააწექი უჯრედს ხელით ფასის ან შეზღუდვების დასადგენად. ყვითელი უჯრედები — ხელით დაყენებული ფასია."
+    "Click a cell to set a manual override or per-day restrictions. Amber cells are manual overrides.": "დააწექი უჯრედს ხელით ფასის ან შეზღუდვების დასადგენად. ყვითელი უჯრედები — ხელით დაყენებული ფასია.",
+
+    "Bulk price update": "ფასების მასობრივი განახლება",
+    "Bulk update": "მასობრივი განახლება",
+    "Restrictions": "შეზღუდვები",
+    "← Pricing calendar": "← ფასების კალენდარი",
+    "Start date": "საწყისი თარიღი",
+    "End date": "საბოლოო თარიღი",
+    "Room types": "ნომრის ტიპები",
+    "Set absolute price": "ფიქსირებული ფასი",
+    "Percent from base (e.g. +15)": "პროცენტი ბაზიდან (მაგ. +15)",
+    "Clear override (restore engine price)": "ცვლილების მოხსნა (ენჯინის ფასის დაბრუნება)",
+    "Weekends only (Fri / Sat)": "მხოლოდ შაბათ-კვირას",
+    "Also set restrictions for these days": "ამავე დღეებზე შეზღუდვების დაყენებაც",
+    "Maximum stay": "მაქსიმუმ ღამე",
+    "Apply to selected days": "გამოყენება არჩეულ დღეებზე",
+    "How this works": "როგორ მუშაობს",
+    ":n rows updated.": ":n ჩანაწერი განახლდა.",
+    "End date must be after start date.": "საბოლოო თარიღი მეტი უნდა იყოს ვიდრე საწყისი.",
+    "Select at least one room type.": "აირჩიე მინიმუმ ერთი ნომრის ტიპი.",
+    "Restriction saved.": "შეზღუდვა შენახულია.",
+    "Type a number to set minimum stay for that day. Click CTA / CTD to close arrival / departure.": "ჩაწერე რიცხვი მინიმუმ ღამის დასაყენებლად. დააწექი CTA / CTD ჩამოსვლის / გასვლის დახურვისთვის.",
+
+    "Pricing breakdown": "ფასის ბრეიკდაუნი",
+    "manual": "ხელით",
+    "\"Set absolute price\" overrides the engine for each day.": "„ფიქსირებული ფასი“ ცვლის ენჯინის გამოთვლას არჩეულ დღეებზე.",
+    "\"Percent from base\" sets price = base × (1 + value%).": "„პროცენტი ბაზიდან“: ფასი = ბაზა × (1 + პროცენტი%).",
+    "\"Clear override\" removes any manual override (engine takes over again).": "„ცვლილების მოხსნა“ შლის ხელით დაყენებულ ფასს — ენჯინი ისევ თვითონ ითვლის."
 }

@@ -86,15 +86,37 @@
 
             @if ($quote)
                 <div class="mt-5 rounded-md bg-slate-50 p-4 text-sm">
-                    <div class="font-medium text-slate-700">{{ __('Quote') }}</div>
-                    <ul class="mt-2 space-y-0.5 text-slate-600">
+                    <div class="font-medium text-slate-700 mb-2">{{ __('Pricing breakdown') }}</div>
+                    <ul class="space-y-2 text-slate-600">
                         @foreach ($quote->nights as $n)
-                            <li class="flex justify-between">
-                                <span>{{ $n->date->toDateString() }} {{ $n->weekendUplift ? '· '.__('weekend') : '' }}</span>
-                                <span>{{ number_format($n->amount, 2) }}</span>
+                            <li>
+                                <div class="flex justify-between">
+                                    <span class="font-medium text-slate-800">
+                                        {{ $n->date->toDateString() }}
+                                        @if ($n->manualOverride)
+                                            <span class="ml-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] text-amber-800">{{ __('manual') }}</span>
+                                        @elseif ($n->weekendUplift)
+                                            <span class="ml-1 text-[11px] text-slate-500">· {{ __('weekend') }}</span>
+                                        @endif
+                                    </span>
+                                    <span class="font-medium">{{ number_format($n->amount, 2) }}</span>
+                                </div>
+                                @if (! $n->manualOverride && ! empty($n->applied))
+                                    <ul class="mt-1 ml-2 space-y-0.5 text-xs text-slate-500 border-l border-slate-200 pl-3">
+                                        <li class="flex justify-between"><span>{{ __('base') }}</span><span>{{ number_format($n->basePrice, 2) }}</span></li>
+                                        @foreach ($n->applied as $rule)
+                                            <li class="flex justify-between">
+                                                <span>{{ $rule['name'] }}</span>
+                                                <span class="{{ $rule['delta'] >= 0 ? 'text-rose-600' : 'text-emerald-600' }}">
+                                                    {{ $rule['delta'] >= 0 ? '+' : '' }}{{ number_format($rule['delta'], 2) }}
+                                                </span>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                @endif
                             </li>
                         @endforeach
-                        <li class="flex justify-between border-t border-slate-200 pt-1 mt-1 font-semibold text-slate-900">
+                        <li class="flex justify-between border-t border-slate-200 pt-2 mt-1 font-semibold text-slate-900">
                             <span>{{ __('Total') }}</span>
                             <span>{{ number_format($quote->total(), 2) }} {{ $currency }}</span>
                         </li>
@@ -202,15 +224,37 @@
 
                 @if ($quote)
                     <div class="rounded-md bg-white p-4 ring-1 ring-slate-200 text-sm">
-                        <div class="font-medium text-slate-700 mb-2">{{ __('Pricing') }}</div>
-                        <ul class="space-y-0.5 text-slate-600">
+                        <div class="font-medium text-slate-700 mb-2">{{ __('Pricing breakdown') }}</div>
+                        <ul class="space-y-2 text-slate-600">
                             @foreach ($quote->nights as $n)
-                                <li class="flex justify-between">
-                                    <span>{{ $n->date->toDateString() }}{{ $n->weekendUplift ? ' · '.__('weekend') : '' }}</span>
-                                    <span>{{ number_format($n->amount, 2) }}</span>
+                                <li>
+                                    <div class="flex justify-between">
+                                        <span class="font-medium text-slate-800">
+                                            {{ $n->date->toDateString() }}
+                                            @if ($n->manualOverride)
+                                                <span class="ml-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] text-amber-800">{{ __('manual') }}</span>
+                                            @elseif ($n->weekendUplift)
+                                                <span class="ml-1 text-[11px] text-slate-500">· {{ __('weekend') }}</span>
+                                            @endif
+                                        </span>
+                                        <span class="font-medium">{{ number_format($n->amount, 2) }}</span>
+                                    </div>
+                                    @if (! $n->manualOverride && ! empty($n->applied))
+                                        <ul class="mt-1 ml-2 space-y-0.5 text-xs text-slate-500 border-l border-slate-200 pl-3">
+                                            <li class="flex justify-between"><span>{{ __('base') }}</span><span>{{ number_format($n->basePrice, 2) }}</span></li>
+                                            @foreach ($n->applied as $rule)
+                                                <li class="flex justify-between">
+                                                    <span>{{ $rule['name'] }}</span>
+                                                    <span class="{{ $rule['delta'] >= 0 ? 'text-rose-600' : 'text-emerald-600' }}">
+                                                        {{ $rule['delta'] >= 0 ? '+' : '' }}{{ number_format($rule['delta'], 2) }}
+                                                    </span>
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    @endif
                                 </li>
                             @endforeach
-                            <li class="flex justify-between border-t border-slate-200 pt-1 mt-1 font-semibold text-slate-900">
+                            <li class="flex justify-between border-t border-slate-200 pt-2 mt-1 font-semibold text-slate-900">
                                 <span>{{ __('Total') }}</span>
                                 <span>{{ number_format($quote->total(), 2) }} {{ $currency }}</span>
                             </li>

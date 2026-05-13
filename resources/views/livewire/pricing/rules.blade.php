@@ -4,6 +4,10 @@
     <div class="mb-4 flex flex-wrap items-center gap-2">
         <a href="{{ route('pricing.calendar') }}"
            class="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50">{{ __('Pricing calendar') }}</a>
+        <a href="{{ route('pricing.bulk') }}"
+           class="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50">{{ __('Bulk update') }}</a>
+        <a href="{{ route('pricing.restrictions') }}"
+           class="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50">{{ __('Restrictions') }}</a>
         <button wire:click="openCreate"
                 class="ml-auto rounded-md bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800">{{ __('+ New rule') }}</button>
     </div>

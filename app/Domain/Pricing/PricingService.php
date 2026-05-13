@@ -66,11 +66,21 @@ class PricingService
         );
 
         [$base, $isManual] = $this->basePriceFor($roomType, $date, $room);
+        $originalBase = $base;
+        $applied = [];
 
         if (! $isManual) {
             foreach ($this->rulesFor($roomType) as $rule) {
                 if ($rule->applies($ctx)) {
+                    $before = $base;
                     $base = $rule->apply($base, $ctx);
+                    $applied[] = [
+                        'name'  => $rule->row->name,
+                        'type'  => $rule->row->type,
+                        'from'  => round($before, 2),
+                        'to'    => round($base, 2),
+                        'delta' => round($base - $before, 2),
+                    ];
                 }
             }
         }
@@ -80,6 +90,9 @@ class PricingService
             amount: round($base, 2),
             currency: $roomType->property->base_currency,
             weekendUplift: in_array($date->dayOfWeekIso, [5, 6], true),
+            basePrice: round($originalBase, 2),
+            applied: $applied,
+            manualOverride: $isManual,
         );
     }
 
