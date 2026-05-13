@@ -42,8 +42,12 @@ final readonly class CreateRideRequest
             throw new RideNotOfferableException('Fare estimate has expired.');
         }
 
+        $testPhones = (array) config('pilot.test_phone_numbers', []);
+        $isTestRide = in_array((string) $customer->phone_e164, $testPhones, true);
+        $cohort = $isTestRide ? (string) config('pilot.cohort') : null;
+
         try {
-            $ride = DB::transaction(function () use ($customer, $data, $estimate): Ride {
+            $ride = DB::transaction(function () use ($customer, $data, $estimate, $isTestRide, $cohort): Ride {
                 $ride = new Ride([
                     'ulid' => Ulid::new(),
                     'customer_id' => $customer->id,
@@ -56,6 +60,8 @@ final readonly class CreateRideRequest
                     'surge_multiplier' => $estimate->surge_multiplier,
                     'currency' => $estimate->currency,
                     'payment_method' => $data->paymentMethod,
+                    'is_test_ride' => $isTestRide,
+                    'pilot_cohort' => $cohort !== '' ? $cohort : null,
                     'requested_at' => now(),
                 ]);
                 $ride->save();

@@ -25,6 +25,12 @@ final class RideResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('ulid')->copyable()->limit(10),
+                Tables\Columns\IconColumn::make('is_test_ride')
+                    ->label('Test')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-beaker')
+                    ->falseIcon('heroicon-o-minus-circle')
+                    ->tooltip(fn ($record) => $record->pilot_cohort ?? ''),
                 Tables\Columns\TextColumn::make('customer.phone_e164')->label('Customer'),
                 Tables\Columns\TextColumn::make('driver.user.phone_e164')->label('Driver'),
                 Tables\Columns\TextColumn::make('status')->badge()->colors([
@@ -34,6 +40,7 @@ final class RideResource extends Resource
                 ]),
                 Tables\Columns\TextColumn::make('quoted_amount')->money(fn ($record) => $record->currency),
                 Tables\Columns\TextColumn::make('final_amount')->money(fn ($record) => $record->currency),
+                Tables\Columns\TextColumn::make('pilot_cohort')->label('Cohort')->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('requested_at')->dateTime()->since(),
             ])
             ->filters([
@@ -50,6 +57,18 @@ final class RideResource extends Resource
                     'no_drivers' => 'No drivers',
                     'failed' => 'Failed',
                 ]),
+                Tables\Filters\TernaryFilter::make('is_test_ride')
+                    ->label('Test rides')
+                    ->placeholder('All rides')
+                    ->trueLabel('Test rides only')
+                    ->falseLabel('Production rides only'),
+                Tables\Filters\SelectFilter::make('pilot_cohort')
+                    ->label('Pilot cohort')
+                    ->options(fn () => Ride::query()
+                        ->whereNotNull('pilot_cohort')
+                        ->distinct()
+                        ->pluck('pilot_cohort', 'pilot_cohort')
+                        ->all()),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),

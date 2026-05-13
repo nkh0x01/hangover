@@ -72,6 +72,8 @@ class Ride extends Model
         'waiting_seconds',
         'currency',
         'payment_method',
+        'is_test_ride',
+        'pilot_cohort',
         'payment_id',
         'promo_code_id',
         'commission_amount',
@@ -91,6 +93,7 @@ class Ride extends Model
     {
         return [
             'status' => RideStatus::class,
+            'is_test_ride' => 'boolean',
             'quoted_amount' => 'decimal:2',
             'final_amount' => 'decimal:2',
             'surge_multiplier' => 'decimal:2',
