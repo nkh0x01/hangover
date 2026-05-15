@@ -1,0 +1,12 @@
+{
+  "name": "hangover",
+  "version": "0.1.0",
+  "description": "IBSU student project to communicate via HTML5 with webcam & microphone, plus SEO AI plugin.",
+  "main": "app/app.js",
+  "scripts": {
+    "seo": "node app/plugins/seo-ai/cli.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.30.0"
+  }
+}

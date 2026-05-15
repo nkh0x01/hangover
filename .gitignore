@@ -12,3 +12,10 @@
 
 # sftp configuration file
 sftp-config.json
+
+# node
+node_modules/
+package-lock.json
+npm-debug.log*
+.env
+.env.local
