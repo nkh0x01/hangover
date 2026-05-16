@@ -133,4 +133,36 @@ abstract class AbstractMetaDriver implements ChannelDriver
     {
         return SendResult::fail('not_supported');
     }
+
+    /**
+     * Default: degrade gracefully — drivers without native button
+     * support emit the text body plus an inline list of choices.
+     */
+    public function sendInteractiveButtons(
+        string $recipient,
+        string $bodyText,
+        array $buttons,
+        ?\App\Services\Channels\DTO\MediaPayload $header = null,
+        ?string $footerText = null,
+    ): SendResult {
+        $lines = [$bodyText];
+        foreach ($buttons as $i => $b) {
+            $lines[] = ($i + 1) . ') ' . ($b['title'] ?? '');
+        }
+        if ($footerText) {
+            $lines[] = '';
+            $lines[] = $footerText;
+        }
+        return $this->sendText($recipient, implode("\n", $lines));
+    }
+
+    /** Default: not supported. WhatsApp overrides this. */
+    public function sendTemplate(
+        string $recipient,
+        string $templateName,
+        string $languageCode,
+        array $components = [],
+    ): SendResult {
+        return SendResult::fail('not_supported');
+    }
 }

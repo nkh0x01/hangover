@@ -84,6 +84,11 @@ class MessengerDriver extends AbstractMetaDriver
         $text = $msg['text'] ?? null;
         $att  = $msg['attachments'][0] ?? null;
 
+        // Quick-reply tap → treat as interactive with payload + visible title.
+        if (! empty($msg['quick_reply']['payload'])) {
+            return ['interactive', $text, ['payload' => $msg['quick_reply']['payload']]];
+        }
+
         if ($att) {
             return match ($att['type'] ?? 'text') {
                 'image' => ['image', $text, ['url' => $att['payload']['url'] ?? null]],
@@ -158,6 +163,38 @@ class MessengerDriver extends AbstractMetaDriver
                 'recipient'      => ['comment_id' => $commentId],
                 'messaging_type' => 'RESPONSE',
                 'message'        => ['text' => $text],
+            ],
+            $this->config['page_access_token'] ?? null,
+        ));
+    }
+
+    public function sendInteractiveButtons(
+        string $recipient,
+        string $bodyText,
+        array $buttons,
+        ?MediaPayload $header = null,
+        ?string $footerText = null,
+    ): SendResult {
+        // Messenger supports up to 13 quick replies and 3 button-template buttons.
+        // We use quick_replies for short flows (≤ 11 chars/title), and the
+        // button template for richer cases.
+        $quickReplies = array_slice(array_map(fn ($b) => [
+            'content_type' => 'text',
+            'title'        => mb_substr((string) ($b['title'] ?? ''), 0, 20),
+            'payload'      => mb_substr((string) ($b['id'] ?? $b['title'] ?? ''), 0, 1000),
+        ], $buttons), 0, 11);
+
+        $message = ['text' => $bodyText];
+        if (! empty($quickReplies)) {
+            $message['quick_replies'] = $quickReplies;
+        }
+
+        return $this->asSendResult($this->graphPost(
+            'me/messages',
+            [
+                'recipient'      => ['id' => $recipient],
+                'messaging_type' => 'RESPONSE',
+                'message'        => $message,
             ],
             $this->config['page_access_token'] ?? null,
         ));

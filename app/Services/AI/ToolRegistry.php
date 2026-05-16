@@ -11,6 +11,7 @@ use App\Services\Products\ProductCatalog;
 use App\Services\Products\RecommendationEngine;
 use App\Services\Sales\CheckoutCollector;
 use App\Services\Sales\PaymentLinkGenerator;
+use App\Services\Sales\ProductCardSender;
 
 /**
  * Defines the tools Claude can call inside a sales conversation and
@@ -25,6 +26,7 @@ class ToolRegistry
         private PaymentLinkGenerator $payments,
         private EscalationDispatcher $escalation,
         private CatalogSync $gadgetCatalog,
+        private ProductCardSender $cardSender,
     ) {}
 
     /** Tool schemas passed to Anthropic Messages API. */
@@ -96,6 +98,17 @@ class ToolRegistry
                 ],
             ],
             [
+                'name'        => 'present_product',
+                'description' => 'Render a real WhatsApp/Messenger product card to the customer — image header, name, price, and three reply buttons ("Order", "Pickup at branch", "Other options" for in-stock; "Alternatives", "Notify when available", "Talk to human" for out-of-stock). USE THIS instead of pasting product details in plain text whenever you want to show a specific product.',
+                'input_schema' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'sku' => ['type' => 'string', 'description' => 'SKU of the product to present.'],
+                    ],
+                    'required' => ['sku'],
+                ],
+            ],
+            [
                 'name'        => 'find_active_coupons',
                 'description' => 'Return the currently active gadget.ge coupons/promos. Optionally filter by SKU or category — useful when the customer asks "გაქვთ აქცია?" or you want to mention a relevant discount before closing the sale. Do NOT invent codes; only mention what this returns.',
                 'input_schema' => [
@@ -141,6 +154,7 @@ class ToolRegistry
             'search_products'         => $this->searchProducts($input),
             'check_stock'             => $this->checkStock($input),
             'recommend_alternatives'  => $this->recommendAlternatives($input),
+            'present_product'         => $this->presentProduct($input, $customer, $conversation),
             'create_order_draft'      => $this->createOrderDraft($input, $customer, $conversation),
             'generate_payment_link'   => $this->generatePaymentLink($input, $conversation),
             'find_active_coupons'     => $this->findActiveCoupons($input),
@@ -148,6 +162,21 @@ class ToolRegistry
             'escalate_to_human'       => $this->escalate($input, $customer, $conversation),
             default                   => ['error' => "unknown tool: $name"],
         };
+    }
+
+    private function presentProduct(array $i, Customer $customer, Conversation $conversation): array
+    {
+        $sku = (string) ($i['sku'] ?? '');
+        $product = $sku !== '' ? $this->catalog->findBySku($sku) : null;
+        if (! $product) {
+            return ['error' => 'sku_not_found'];
+        }
+        $this->cardSender->send($conversation, $customer, $product);
+        return [
+            'rendered' => true,
+            'sku'      => $product->sku,
+            'note'     => 'A native product card with image and buttons has been delivered. Do not repeat the product info in plain text.',
+        ];
     }
 
     private function findActiveCoupons(array $i): array

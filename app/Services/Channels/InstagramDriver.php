@@ -35,6 +35,11 @@ class InstagramDriver extends AbstractMetaDriver
                 $kind = $att['type'] ?? 'text';
                 $media = $att ? ['url' => $att['payload']['url'] ?? null] : [];
 
+                if (! empty($msg['quick_reply']['payload'])) {
+                    $kind  = 'interactive';
+                    $media = ['payload' => $msg['quick_reply']['payload']];
+                }
+
                 $ts = $m['timestamp'] ?? null;
                 $receivedAt = $ts !== null ? intdiv((int) $ts, 1000) : time();
 
@@ -134,6 +139,35 @@ class InstagramDriver extends AbstractMetaDriver
                 'recipient'      => ['comment_id' => $commentId],
                 'messaging_type' => 'RESPONSE',
                 'message'        => ['text' => $text],
+            ],
+        ));
+    }
+
+    public function sendInteractiveButtons(
+        string $recipient,
+        string $bodyText,
+        array $buttons,
+        ?MediaPayload $header = null,
+        ?string $footerText = null,
+    ): SendResult {
+        // Instagram supports up to 13 quick replies.
+        $quickReplies = array_slice(array_map(fn ($b) => [
+            'content_type' => 'text',
+            'title'        => mb_substr((string) ($b['title'] ?? ''), 0, 20),
+            'payload'      => mb_substr((string) ($b['id'] ?? $b['title'] ?? ''), 0, 1000),
+        ], $buttons), 0, 11);
+
+        $message = ['text' => $bodyText];
+        if (! empty($quickReplies)) {
+            $message['quick_replies'] = $quickReplies;
+        }
+
+        return $this->asSendResult($this->graphPost(
+            ($this->config['ig_account_id'] ?? 'me') . '/messages',
+            [
+                'recipient'      => ['id' => $recipient],
+                'messaging_type' => 'RESPONSE',
+                'message'        => $message,
             ],
         ));
     }

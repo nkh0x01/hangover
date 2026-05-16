@@ -17,6 +17,7 @@ use App\Services\Products\ProductCatalog;
 use App\Services\Products\RecommendationEngine;
 use App\Services\Sales\CheckoutCollector;
 use App\Services\Sales\PaymentLinkGenerator;
+use App\Services\Sales\ProductCardSender;
 use Illuminate\Support\ServiceProvider;
 
 class AIServiceProvider extends ServiceProvider
@@ -34,6 +35,7 @@ class AIServiceProvider extends ServiceProvider
 
         $this->app->singleton(CheckoutCollector::class);
         $this->app->singleton(PaymentLinkGenerator::class);
+        $this->app->singleton(ProductCardSender::class);
 
         $this->app->singleton(EscalationDispatcher::class);
 
