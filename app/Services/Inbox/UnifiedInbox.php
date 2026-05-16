@@ -28,10 +28,9 @@ class UnifiedInbox
         if (! empty($filters['q'])) {
             $needle = $filters['q'];
             $q->where(function ($qq) use ($needle) {
-                $qq->whereHas('customer', fn ($c) =>
-                    $c->where('display_name', 'like', "%$needle%")
-                      ->orWhere('phone', 'like', "%$needle%")
-                      ->orWhere('platform_user_id', 'like', "%$needle%"));
+                $qq->whereHas('customer', fn ($c) => $c->where('display_name', 'like', "%$needle%")
+                    ->orWhere('phone', 'like', "%$needle%")
+                    ->orWhere('platform_user_id', 'like', "%$needle%"));
             });
         }
 
@@ -39,27 +38,28 @@ class UnifiedInbox
 
         return $rows->map(function (Conversation $c) {
             $last = Message::where('conversation_id', $c->id)->latest('id')->first();
+
             return [
-                'id'             => $c->id,
-                'platform'       => $c->platform,
-                'thread_id'      => $c->thread_id,
-                'lead_status'    => $c->lead_status,
-                'escalated'      => $c->escalated,
-                'ai_paused'      => $c->ai_paused,
-                'last_inbound'   => $c->last_inbound_at,
-                'last_outbound'  => $c->last_outbound_at,
-                'last_message'   => $last ? [
+                'id' => $c->id,
+                'platform' => $c->platform,
+                'thread_id' => $c->thread_id,
+                'lead_status' => $c->lead_status,
+                'escalated' => $c->escalated,
+                'ai_paused' => $c->ai_paused,
+                'last_inbound' => $c->last_inbound_at,
+                'last_outbound' => $c->last_outbound_at,
+                'last_message' => $last ? [
                     'direction' => $last->direction,
-                    'body'      => mb_substr((string) $last->body, 0, 200),
-                    'is_ai'     => (bool) $last->is_ai,
-                    'created_at'=> $last->created_at,
+                    'body' => mb_substr((string) $last->body, 0, 200),
+                    'is_ai' => (bool) $last->is_ai,
+                    'created_at' => $last->created_at,
                 ] : null,
                 'customer' => [
-                    'id'      => $c->customer?->id,
-                    'name'    => $c->customer?->display_name,
-                    'handle'  => $c->customer?->platform_user_id,
-                    'is_vip'  => (bool) $c->customer?->is_vip,
-                    'memory'  => $c->customer?->profile_json ?? [],
+                    'id' => $c->customer?->id,
+                    'name' => $c->customer?->display_name,
+                    'handle' => $c->customer?->platform_user_id,
+                    'is_vip' => (bool) $c->customer?->is_vip,
+                    'memory' => $c->customer?->profile_json ?? [],
                 ],
             ];
         })->all();
@@ -73,24 +73,24 @@ class UnifiedInbox
             ->limit($limit)
             ->get()
             ->map(fn (Message $m) => [
-                'id'         => $m->id,
-                'direction'  => $m->direction,
-                'kind'       => $m->kind,
-                'body'       => $m->body,
-                'media'      => $m->media_json,
-                'is_ai'      => (bool) $m->is_ai,
+                'id' => $m->id,
+                'direction' => $m->direction,
+                'kind' => $m->kind,
+                'body' => $m->body,
+                'media' => $m->media_json,
+                'is_ai' => (bool) $m->is_ai,
                 'confidence' => $m->confidence,
-                'intent'     => $m->intent,
-                'author'     => $m->author?->only(['id', 'name']),
+                'intent' => $m->intent,
+                'author' => $m->author?->only(['id', 'name']),
                 'created_at' => $m->created_at,
             ])
             ->all();
 
         return [
-            'conversation' => $c->only(['id','platform','thread_id','lead_status','escalated','ai_paused','escalation_reason']),
-            'customer'     => $c->customer?->toArray(),
-            'assigned'     => $c->assignedEmployee?->only(['id', 'name']),
-            'messages'     => $messages,
+            'conversation' => $c->only(['id', 'platform', 'thread_id', 'lead_status', 'escalated', 'ai_paused', 'escalation_reason']),
+            'customer' => $c->customer?->toArray(),
+            'assigned' => $c->assignedEmployee?->only(['id', 'name']),
+            'messages' => $messages,
         ];
     }
 }

@@ -19,7 +19,7 @@ class CheckoutCollectorTest extends TestCase
         $customer = Customer::create(['platform' => 'whatsapp', 'platform_user_id' => '995500000001']);
         $conv = Conversation::create(['customer_id' => $customer->id, 'platform' => 'whatsapp', 'thread_id' => 'tt']);
 
-        $collector = new CheckoutCollector();
+        $collector = new CheckoutCollector;
 
         $order = $collector->upsertDraft($conv, $customer, [
             'items' => [['sku' => 'TEST-1', 'qty' => 2]],
@@ -33,9 +33,9 @@ class CheckoutCollectorTest extends TestCase
         $this->assertContains('delivery_method', $missing);
 
         $collector->upsertDraft($conv, $customer, [
-            'customer_name'    => 'ნიკა',
-            'customer_phone'   => '599000000',
-            'delivery_method'  => 'pickup',
+            'customer_name' => 'ნიკა',
+            'customer_phone' => '599000000',
+            'delivery_method' => 'pickup',
             'preferred_branch' => 'Saburtalo',
         ]);
 

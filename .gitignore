@@ -10,13 +10,16 @@
 /storage/framework/testing/*
 /storage/framework/views/*
 /storage/logs/*
+/bootstrap/cache/*
 !/storage/framework/cache/.gitkeep
 !/storage/framework/sessions/.gitkeep
 !/storage/framework/views/.gitkeep
 !/storage/logs/.gitkeep
+!/bootstrap/cache/.gitkeep
 .env
 .env.*.local
 .env.local
+.phpunit.cache
 .phpunit.result.cache
 auth.json
 composer.lock

@@ -34,71 +34,71 @@ class ToolRegistry
     {
         return [
             [
-                'name'        => 'search_products',
+                'name' => 'search_products',
                 'description' => 'Search the live Gadget catalog. Returns up to 5 in-stock products matching the query and filters.',
                 'input_schema' => [
                     'type' => 'object',
                     'properties' => [
-                        'query'    => ['type' => 'string', 'description' => 'Free-text query, e.g. "iphone 15 case clear"'],
+                        'query' => ['type' => 'string', 'description' => 'Free-text query, e.g. "iphone 15 case clear"'],
                         'category' => ['type' => 'string', 'description' => 'Optional category filter (e.g. "cases", "chargers")'],
-                        'brand'    => ['type' => 'string', 'description' => 'Optional brand filter'],
-                        'min_price'=> ['type' => 'number'],
-                        'max_price'=> ['type' => 'number'],
+                        'brand' => ['type' => 'string', 'description' => 'Optional brand filter'],
+                        'min_price' => ['type' => 'number'],
+                        'max_price' => ['type' => 'number'],
                         'in_stock' => ['type' => 'boolean', 'default' => true],
                     ],
                     'required' => ['query'],
                 ],
             ],
             [
-                'name'        => 'check_stock',
+                'name' => 'check_stock',
                 'description' => 'Check stock for a specific SKU, optionally per branch.',
                 'input_schema' => [
                     'type' => 'object',
                     'properties' => [
-                        'sku'    => ['type' => 'string'],
+                        'sku' => ['type' => 'string'],
                         'branch' => ['type' => 'string', 'description' => 'Branch name; null = total stock'],
                     ],
                     'required' => ['sku'],
                 ],
             ],
             [
-                'name'        => 'recommend_alternatives',
+                'name' => 'recommend_alternatives',
                 'description' => 'Return alternatives in the same category and price band as the given SKU.',
                 'input_schema' => [
                     'type' => 'object',
                     'properties' => ['sku' => ['type' => 'string']],
-                    'required'   => ['sku'],
+                    'required' => ['sku'],
                 ],
             ],
             [
-                'name'        => 'create_order_draft',
+                'name' => 'create_order_draft',
                 'description' => 'Create or update a draft order with whatever fields you have so far. Returns the missing fields list.',
                 'input_schema' => [
                     'type' => 'object',
                     'properties' => [
-                        'items'            => ['type' => 'array', 'items' => ['type' => 'object', 'properties' => ['sku' => ['type'=>'string'], 'qty' => ['type'=>'integer']]]],
-                        'customer_name'    => ['type' => 'string'],
-                        'customer_phone'   => ['type' => 'string'],
-                        'city'             => ['type' => 'string'],
-                        'address'          => ['type' => 'string'],
+                        'items' => ['type' => 'array', 'items' => ['type' => 'object', 'properties' => ['sku' => ['type' => 'string'], 'qty' => ['type' => 'integer']]]],
+                        'customer_name' => ['type' => 'string'],
+                        'customer_phone' => ['type' => 'string'],
+                        'city' => ['type' => 'string'],
+                        'address' => ['type' => 'string'],
                         'preferred_branch' => ['type' => 'string'],
-                        'delivery_method'  => ['type' => 'string', 'enum' => ['pickup', 'courier', 'cod']],
-                        'payment_method'   => ['type' => 'string', 'enum' => ['branch', 'card', 'cod']],
-                        'notes'            => ['type' => 'string'],
+                        'delivery_method' => ['type' => 'string', 'enum' => ['pickup', 'courier', 'cod']],
+                        'payment_method' => ['type' => 'string', 'enum' => ['branch', 'card', 'cod']],
+                        'notes' => ['type' => 'string'],
                     ],
                 ],
             ],
             [
-                'name'        => 'generate_payment_link',
+                'name' => 'generate_payment_link',
                 'description' => 'Generate a secure card-payment link for an existing draft order. Only call when the customer explicitly chose card payment.',
                 'input_schema' => [
                     'type' => 'object',
                     'properties' => ['order_id' => ['type' => 'integer']],
-                    'required'   => ['order_id'],
+                    'required' => ['order_id'],
                 ],
             ],
             [
-                'name'        => 'present_product',
+                'name' => 'present_product',
                 'description' => 'Render a real WhatsApp/Messenger product card to the customer — image header, name, price, and three reply buttons ("Order", "Pickup at branch", "Other options" for in-stock; "Alternatives", "Notify when available", "Talk to human" for out-of-stock). USE THIS instead of pasting product details in plain text whenever you want to show a specific product.',
                 'input_schema' => [
                     'type' => 'object',
@@ -109,32 +109,32 @@ class ToolRegistry
                 ],
             ],
             [
-                'name'        => 'find_active_coupons',
+                'name' => 'find_active_coupons',
                 'description' => 'Return the currently active gadget.ge coupons/promos. Optionally filter by SKU or category — useful when the customer asks "გაქვთ აქცია?" or you want to mention a relevant discount before closing the sale. Do NOT invent codes; only mention what this returns.',
                 'input_schema' => [
                     'type' => 'object',
                     'properties' => [
-                        'sku'      => ['type' => 'string'],
+                        'sku' => ['type' => 'string'],
                         'category' => ['type' => 'string'],
                     ],
                 ],
             ],
             [
-                'name'        => 'gadget_live_stock',
+                'name' => 'gadget_live_stock',
                 'description' => 'Bypass the mirror and fetch right-now stock for a SKU directly from gadget.ge. Use when the customer explicitly asks "ახლა გაქვთ?" / "სასწრაფოდ მჭირდება" or when check_stock returned a borderline value.',
                 'input_schema' => [
                     'type' => 'object',
                     'properties' => ['sku' => ['type' => 'string']],
-                    'required'   => ['sku'],
+                    'required' => ['sku'],
                 ],
             ],
             [
-                'name'        => 'escalate_to_human',
+                'name' => 'escalate_to_human',
                 'description' => 'Hand the conversation to a human employee. Call this when confidence is low, the customer is angry, the request is out of scope, or any factual claim cannot be verified through other tools.',
                 'input_schema' => [
                     'type' => 'object',
                     'properties' => [
-                        'reason'  => ['type' => 'string'],
+                        'reason' => ['type' => 'string'],
                         'urgency' => ['type' => 'string', 'enum' => ['low', 'medium', 'high']],
                         'summary' => ['type' => 'string'],
                     ],
@@ -151,16 +151,16 @@ class ToolRegistry
     public function execute(string $name, array $input, Customer $customer, Conversation $conversation): array
     {
         return match ($name) {
-            'search_products'         => $this->searchProducts($input),
-            'check_stock'             => $this->checkStock($input),
-            'recommend_alternatives'  => $this->recommendAlternatives($input),
-            'present_product'         => $this->presentProduct($input, $customer, $conversation),
-            'create_order_draft'      => $this->createOrderDraft($input, $customer, $conversation),
-            'generate_payment_link'   => $this->generatePaymentLink($input, $conversation),
-            'find_active_coupons'     => $this->findActiveCoupons($input),
-            'gadget_live_stock'       => $this->gadgetLiveStock($input),
-            'escalate_to_human'       => $this->escalate($input, $customer, $conversation),
-            default                   => ['error' => "unknown tool: $name"],
+            'search_products' => $this->searchProducts($input),
+            'check_stock' => $this->checkStock($input),
+            'recommend_alternatives' => $this->recommendAlternatives($input),
+            'present_product' => $this->presentProduct($input, $customer, $conversation),
+            'create_order_draft' => $this->createOrderDraft($input, $customer, $conversation),
+            'generate_payment_link' => $this->generatePaymentLink($input, $conversation),
+            'find_active_coupons' => $this->findActiveCoupons($input),
+            'gadget_live_stock' => $this->gadgetLiveStock($input),
+            'escalate_to_human' => $this->escalate($input, $customer, $conversation),
+            default => ['error' => "unknown tool: $name"],
         };
     }
 
@@ -172,16 +172,17 @@ class ToolRegistry
             return ['error' => 'sku_not_found'];
         }
         $this->cardSender->send($conversation, $customer, $product);
+
         return [
             'rendered' => true,
-            'sku'      => $product->sku,
-            'note'     => 'A native product card with image and buttons has been delivered. Do not repeat the product info in plain text.',
+            'sku' => $product->sku,
+            'note' => 'A native product card with image and buttons has been delivered. Do not repeat the product info in plain text.',
         ];
     }
 
     private function findActiveCoupons(array $i): array
     {
-        $sku      = (string) ($i['sku']      ?? '');
+        $sku = (string) ($i['sku'] ?? '');
         $category = (string) ($i['category'] ?? '');
 
         $coupons = Coupon::query()
@@ -191,34 +192,40 @@ class ToolRegistry
             ->get();
 
         $relevant = $coupons->filter(function (Coupon $c) use ($sku, $category) {
-            if ($sku === '' && $category === '') return true;
+            if ($sku === '' && $category === '') {
+                return true;
+            }
+
             return $c->appliesToSku($sku, $category ?: null);
         })->take(5);
 
         return ['coupons' => $relevant->map(fn (Coupon $c) => [
-            'code'          => $c->code,
+            'code' => $c->code,
             'discount_type' => $c->discount_type,
-            'amount'        => (float) $c->amount,
-            'min_amount'    => $c->min_amount !== null ? (float) $c->min_amount : null,
-            'expires_at'    => optional($c->expires_at)->toIso8601String(),
+            'amount' => (float) $c->amount,
+            'min_amount' => $c->min_amount !== null ? (float) $c->min_amount : null,
+            'expires_at' => optional($c->expires_at)->toIso8601String(),
             'free_shipping' => $c->free_shipping,
-            'description'   => $c->description,
+            'description' => $c->description,
         ])->values()->all()];
     }
 
     private function gadgetLiveStock(array $i): array
     {
         $sku = (string) ($i['sku'] ?? '');
-        if ($sku === '') return ['error' => 'missing_sku'];
+        if ($sku === '') {
+            return ['error' => 'missing_sku'];
+        }
 
         $product = $this->gadgetCatalog->refreshSku($sku);
         if (! $product) {
             return ['error' => 'sku_not_found'];
         }
+
         return [
-            'sku'        => $product->sku,
-            'in_stock'   => $product->isInStock(),
-            'stock_total'=> (int) $product->stock_total,
+            'sku' => $product->sku,
+            'in_stock' => $product->isInStock(),
+            'stock_total' => (int) $product->stock_total,
             'per_branch' => $product->stock_by_branch_json ?? [],
             'refreshed_at' => $product->synced_at?->toIso8601String(),
         ];
@@ -227,25 +234,25 @@ class ToolRegistry
     private function searchProducts(array $i): array
     {
         $products = $this->catalog->search(
-            query:    $i['query'] ?? '',
+            query: $i['query'] ?? '',
             category: $i['category'] ?? null,
-            brand:    $i['brand'] ?? null,
+            brand: $i['brand'] ?? null,
             minPrice: $i['min_price'] ?? null,
             maxPrice: $i['max_price'] ?? null,
-            inStock:  $i['in_stock'] ?? true,
-            limit:    5,
+            inStock: $i['in_stock'] ?? true,
+            limit: 5,
         );
 
         return ['products' => array_map(fn ($p) => [
-            'sku'     => $p->sku,
-            'name'    => $p->name,
-            'brand'   => $p->brand,
-            'price'   => $p->effectivePrice(),
-            'currency'=> $p->currency,
-            'stock'   => $p->stock_total,
-            'image'   => $p->primaryImage(),
-            'url'     => $p->url,
-            'attrs'   => $p->attributes_json ?? [],
+            'sku' => $p->sku,
+            'name' => $p->name,
+            'brand' => $p->brand,
+            'price' => $p->effectivePrice(),
+            'currency' => $p->currency,
+            'stock' => $p->stock_total,
+            'image' => $p->primaryImage(),
+            'url' => $p->url,
+            'attrs' => $p->attributes_json ?? [],
         ], $products)];
     }
 
@@ -256,10 +263,11 @@ class ToolRegistry
             return ['error' => 'sku_not_found'];
         }
         $branch = $i['branch'] ?? null;
+
         return [
-            'sku'        => $product->sku,
-            'in_stock'   => $product->isInStock($branch),
-            'stock_total'=> $product->stock_total,
+            'sku' => $product->sku,
+            'in_stock' => $product->isInStock($branch),
+            'stock_total' => $product->stock_total,
             'per_branch' => $product->stock_by_branch_json ?? [],
         ];
     }
@@ -267,9 +275,10 @@ class ToolRegistry
     private function recommendAlternatives(array $i): array
     {
         $alts = $this->rec->alternativesFor($i['sku'] ?? '');
+
         return ['alternatives' => array_map(fn ($p) => [
-            'sku'   => $p->sku,
-            'name'  => $p->name,
+            'sku' => $p->sku,
+            'name' => $p->name,
             'price' => $p->effectivePrice(),
             'image' => $p->primaryImage(),
         ], $alts)];
@@ -278,17 +287,19 @@ class ToolRegistry
     private function createOrderDraft(array $i, Customer $customer, Conversation $conversation): array
     {
         $order = $this->checkout->upsertDraft($conversation, $customer, $i);
+
         return [
-            'order_id'       => $order->id,
-            'status'         => $order->status,
+            'order_id' => $order->id,
+            'status' => $order->status,
             'missing_fields' => $this->checkout->missingFields($order),
-            'total'          => (float) $order->total,
+            'total' => (float) $order->total,
         ];
     }
 
     private function generatePaymentLink(array $i, Conversation $conversation): array
     {
         $link = $this->payments->generate((int) ($i['order_id'] ?? 0), $conversation);
+
         return $link
             ? ['payment_link' => $link]
             : ['error' => 'cannot_generate_link'];
@@ -298,10 +309,10 @@ class ToolRegistry
     {
         $this->escalation->dispatch(
             conversation: $conversation,
-            customer:     $customer,
-            reason:       $i['reason']  ?? 'ai_requested',
-            urgency:      $i['urgency'] ?? 'medium',
-            summary:      $i['summary'] ?? null,
+            customer: $customer,
+            reason: $i['reason'] ?? 'ai_requested',
+            urgency: $i['urgency'] ?? 'medium',
+            summary: $i['summary'] ?? null,
         );
 
         return ['escalated' => true];

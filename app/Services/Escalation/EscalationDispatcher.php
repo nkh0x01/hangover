@@ -22,17 +22,17 @@ class EscalationDispatcher
     ): Escalation {
         $escalation = Escalation::create([
             'conversation_id' => $conversation->id,
-            'customer_id'     => $customer->id,
-            'reason'          => $reason,
-            'urgency'         => $urgency,
-            'summary'         => $summary,
+            'customer_id' => $customer->id,
+            'reason' => $reason,
+            'urgency' => $urgency,
+            'summary' => $summary,
         ]);
 
         $conversation->update([
-            'escalated'         => true,
+            'escalated' => true,
             'escalation_reason' => $reason,
-            'lead_status'       => Conversation::STATUS_ESCALATED,
-            'ai_paused'         => (bool) config('escalation.pause_ai_after_escalation', true),
+            'lead_status' => Conversation::STATUS_ESCALATED,
+            'ai_paused' => (bool) config('escalation.pause_ai_after_escalation', true),
         ]);
 
         $this->notifyOwner($escalation, $conversation, $customer);
@@ -45,6 +45,7 @@ class EscalationDispatcher
         $targets = config('escalation.whatsapp_targets', []);
         if (empty($targets)) {
             Log::warning('escalation.no_targets', ['conversation' => $c->id]);
+
             return;
         }
 
@@ -73,9 +74,9 @@ class EscalationDispatcher
             ->latest('id')->first();
 
         $emoji = match ($e->urgency) {
-            'high'   => '🚨',
+            'high' => '🚨',
             'medium' => '⚠️',
-            default  => 'ℹ️',
+            default => 'ℹ️',
         };
 
         $link = rtrim(config('escalation.admin_url', ''), '/') . '/c/' . $c->id;
@@ -89,7 +90,7 @@ class EscalationDispatcher
         return "$emoji [$platform] $name\n" .
                "$lastLine\n\n" .
                "Why: $reasonLabel\n" .
-               ($e->summary ? "Note: " . mb_substr($e->summary, 0, 240) . "\n" : '') .
+               ($e->summary ? 'Note: ' . mb_substr($e->summary, 0, 240) . "\n" : '') .
                "Open: $link";
     }
 }

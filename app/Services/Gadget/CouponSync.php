@@ -20,13 +20,15 @@ class CouponSync
             return ['ok' => false, 'reason' => 'wc_not_configured'];
         }
 
-        $seen     = [];
+        $seen = [];
         $upserted = 0;
 
         try {
             foreach ($this->api->coupons()->each() as $c) {
                 $row = $this->mapper->fromWoo($c);
-                if ($row['code'] === '') continue;
+                if ($row['code'] === '') {
+                    continue;
+                }
 
                 Coupon::updateOrCreate(['code' => $row['code']], $row);
                 $seen[] = $row['code'];
@@ -34,6 +36,7 @@ class CouponSync
             }
         } catch (WooApiException $e) {
             Log::error('coupons.sync.failed', ['msg' => $e->getMessage()]);
+
             return ['ok' => false, 'reason' => 'wc_api_error', 'detail' => $e->getMessage()];
         }
 

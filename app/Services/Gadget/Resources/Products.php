@@ -12,9 +12,9 @@ class Products
     public function list(int $page = 1, int $perPage = 100, array $filters = []): array
     {
         return $this->client->get('products', array_merge([
-            'page'     => $page,
+            'page' => $page,
             'per_page' => $perPage,
-            'status'   => 'publish',
+            'status' => 'publish',
         ], $filters));
     }
 
@@ -31,12 +31,14 @@ class Products
     public function get(int $id): ?array
     {
         $p = $this->client->get("products/$id");
+
         return $p ?: null;
     }
 
     public function findBySku(string $sku): ?array
     {
         $items = $this->client->get('products', ['sku' => $sku, 'per_page' => 1]);
+
         return $items[0] ?? null;
     }
 
@@ -47,11 +49,12 @@ class Products
         if (! $p) {
             return ['found' => false];
         }
+
         return [
-            'found'        => true,
-            'sku'          => $p['sku'] ?? $sku,
+            'found' => true,
+            'sku' => $p['sku'] ?? $sku,
             'stock_status' => $p['stock_status'] ?? null,
-            'stock'        => $p['stock_quantity'] ?? null,
+            'stock' => $p['stock_quantity'] ?? null,
             'manage_stock' => $p['manage_stock'] ?? false,
         ];
     }

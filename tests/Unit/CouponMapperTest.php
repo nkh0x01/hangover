@@ -14,24 +14,24 @@ class CouponMapperTest extends TestCase
     public function test_maps_typical_woocommerce_coupon_and_applies_validity_logic(): void
     {
         $woo = [
-            'id'                  => 7,
-            'code'                => 'NY2026',
-            'discount_type'       => 'percent',
-            'amount'              => '15',
-            'minimum_amount'      => '50',
-            'maximum_amount'      => '',
-            'date_expires'        => '2026-12-31T23:59:59',
-            'product_ids'         => [11, 12],
-            'product_categories'  => [['id' => 7, 'name' => 'Cases', 'slug' => 'cases']],
-            'excluded_product_ids'=> [],
-            'individual_use'      => true,
-            'free_shipping'       => false,
-            'usage_limit'         => 100,
-            'usage_count'         => 4,
-            'description'         => 'New Year discount',
+            'id' => 7,
+            'code' => 'NY2026',
+            'discount_type' => 'percent',
+            'amount' => '15',
+            'minimum_amount' => '50',
+            'maximum_amount' => '',
+            'date_expires' => '2026-12-31T23:59:59',
+            'product_ids' => [11, 12],
+            'product_categories' => [['id' => 7, 'name' => 'Cases', 'slug' => 'cases']],
+            'excluded_product_ids' => [],
+            'individual_use' => true,
+            'free_shipping' => false,
+            'usage_limit' => 100,
+            'usage_count' => 4,
+            'description' => 'New Year discount',
         ];
 
-        $row = (new CouponMapper())->fromWoo($woo);
+        $row = (new CouponMapper)->fromWoo($woo);
         $coupon = Coupon::create($row);
 
         $this->assertSame('NY2026', $coupon->code);

@@ -19,23 +19,23 @@ class RecommendationEngine
     {
         $memory = $customer->profile_json ?? [];
         $ecosystem = $memory['ecosystem'] ?? null;
-        $budget    = $memory['budget_range'] ?? null;
+        $budget = $memory['budget_range'] ?? null;
 
         [$minPrice, $maxPrice] = $this->parseBudget($budget);
 
         $brand = match ($ecosystem) {
-            'apple'   => 'Apple',
+            'apple' => 'Apple',
             'samsung' => 'Samsung',
-            default   => null,
+            default => null,
         };
 
         return $this->catalog->search(
-            query:    $intent,
-            brand:    $brand,
+            query: $intent,
+            brand: $brand,
             minPrice: $minPrice,
             maxPrice: $maxPrice,
-            inStock:  true,
-            limit:    $limit,
+            inStock: true,
+            limit: $limit,
         );
     }
 
@@ -51,7 +51,7 @@ class RecommendationEngine
             return [];
         }
         $price = $product->effectivePrice();
-        $band  = max(50, $price * 0.25);
+        $band = max(50, $price * 0.25);
 
         return Product::query()
             ->where('is_active', true)
@@ -67,7 +67,9 @@ class RecommendationEngine
 
     private function parseBudget(?string $budget): array
     {
-        if (! $budget) return [null, null];
+        if (! $budget) {
+            return [null, null];
+        }
 
         if (preg_match('/(\d+)\s*[-–to]+\s*(\d+)/', $budget, $m)) {
             return [(float) $m[1], (float) $m[2]];
@@ -78,6 +80,7 @@ class RecommendationEngine
         if (preg_match('/>\s*(\d+)/', $budget, $m)) {
             return [(float) $m[1], null];
         }
+
         return [null, null];
     }
 }

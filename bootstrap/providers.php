@@ -1,8 +1,13 @@
 <?php
 
+use App\Providers\AIServiceProvider;
+use App\Providers\AppServiceProvider;
+use App\Providers\ChannelServiceProvider;
+use App\Providers\GadgetServiceProvider;
+
 return [
-    App\Providers\AppServiceProvider::class,
-    App\Providers\ChannelServiceProvider::class,
-    App\Providers\AIServiceProvider::class,
-    App\Providers\GadgetServiceProvider::class,
+    AppServiceProvider::class,
+    ChannelServiceProvider::class,
+    AIServiceProvider::class,
+    GadgetServiceProvider::class,
 ];

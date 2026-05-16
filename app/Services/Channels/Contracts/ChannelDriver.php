@@ -39,11 +39,10 @@ interface ChannelDriver
     /**
      * Send a rich interactive message with quick-reply buttons.
      *
-     * @param string $recipient
-     * @param string $bodyText           main message body
-     * @param array<int, array{id: string, title: string}> $buttons up to 3 buttons (WhatsApp limit)
-     * @param ?MediaPayload $header      optional header (image/video/document)
-     * @param ?string $footerText        optional footer text
+     * @param  string  $bodyText  main message body
+     * @param  array<int, array{id: string, title: string}>  $buttons  up to 3 buttons (WhatsApp limit)
+     * @param  ?MediaPayload  $header  optional header (image/video/document)
+     * @param  ?string  $footerText  optional footer text
      */
     public function sendInteractiveButtons(
         string $recipient,
@@ -56,10 +55,9 @@ interface ChannelDriver
     /**
      * Send a pre-approved WhatsApp message template.
      *
-     * @param string $recipient
-     * @param string $templateName       must match a template approved on the WhatsApp Business platform
-     * @param string $languageCode       e.g. "ka", "en"
-     * @param array  $components         components array per WhatsApp spec
+     * @param  string  $templateName  must match a template approved on the WhatsApp Business platform
+     * @param  string  $languageCode  e.g. "ka", "en"
+     * @param  array  $components  components array per WhatsApp spec
      */
     public function sendTemplate(
         string $recipient,

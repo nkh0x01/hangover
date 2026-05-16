@@ -11,12 +11,14 @@ class Customers
     public function get(int $id): ?array
     {
         $c = $this->client->get("customers/$id");
+
         return $c ?: null;
     }
 
     public function findByEmail(string $email): ?array
     {
         $items = $this->client->get('customers', ['email' => $email, 'per_page' => 1]);
+
         return $items[0] ?? null;
     }
 
@@ -29,7 +31,9 @@ class Customers
     public function findByPhone(string $phone): ?array
     {
         $needle = preg_replace('/\D+/', '', $phone);
-        if ($needle === '') return null;
+        if ($needle === '') {
+            return null;
+        }
 
         $items = $this->client->get('customers', ['search' => $needle, 'per_page' => 10]);
         foreach ((array) $items as $c) {
@@ -38,6 +42,7 @@ class Customers
                 return $c;
             }
         }
+
         return null;
     }
 

@@ -35,6 +35,7 @@ class CatalogSyncService
             $items = json_decode((string) $res->getBody(), true) ?: [];
         } catch (Throwable $e) {
             Log::error('catalog.sync.fetch_failed', ['msg' => $e->getMessage()]);
+
             return ['ok' => false, 'reason' => 'fetch_failed'];
         }
 
@@ -44,34 +45,38 @@ class CatalogSyncService
         }
 
         $upserted = 0;
-        $skipped  = 0;
+        $skipped = 0;
 
         foreach ($items as $row) {
             $sku = (string) ($row['sku'] ?? $row['id'] ?? '');
-            if ($sku === '') { $skipped++; continue; }
+            if ($sku === '') {
+                $skipped++;
+
+                continue;
+            }
 
             Product::updateOrCreate(
                 ['sku' => $sku],
                 [
-                    'source_id'           => (string) ($row['id'] ?? $sku),
-                    'name'                => (string) ($row['name'] ?? $row['title'] ?? $sku),
-                    'brand'               => $row['brand'] ?? null,
-                    'model'               => $row['model'] ?? null,
-                    'category'            => (string) ($row['category'] ?? 'misc'),
-                    'subcategory'         => $row['subcategory'] ?? null,
-                    'description'         => $row['description'] ?? null,
-                    'price'               => (float) ($row['price'] ?? 0),
-                    'price_promo'         => isset($row['price_promo']) ? (float) $row['price_promo'] : null,
-                    'currency'            => $row['currency'] ?? 'GEL',
-                    'stock_total'         => (int) ($row['stock'] ?? array_sum((array) ($row['stock_by_branch'] ?? []))),
-                    'stock_by_branch_json'=> $row['stock_by_branch'] ?? null,
-                    'attributes_json'     => $row['attributes'] ?? null,
-                    'compatibility_json'  => $row['compatibility'] ?? null,
-                    'images_json'         => $row['images'] ?? (isset($row['image']) ? [$row['image']] : null),
-                    'url'                 => $row['url'] ?? null,
-                    'is_active'           => (bool) ($row['active'] ?? true),
-                    'is_promo'            => (bool) ($row['promo'] ?? false),
-                    'synced_at'           => now(),
+                    'source_id' => (string) ($row['id'] ?? $sku),
+                    'name' => (string) ($row['name'] ?? $row['title'] ?? $sku),
+                    'brand' => $row['brand'] ?? null,
+                    'model' => $row['model'] ?? null,
+                    'category' => (string) ($row['category'] ?? 'misc'),
+                    'subcategory' => $row['subcategory'] ?? null,
+                    'description' => $row['description'] ?? null,
+                    'price' => (float) ($row['price'] ?? 0),
+                    'price_promo' => isset($row['price_promo']) ? (float) $row['price_promo'] : null,
+                    'currency' => $row['currency'] ?? 'GEL',
+                    'stock_total' => (int) ($row['stock'] ?? array_sum((array) ($row['stock_by_branch'] ?? []))),
+                    'stock_by_branch_json' => $row['stock_by_branch'] ?? null,
+                    'attributes_json' => $row['attributes'] ?? null,
+                    'compatibility_json' => $row['compatibility'] ?? null,
+                    'images_json' => $row['images'] ?? (isset($row['image']) ? [$row['image']] : null),
+                    'url' => $row['url'] ?? null,
+                    'is_active' => (bool) ($row['active'] ?? true),
+                    'is_promo' => (bool) ($row['promo'] ?? false),
+                    'synced_at' => now(),
                 ],
             );
             $upserted++;

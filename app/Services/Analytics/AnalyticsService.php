@@ -15,22 +15,22 @@ class AnalyticsService
     public function rollupHour(CarbonImmutable $hour): void
     {
         $start = $hour->startOfHour();
-        $end   = $hour->endOfHour();
+        $end = $hour->endOfHour();
 
         foreach (['whatsapp', 'messenger', 'instagram', 'facebook'] as $platform) {
             $payload = [
-                'day'                    => $start->toDateString(),
-                'hour'                   => $start->hour,
-                'platform'               => $platform,
-                'conversations_started'  => Conversation::where('platform', $platform)->whereBetween('created_at', [$start, $end])->count(),
-                'messages_inbound'       => Message::whereBetween('created_at', [$start, $end])->where('direction', 'inbound')->whereHas('conversation', fn ($q) => $q->where('platform', $platform))->count(),
-                'messages_outbound_ai'   => Message::whereBetween('created_at', [$start, $end])->where('direction', 'outbound')->where('is_ai', true)->whereHas('conversation', fn ($q) => $q->where('platform', $platform))->count(),
-                'messages_outbound_human'=> Message::whereBetween('created_at', [$start, $end])->where('direction', 'outbound')->where('is_ai', false)->whereHas('conversation', fn ($q) => $q->where('platform', $platform))->count(),
-                'escalations'            => Escalation::whereBetween('created_at', [$start, $end])->whereHas('conversation', fn ($q) => $q->where('platform', $platform))->count(),
-                'orders_created'         => Order::whereBetween('created_at', [$start, $end])->whereHas('conversation', fn ($q) => $q->where('platform', $platform))->count(),
-                'orders_paid'            => Order::whereBetween('paid_at', [$start, $end])->whereHas('conversation', fn ($q) => $q->where('platform', $platform))->count(),
-                'comments_handled'       => DB::table('comments')->where('platform', $platform)->where('replied', true)->whereBetween('updated_at', [$start, $end])->count(),
-                'avg_response_seconds'   => $this->avgResponseSeconds($platform, $start, $end),
+                'day' => $start->toDateString(),
+                'hour' => $start->hour,
+                'platform' => $platform,
+                'conversations_started' => Conversation::where('platform', $platform)->whereBetween('created_at', [$start, $end])->count(),
+                'messages_inbound' => Message::whereBetween('created_at', [$start, $end])->where('direction', 'inbound')->whereHas('conversation', fn ($q) => $q->where('platform', $platform))->count(),
+                'messages_outbound_ai' => Message::whereBetween('created_at', [$start, $end])->where('direction', 'outbound')->where('is_ai', true)->whereHas('conversation', fn ($q) => $q->where('platform', $platform))->count(),
+                'messages_outbound_human' => Message::whereBetween('created_at', [$start, $end])->where('direction', 'outbound')->where('is_ai', false)->whereHas('conversation', fn ($q) => $q->where('platform', $platform))->count(),
+                'escalations' => Escalation::whereBetween('created_at', [$start, $end])->whereHas('conversation', fn ($q) => $q->where('platform', $platform))->count(),
+                'orders_created' => Order::whereBetween('created_at', [$start, $end])->whereHas('conversation', fn ($q) => $q->where('platform', $platform))->count(),
+                'orders_paid' => Order::whereBetween('paid_at', [$start, $end])->whereHas('conversation', fn ($q) => $q->where('platform', $platform))->count(),
+                'comments_handled' => DB::table('comments')->where('platform', $platform)->where('replied', true)->whereBetween('updated_at', [$start, $end])->count(),
+                'avg_response_seconds' => $this->avgResponseSeconds($platform, $start, $end),
             ];
 
             AnalyticsRollup::updateOrCreate(
@@ -43,24 +43,24 @@ class AnalyticsService
     public function dashboard(): array
     {
         $today = now()->toDateString();
-        $rows  = AnalyticsRollup::whereDate('day', $today)->get();
+        $rows = AnalyticsRollup::whereDate('day', $today)->get();
 
         return [
-            'date'                   => $today,
-            'total_conversations'    => (int) $rows->sum('conversations_started'),
-            'inbound'                => (int) $rows->sum('messages_inbound'),
-            'ai_replies'             => (int) $rows->sum('messages_outbound_ai'),
-            'human_replies'          => (int) $rows->sum('messages_outbound_human'),
-            'escalations'            => (int) $rows->sum('escalations'),
-            'orders_created'         => (int) $rows->sum('orders_created'),
-            'orders_paid'            => (int) $rows->sum('orders_paid'),
-            'comments_handled'       => (int) $rows->sum('comments_handled'),
-            'ai_share'               => $this->ratio((int) $rows->sum('messages_outbound_ai'), (int) $rows->sum('messages_outbound_ai') + (int) $rows->sum('messages_outbound_human')),
-            'by_platform'            => $rows->groupBy('platform')->map(fn ($p) => [
+            'date' => $today,
+            'total_conversations' => (int) $rows->sum('conversations_started'),
+            'inbound' => (int) $rows->sum('messages_inbound'),
+            'ai_replies' => (int) $rows->sum('messages_outbound_ai'),
+            'human_replies' => (int) $rows->sum('messages_outbound_human'),
+            'escalations' => (int) $rows->sum('escalations'),
+            'orders_created' => (int) $rows->sum('orders_created'),
+            'orders_paid' => (int) $rows->sum('orders_paid'),
+            'comments_handled' => (int) $rows->sum('comments_handled'),
+            'ai_share' => $this->ratio((int) $rows->sum('messages_outbound_ai'), (int) $rows->sum('messages_outbound_ai') + (int) $rows->sum('messages_outbound_human')),
+            'by_platform' => $rows->groupBy('platform')->map(fn ($p) => [
                 'conversations' => (int) $p->sum('conversations_started'),
-                'inbound'       => (int) $p->sum('messages_inbound'),
-                'escalations'   => (int) $p->sum('escalations'),
-                'orders'        => (int) $p->sum('orders_created'),
+                'inbound' => (int) $p->sum('messages_inbound'),
+                'escalations' => (int) $p->sum('escalations'),
+                'orders' => (int) $p->sum('orders_created'),
             ])->all(),
         ];
     }
@@ -90,6 +90,7 @@ class AnalyticsService
         if ($diffs->isEmpty()) {
             return null;
         }
+
         return round($diffs->avg(), 2);
     }
 }

@@ -30,7 +30,7 @@ class DailyWhatsAppSummary implements ShouldQueue
             "• შეკვეთა გახსნილი: {$d['orders_created']}\n" .
             "• გადახდილი შეკვეთა: {$d['orders_paid']}\n" .
             "• კომენტარები: {$d['comments_handled']}\n" .
-            "• AI წილი პასუხებში: " . round(($d['ai_share'] ?? 0) * 100) . "%";
+            '• AI წილი პასუხებში: ' . round(($d['ai_share'] ?? 0) * 100) . '%';
 
         $driver = $channels->driver('whatsapp');
         foreach (config('escalation.whatsapp_targets', []) as $phone) {

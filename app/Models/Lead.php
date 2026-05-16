@@ -14,7 +14,7 @@ class Lead extends Model
 
     protected $casts = [
         'product_skus_json' => 'array',
-        'last_event_at'     => 'datetime',
+        'last_event_at' => 'datetime',
     ];
 
     public function conversation(): BelongsTo

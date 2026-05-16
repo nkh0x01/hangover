@@ -6,7 +6,6 @@ use App\Models\Comment;
 use App\Services\AI\ClaudeClient;
 use App\Services\AI\IntentDetector;
 use App\Services\Channels\ChannelManager;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -29,22 +28,24 @@ class CommentResponder
             return;
         }
 
-        $intent    = $this->intent->detect($text);
+        $intent = $this->intent->detect($text);
         $sentiment = $this->intent->sentiment($text);
 
         $comment->update([
-            'intent'    => $intent,
+            'intent' => $intent,
             'sentiment' => $sentiment,
         ]);
 
         // Escalate (don't reply publicly) on risky comments.
         if ($sentiment < -0.4 || in_array($intent, ['complaint', 'refund', 'warranty', 'manager_request'], true)) {
             $comment->update(['escalated' => true]);
+
             return;
         }
 
         if (in_array($intent, ['spam', 'off_topic'], true)) {
             $comment->update(['replied' => false]);
+
             return;
         }
 
@@ -56,12 +57,13 @@ class CommentResponder
             $result = $driver->replyToComment($comment->comment_id, $reply);
             if (! $result->ok) {
                 Log::warning('comment.public_reply.failed', ['comment' => $comment->comment_id, 'err' => $result->error]);
+
                 return;
             }
             $comment->update([
-                'replied'           => true,
-                'reply_body'        => $reply,
-                'reply_comment_id'  => $result->platformMsgId,
+                'replied' => true,
+                'reply_body' => $reply,
+                'reply_comment_id' => $result->platformMsgId,
             ]);
 
             // Try to pull them into DM via Private Reply.
@@ -80,30 +82,31 @@ class CommentResponder
     {
         // Cheap canned replies — short, on-brand. Random pick keeps it human.
         $bank = match ($intent) {
-            'price_question'  => [
+            'price_question' => [
                 'მოგწერთ პირადში ❤️',
                 'დეტალებს პირადში გამოგიგზავნით.',
             ],
-            'product_question'=> [
+            'product_question' => [
                 'მოგწერთ პირადში ❤️',
                 'პირადში მოგწერეთ ყველაფერი 🤍',
                 'ეს მოდელი გვაქვს ❤️ პირადში დაგიკონკრეტებთ.',
             ],
-            'ready_to_buy'    => [
+            'ready_to_buy' => [
                 'პირადში მოგწერეთ, შევუკვეთოთ! 🛍️',
                 'ფანტასტიკურია — დეტალები პირადში ❤️',
             ],
-            default           => [
+            default => [
                 'მოგწერთ პირადში ❤️',
                 'პირადში მოგწერეთ.',
             ],
         };
+
         return $bank[array_rand($bank)];
     }
 
     private function craftPrivateNudge(string $text, string $intent): string
     {
-        return "გამარჯობა! 👋 თქვენი კომენტარის გამო მოგწერთ პირადში. " .
-            "მითხარით კონკრეტული მოდელი/კითხვა და ყველაფერს ერთად მოვაგვაროთ 🤍";
+        return 'გამარჯობა! 👋 თქვენი კომენტარის გამო მოგწერთ პირადში. ' .
+            'მითხარით კონკრეტული მოდელი/კითხვა და ყველაფერს ერთად მოვაგვაროთ 🤍';
     }
 }

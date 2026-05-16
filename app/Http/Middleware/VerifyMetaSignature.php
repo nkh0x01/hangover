@@ -6,7 +6,6 @@ use App\Exceptions\WebhookVerificationException;
 use App\Services\Channels\ChannelManager;
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Throwable;
 
 class VerifyMetaSignature
@@ -31,6 +30,7 @@ class VerifyMetaSignature
             return response($e->getMessage(), 403);
         } catch (Throwable $e) {
             report($e);
+
             return response('verification_error', 500);
         }
 

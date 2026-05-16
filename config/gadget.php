@@ -9,15 +9,15 @@ return [
     | standard WC REST API (/wp-json/wc/v3) using consumer-key + secret
     | (HTTP Basic over HTTPS).
     */
-    'base_url'        => env('GADGET_WC_BASE_URL', 'https://gadget.ge'),
-    'api_path'        => env('GADGET_WC_API_PATH', '/wp-json/wc/v3'),
-    'consumer_key'    => env('GADGET_WC_CONSUMER_KEY'),
+    'base_url' => env('GADGET_WC_BASE_URL', 'https://gadget.ge'),
+    'api_path' => env('GADGET_WC_API_PATH', '/wp-json/wc/v3'),
+    'consumer_key' => env('GADGET_WC_CONSUMER_KEY'),
     'consumer_secret' => env('GADGET_WC_CONSUMER_SECRET'),
-    'webhook_secret'  => env('GADGET_WC_WEBHOOK_SECRET'),
+    'webhook_secret' => env('GADGET_WC_WEBHOOK_SECRET'),
 
-    'timeout'         => (int) env('GADGET_WC_TIMEOUT', 20),
-    'retries'         => (int) env('GADGET_WC_RETRIES', 3),
-    'verify_tls'      => (bool) env('GADGET_WC_VERIFY_TLS', true),
+    'timeout' => (int) env('GADGET_WC_TIMEOUT', 20),
+    'retries' => (int) env('GADGET_WC_RETRIES', 3),
+    'verify_tls' => (bool) env('GADGET_WC_VERIFY_TLS', true),
 
     /*
     |--------------------------------------------------------------------------
@@ -26,8 +26,8 @@ return [
     */
     'sync' => [
         'products_minutes' => (int) env('GADGET_WC_SYNC_PRODUCTS_MIN', 15),
-        'coupons_minutes'  => (int) env('GADGET_WC_SYNC_COUPONS_MIN', 30),
-        'page_size'        => (int) env('GADGET_WC_PAGE_SIZE', 100),
+        'coupons_minutes' => (int) env('GADGET_WC_SYNC_COUPONS_MIN', 30),
+        'page_size' => (int) env('GADGET_WC_PAGE_SIZE', 100),
     ],
 
     /*
@@ -39,19 +39,19 @@ return [
     */
     'orders' => [
         'currency_fallback' => 'GEL',
-        'source_meta_key'   => 'created_via',
+        'source_meta_key' => 'created_via',
         'source_meta_value' => 'gadget_ai_chatbot',
-        'payment_methods'   => [
+        'payment_methods' => [
             'branch' => ['id' => 'cod',    'title' => 'ფილიალში გადახდა', 'set_paid' => false],
-            'cod'    => ['id' => 'cod',    'title' => 'კურიერთან გადახდა', 'set_paid' => false],
-            'card'   => ['id' => 'bog',    'title' => 'ბარათით გადახდა',  'set_paid' => false],
+            'cod' => ['id' => 'cod',    'title' => 'კურიერთან გადახდა', 'set_paid' => false],
+            'card' => ['id' => 'bog',    'title' => 'ბარათით გადახდა',  'set_paid' => false],
         ],
         'shipping' => [
-            'pickup_method_id'  => 'local_pickup',
-            'pickup_title'      => 'ფილიალში მიტანა',
+            'pickup_method_id' => 'local_pickup',
+            'pickup_title' => 'ფილიალში მიტანა',
             'courier_method_id' => 'flat_rate',
-            'courier_title'     => 'კურიერი',
-            'courier_fee'       => 10.0,
+            'courier_title' => 'კურიერი',
+            'courier_fee' => 10.0,
         ],
     ],
 
@@ -63,20 +63,20 @@ return [
     | Tweak these without touching code if Gadget customises the schema.
     */
     'product_map' => [
-        'source_id'   => 'id',
-        'sku'         => 'sku',
-        'name'        => 'name',
-        'url'         => 'permalink',
+        'source_id' => 'id',
+        'sku' => 'sku',
+        'name' => 'name',
+        'url' => 'permalink',
         'description' => 'short_description',
-        'price'       => 'regular_price',
+        'price' => 'regular_price',
         'price_promo' => 'sale_price',
-        'is_promo'    => 'on_sale',
-        'stock'       => 'stock_quantity',
-        'stock_status'=> 'stock_status',           // "instock" / "outofstock"
-        'manage_stock'=> 'manage_stock',
-        'images'      => 'images',                 // [{src}]
-        'categories'  => 'categories',             // [{name}]
-        'brand_taxonomy'  => 'product_brand',      // common Woo brands plugin
+        'is_promo' => 'on_sale',
+        'stock' => 'stock_quantity',
+        'stock_status' => 'stock_status',           // "instock" / "outofstock"
+        'manage_stock' => 'manage_stock',
+        'images' => 'images',                 // [{src}]
+        'categories' => 'categories',             // [{name}]
+        'brand_taxonomy' => 'product_brand',      // common Woo brands plugin
         'brand_attribute' => 'pa_brand',           // fallback: Woo attribute slug
     ],
 
@@ -92,8 +92,8 @@ return [
         // Map of branch display name → meta_data key in WC.
         'meta_keys' => [
             'Saburtalo' => 'stock_saburtalo',
-            'Vake'      => 'stock_vake',
-            'Gldani'    => 'stock_gldani',
+            'Vake' => 'stock_vake',
+            'Gldani' => 'stock_gldani',
         ],
     ],
 ];

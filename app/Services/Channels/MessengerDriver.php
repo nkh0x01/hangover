@@ -39,38 +39,42 @@ class MessengerDriver extends AbstractMetaDriver
                 $receivedAt = $ts !== null ? intdiv((int) $ts, 1000) : time();
 
                 $events[] = new InboundEvent(
-                    platform:      'messenger',
+                    platform: 'messenger',
                     platformMsgId: (string) ($msg['mid'] ?? ''),
-                    threadId:      (string) $senderId,
-                    senderId:      (string) $senderId,
-                    senderName:    null,
-                    kind:          $kind,
-                    text:          $text,
-                    media:         $media,
-                    receivedAt:    $receivedAt,
-                    raw:           $m,
+                    threadId: (string) $senderId,
+                    senderId: (string) $senderId,
+                    senderName: null,
+                    kind: $kind,
+                    text: $text,
+                    media: $media,
+                    receivedAt: $receivedAt,
+                    raw: $m,
                 );
             }
 
             // Page comments (feed change)
             foreach (data_get($entry, 'changes', []) as $change) {
-                if (($change['field'] ?? null) !== 'feed') continue;
+                if (($change['field'] ?? null) !== 'feed') {
+                    continue;
+                }
                 $v = $change['value'] ?? [];
-                if (($v['item'] ?? null) !== 'comment' || ($v['verb'] ?? null) !== 'add') continue;
+                if (($v['item'] ?? null) !== 'comment' || ($v['verb'] ?? null) !== 'add') {
+                    continue;
+                }
 
                 $events[] = new InboundEvent(
-                    platform:        'facebook',
-                    platformMsgId:   (string) ($v['comment_id'] ?? ''),
-                    threadId:        (string) ($v['post_id'] ?? ''),
-                    senderId:        (string) ($v['from']['id'] ?? ''),
-                    senderName:      $v['from']['name'] ?? null,
-                    kind:            'comment',
-                    text:            $v['message'] ?? null,
-                    media:           [],
-                    receivedAt:      (int) ($v['created_time'] ?? time()),
-                    raw:             $v,
-                    commentId:       (string) ($v['comment_id'] ?? ''),
-                    postId:          (string) ($v['post_id'] ?? ''),
+                    platform: 'facebook',
+                    platformMsgId: (string) ($v['comment_id'] ?? ''),
+                    threadId: (string) ($v['post_id'] ?? ''),
+                    senderId: (string) ($v['from']['id'] ?? ''),
+                    senderName: $v['from']['name'] ?? null,
+                    kind: 'comment',
+                    text: $v['message'] ?? null,
+                    media: [],
+                    receivedAt: (int) ($v['created_time'] ?? time()),
+                    raw: $v,
+                    commentId: (string) ($v['comment_id'] ?? ''),
+                    postId: (string) ($v['post_id'] ?? ''),
                     parentCommentId: $v['parent_id'] ?? null,
                 );
             }
@@ -82,7 +86,7 @@ class MessengerDriver extends AbstractMetaDriver
     private function extractMessage(array $msg): array
     {
         $text = $msg['text'] ?? null;
-        $att  = $msg['attachments'][0] ?? null;
+        $att = $msg['attachments'][0] ?? null;
 
         // Quick-reply tap → treat as interactive with payload + visible title.
         if (! empty($msg['quick_reply']['payload'])) {
@@ -106,9 +110,9 @@ class MessengerDriver extends AbstractMetaDriver
         return $this->asSendResult($this->graphPost(
             'me/messages',
             [
-                'recipient'      => ['id' => $recipient],
+                'recipient' => ['id' => $recipient],
                 'messaging_type' => 'RESPONSE',
-                'message'        => ['text' => $text],
+                'message' => ['text' => $text],
             ],
             $this->config['page_access_token'] ?? null,
         ));
@@ -119,11 +123,11 @@ class MessengerDriver extends AbstractMetaDriver
         return $this->asSendResult($this->graphPost(
             'me/messages',
             [
-                'recipient'      => ['id' => $recipient],
+                'recipient' => ['id' => $recipient],
                 'messaging_type' => 'RESPONSE',
-                'message'        => [
+                'message' => [
                     'attachment' => [
-                        'type'    => $media->kind,
+                        'type' => $media->kind,
                         'payload' => ['url' => $media->url, 'is_reusable' => true],
                     ],
                 ],
@@ -137,8 +141,8 @@ class MessengerDriver extends AbstractMetaDriver
         $this->graphPost(
             'me/messages',
             [
-                'recipient'      => ['id' => $recipient],
-                'sender_action'  => $on ? 'typing_on' : 'typing_off',
+                'recipient' => ['id' => $recipient],
+                'sender_action' => $on ? 'typing_on' : 'typing_off',
             ],
             $this->config['page_access_token'] ?? null,
         );
@@ -160,9 +164,9 @@ class MessengerDriver extends AbstractMetaDriver
         return $this->asSendResult($this->graphPost(
             'me/messages',
             [
-                'recipient'      => ['comment_id' => $commentId],
+                'recipient' => ['comment_id' => $commentId],
                 'messaging_type' => 'RESPONSE',
-                'message'        => ['text' => $text],
+                'message' => ['text' => $text],
             ],
             $this->config['page_access_token'] ?? null,
         ));
@@ -180,8 +184,8 @@ class MessengerDriver extends AbstractMetaDriver
         // button template for richer cases.
         $quickReplies = array_slice(array_map(fn ($b) => [
             'content_type' => 'text',
-            'title'        => mb_substr((string) ($b['title'] ?? ''), 0, 20),
-            'payload'      => mb_substr((string) ($b['id'] ?? $b['title'] ?? ''), 0, 1000),
+            'title' => mb_substr((string) ($b['title'] ?? ''), 0, 20),
+            'payload' => mb_substr((string) ($b['id'] ?? $b['title'] ?? ''), 0, 1000),
         ], $buttons), 0, 11);
 
         $message = ['text' => $bodyText];
@@ -192,9 +196,9 @@ class MessengerDriver extends AbstractMetaDriver
         return $this->asSendResult($this->graphPost(
             'me/messages',
             [
-                'recipient'      => ['id' => $recipient],
+                'recipient' => ['id' => $recipient],
                 'messaging_type' => 'RESPONSE',
-                'message'        => $message,
+                'message' => $message,
             ],
             $this->config['page_access_token'] ?? null,
         ));

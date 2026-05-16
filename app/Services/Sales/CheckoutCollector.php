@@ -7,6 +7,8 @@ use App\Models\Customer;
 use App\Models\Lead;
 use App\Models\Order;
 use App\Models\Product;
+use App\Services\Gadget\OrderPush;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Tiny state machine over the `orders` table. Knows what's needed for
@@ -30,10 +32,10 @@ class CheckoutCollector
         if (! $order) {
             $order = new Order([
                 'conversation_id' => $conversation->id,
-                'customer_id'     => $customer->id,
-                'status'          => Order::STATUS_DRAFT,
-                'items_json'      => [],
-                'currency'        => 'GEL',
+                'customer_id' => $customer->id,
+                'status' => Order::STATUS_DRAFT,
+                'items_json' => [],
+                'currency' => 'GEL',
             ]);
         }
 
@@ -45,7 +47,7 @@ class CheckoutCollector
         }
 
         // Address / delivery
-        foreach (['customer_name','customer_phone','city','address','preferred_branch','delivery_method','payment_method','notes'] as $f) {
+        foreach (['customer_name', 'customer_phone', 'city', 'address', 'preferred_branch', 'delivery_method', 'payment_method', 'notes'] as $f) {
             if (! empty($input[$f])) {
                 $order->$f = $input[$f];
             }
@@ -54,7 +56,7 @@ class CheckoutCollector
         // Delivery fee
         $order->delivery_fee = match ($order->delivery_method) {
             'courier' => 10.00,
-            default   => 0.00,
+            default => 0.00,
         };
         $order->total = (float) $order->subtotal + (float) $order->delivery_fee;
 
@@ -65,10 +67,10 @@ class CheckoutCollector
         Lead::updateOrCreate(
             ['conversation_id' => $conversation->id, 'status' => 'order_created'],
             [
-                'customer_id'       => $customer->id,
+                'customer_id' => $customer->id,
                 'product_skus_json' => array_column($order->items_json ?? [], 'sku'),
-                'status'            => 'order_created',
-                'last_event_at'     => now(),
+                'status' => 'order_created',
+                'last_event_at' => now(),
             ],
         );
 
@@ -92,6 +94,7 @@ class CheckoutCollector
         if (($order->delivery_method ?? null) === 'pickup' && empty($order->preferred_branch)) {
             $missing[] = 'preferred_branch';
         }
+
         return $missing;
     }
 
@@ -101,17 +104,17 @@ class CheckoutCollector
             return false;
         }
         $order->update([
-            'status'       => Order::STATUS_CONFIRMED,
+            'status' => Order::STATUS_CONFIRMED,
             'confirmed_at' => now(),
         ]);
 
         // Push to gadget.ge (WooCommerce). Idempotent — won't double-write.
-        $push = app(\App\Services\Gadget\OrderPush::class)->push($order->fresh());
+        $push = app(OrderPush::class)->push($order->fresh());
         if (! ($push['ok'] ?? false)) {
-            \Illuminate\Support\Facades\Log::warning('checkout.confirm.woo_push_failed', [
-                'order'  => $order->id,
-                'reason' => $push['reason']  ?? null,
-                'detail' => $push['detail']  ?? null,
+            Log::warning('checkout.confirm.woo_push_failed', [
+                'order' => $order->id,
+                'reason' => $push['reason'] ?? null,
+                'detail' => $push['detail'] ?? null,
             ]);
         }
 
@@ -123,17 +126,22 @@ class CheckoutCollector
         $out = [];
         foreach ($items as $it) {
             $sku = $it['sku'] ?? null;
-            if (! $sku) continue;
+            if (! $sku) {
+                continue;
+            }
             $p = Product::where('sku', $sku)->first();
-            if (! $p) continue;
+            if (! $p) {
+                continue;
+            }
             $qty = max(1, (int) ($it['qty'] ?? 1));
             $out[] = [
-                'sku'   => $p->sku,
-                'name'  => $p->name,
-                'qty'   => $qty,
+                'sku' => $p->sku,
+                'name' => $p->name,
+                'qty' => $qty,
                 'price' => $p->effectivePrice(),
             ];
         }
+
         return $out;
     }
 
@@ -143,6 +151,7 @@ class CheckoutCollector
         foreach ($items as $i) {
             $s += (float) $i['price'] * (int) $i['qty'];
         }
+
         return $s;
     }
 }

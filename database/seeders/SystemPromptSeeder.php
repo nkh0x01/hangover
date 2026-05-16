@@ -107,11 +107,11 @@ PROMPT;
 
         AiPrompt::where('slug', 'system')->update(['is_active' => false]);
         AiPrompt::create([
-            'slug'      => 'system',
-            'version'   => $latest + 1,
+            'slug' => 'system',
+            'version' => $latest + 1,
             'is_active' => true,
-            'body'      => $body,
-            'notes'     => 'brand voice (seeded)',
+            'body' => $body,
+            'notes' => 'brand voice (seeded)',
         ]);
     }
 }

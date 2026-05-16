@@ -21,19 +21,19 @@ class OrderMapperTest extends TestCase
         ]);
         $customer = Customer::create(['platform' => 'whatsapp', 'platform_user_id' => '995599100100']);
         $order = Order::create([
-            'customer_id'      => $customer->id,
-            'customer_name'    => 'Nika Beridze',
-            'customer_phone'   => '599100100',
+            'customer_id' => $customer->id,
+            'customer_name' => 'Nika Beridze',
+            'customer_phone' => '599100100',
             'preferred_branch' => 'Saburtalo',
-            'delivery_method'  => 'pickup',
-            'payment_method'   => 'branch',
-            'items_json'       => [['sku' => 'P1', 'qty' => 2, 'price' => 50]],
-            'subtotal'         => 100,
-            'total'            => 100,
-            'currency'         => 'GEL',
+            'delivery_method' => 'pickup',
+            'payment_method' => 'branch',
+            'items_json' => [['sku' => 'P1', 'qty' => 2, 'price' => 50]],
+            'subtotal' => 100,
+            'total' => 100,
+            'currency' => 'GEL',
         ]);
 
-        $payload = (new OrderMapper())->toWoo($order);
+        $payload = (new OrderMapper)->toWoo($order);
 
         $this->assertSame('cod', $payload['payment_method']);
         $this->assertSame('GEL', $payload['currency']);
@@ -51,18 +51,18 @@ class OrderMapperTest extends TestCase
         Product::create(['sku' => 'P2', 'source_id' => '1', 'name' => 'X', 'category' => 'c', 'price' => 10, 'stock_total' => 1]);
         $customer = Customer::create(['platform' => 'whatsapp', 'platform_user_id' => 'x']);
         $order = Order::create([
-            'customer_id'      => $customer->id,
-            'customer_name'    => 'A B',
-            'customer_phone'   => '5',
-            'delivery_method'  => 'courier',
-            'payment_method'   => 'cod',
-            'delivery_fee'     => 10,
-            'items_json'       => [['sku' => 'P2', 'qty' => 1, 'price' => 10]],
-            'total'            => 20,
-            'currency'         => 'GEL',
+            'customer_id' => $customer->id,
+            'customer_name' => 'A B',
+            'customer_phone' => '5',
+            'delivery_method' => 'courier',
+            'payment_method' => 'cod',
+            'delivery_fee' => 10,
+            'items_json' => [['sku' => 'P2', 'qty' => 1, 'price' => 10]],
+            'total' => 20,
+            'currency' => 'GEL',
         ]);
 
-        $payload = (new OrderMapper())->toWoo($order);
+        $payload = (new OrderMapper)->toWoo($order);
         $this->assertSame('flat_rate', $payload['shipping_lines'][0]['method_id']);
         $this->assertSame('10.00', $payload['shipping_lines'][0]['total']);
     }

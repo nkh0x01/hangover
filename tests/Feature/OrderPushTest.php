@@ -21,7 +21,7 @@ class OrderPushTest extends TestCase
 
     public function test_pushes_a_confirmed_order_once_and_stores_external_id(): void
     {
-        config()->set('gadget.consumer_key',    'ck_test');
+        config()->set('gadget.consumer_key', 'ck_test');
         config()->set('gadget.consumer_secret', 'cs_test');
 
         // Mock the WC responses: empty customer search → create customer → create order.
@@ -43,7 +43,7 @@ class OrderPushTest extends TestCase
 
     public function test_does_not_double_push_when_external_order_id_already_set(): void
     {
-        config()->set('gadget.consumer_key',    'ck_test');
+        config()->set('gadget.consumer_key', 'ck_test');
         config()->set('gadget.consumer_secret', 'cs_test');
 
         $mock = new MockHandler([]); // strict — any HTTP call would fail because the queue is empty.
@@ -62,29 +62,27 @@ class OrderPushTest extends TestCase
     private function bindMockedWooClient(MockHandler $mock): void
     {
         $stack = HandlerStack::create($mock);
-        $http  = new Client(['handler' => $stack, 'http_errors' => false]);
+        $http = new Client(['handler' => $stack, 'http_errors' => false]);
 
-        // Replace WooCommerceClient's internal Guzzle via subclass-on-the-fly.
+        // Replace WooCommerceClient's internal Guzzle via reflection.
         $this->app->singleton(WooCommerceClient::class, function () use ($http) {
-            $c = new class($http) extends WooCommerceClient {
-                public function __construct(\GuzzleHttp\Client $injected)
-                {
-                    parent::__construct([
-                        'base_url'        => 'https://gadget.ge',
-                        'api_path'        => '/wp-json/wc/v3',
-                        'consumer_key'    => 'ck_test',
-                        'consumer_secret' => 'cs_test',
-                        'timeout'         => 5,
-                        'retries'         => 0,
-                        'verify_tls'      => false,
-                        'sync'            => ['page_size' => 10],
-                    ]);
-                    $rc = new \ReflectionClass($this);
-                    $prop = $rc->getProperty('http');
-                    $prop->setValue($this, $injected);
-                }
-            };
-            return $c;
+            $client = new WooCommerceClient([
+                'base_url' => 'https://gadget.ge',
+                'api_path' => '/wp-json/wc/v3',
+                'consumer_key' => 'ck_test',
+                'consumer_secret' => 'cs_test',
+                'timeout' => 5,
+                'retries' => 0,
+                'verify_tls' => false,
+                'sync' => ['page_size' => 10],
+            ]);
+
+            // $http is private on WooCommerceClient — reach for it via
+            // ReflectionClass on the parent, not on the runtime class.
+            (new \ReflectionProperty(WooCommerceClient::class, 'http'))
+                ->setValue($client, $http);
+
+            return $client;
         });
         $this->app->singleton(GadgetApi::class, fn ($app) => new GadgetApi($app->make(WooCommerceClient::class)));
     }
@@ -97,18 +95,19 @@ class OrderPushTest extends TestCase
         ]);
         $customer = Customer::create(['platform' => 'whatsapp', 'platform_user_id' => '995599100100', 'phone' => '599100100']);
         $order = Order::create([
-            'customer_id'      => $customer->id,
-            'customer_name'    => 'Nika Beridze',
-            'customer_phone'   => '599100100',
+            'customer_id' => $customer->id,
+            'customer_name' => 'Nika Beridze',
+            'customer_phone' => '599100100',
             'preferred_branch' => 'Saburtalo',
-            'delivery_method'  => 'pickup',
-            'payment_method'   => 'branch',
-            'items_json'       => [['sku' => 'P1', 'qty' => 1, 'price' => 50]],
-            'subtotal'         => 50,
-            'total'            => 50,
-            'currency'         => 'GEL',
-            'status'           => Order::STATUS_CONFIRMED,
+            'delivery_method' => 'pickup',
+            'payment_method' => 'branch',
+            'items_json' => [['sku' => 'P1', 'qty' => 1, 'price' => 50]],
+            'subtotal' => 50,
+            'total' => 50,
+            'currency' => 'GEL',
+            'status' => Order::STATUS_CONFIRMED,
         ]);
+
         return [$order, $customer, $p];
     }
 }

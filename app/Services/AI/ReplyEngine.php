@@ -63,17 +63,18 @@ class ReplyEngine
         if (in_array($intent, $hardStop, true)) {
             $this->escalation->dispatch(
                 conversation: $conversation,
-                customer:     $customer,
-                reason:       "intent_$intent",
-                urgency:      $intent === 'manager_request' ? 'high' : 'medium',
-                summary:      mb_substr($lastInbound->body ?? '', 0, 280),
+                customer: $customer,
+                reason: "intent_$intent",
+                urgency: $intent === 'manager_request' ? 'high' : 'medium',
+                summary: mb_substr($lastInbound->body ?? '', 0, 280),
             );
+
             return;
         }
 
         $tonePreset = $this->tone->detect($conversation);
         $systemBlocks = $this->prompts->systemBlocks($customer, $conversation, $tonePreset);
-        $messages   = $this->prompts->historyMessages($conversation, (int) config('chatbot.ai.history_turns', 12));
+        $messages = $this->prompts->historyMessages($conversation, (int) config('chatbot.ai.history_turns', 12));
 
         // 2. Run the tool-use loop.
         $replyText = $this->runToolLoop($customer, $conversation, $systemBlocks, $messages);
@@ -84,17 +85,18 @@ class ReplyEngine
 
         // 3. Confidence gate.
         $parsed = $this->confidence->parse($replyText);
-        $meta   = $parsed['meta'];
-        $clean  = $parsed['clean'];
+        $meta = $parsed['meta'];
+        $clean = $parsed['clean'];
 
         if (! $this->confidence->passesFloor($meta['confidence'] ?? null)) {
             $this->escalation->dispatch(
                 conversation: $conversation,
-                customer:     $customer,
-                reason:       'low_confidence',
-                urgency:      'low',
-                summary:      "AI confidence " . ($meta['confidence'] ?? 'n/a') . ". Suggested reply was:\n$clean",
+                customer: $customer,
+                reason: 'low_confidence',
+                urgency: 'low',
+                summary: 'AI confidence ' . ($meta['confidence'] ?? 'n/a') . ". Suggested reply was:\n$clean",
             );
+
             return;
         }
 
@@ -113,9 +115,6 @@ class ReplyEngine
      * Core tool-use loop. Returns the final assistant text, or null if
      * the model chose to escalate via tool (in which case the
      * EscalationDispatcher has already fired).
-     *
-     * @param array $systemBlocks
-     * @param array $messages
      */
     private function runToolLoop(Customer $customer, Conversation $conversation, array $systemBlocks, array $messages): ?string
     {
@@ -125,14 +124,14 @@ class ReplyEngine
 
         for ($round = 0; $round < $maxRounds; $round++) {
             $resp = $this->claude->messages([
-                'system'    => $systemBlocks,
-                'messages'  => $messages,
-                'tools'     => $tools,
-                'max_tokens'=> 1024,
+                'system' => $systemBlocks,
+                'messages' => $messages,
+                'tools' => $tools,
+                'max_tokens' => 1024,
             ]);
 
             $stopReason = $resp['stop_reason'] ?? null;
-            $content    = $resp['content']     ?? [];
+            $content = $resp['content'] ?? [];
 
             // Append assistant turn so subsequent tool_results align.
             $messages[] = ['role' => 'assistant', 'content' => $content];
@@ -143,11 +142,13 @@ class ReplyEngine
 
             $toolResultBlocks = [];
             foreach ($content as $block) {
-                if (($block['type'] ?? null) !== 'tool_use') continue;
+                if (($block['type'] ?? null) !== 'tool_use') {
+                    continue;
+                }
 
-                $name   = $block['name']  ?? '';
-                $input  = $block['input'] ?? [];
-                $callId = $block['id']    ?? '';
+                $name = $block['name'] ?? '';
+                $input = $block['input'] ?? [];
+                $callId = $block['id'] ?? '';
 
                 try {
                     $result = $this->tools->execute($name, $input, $customer, $conversation);
@@ -161,9 +162,9 @@ class ReplyEngine
                 }
 
                 $toolResultBlocks[] = [
-                    'type'        => 'tool_result',
+                    'type' => 'tool_result',
                     'tool_use_id' => $callId,
-                    'content'     => json_encode($result, JSON_UNESCAPED_UNICODE),
+                    'content' => json_encode($result, JSON_UNESCAPED_UNICODE),
                 ];
             }
 
@@ -177,11 +178,12 @@ class ReplyEngine
         // Loop got stuck — escalate.
         $this->escalation->dispatch(
             conversation: $conversation,
-            customer:     $customer,
-            reason:       'tool_loop_overflow',
-            urgency:      'low',
-            summary:      'AI got stuck in a tool-use loop. Manual review needed.',
+            customer: $customer,
+            reason: 'tool_loop_overflow',
+            urgency: 'low',
+            summary: 'AI got stuck in a tool-use loop. Manual review needed.',
         );
+
         return null;
     }
 
@@ -209,16 +211,16 @@ class ReplyEngine
             $driver->setTyping($conversation->thread_id, false);
 
             Message::create([
-                'conversation_id'    => $conversation->id,
-                'customer_id'        => $customer->id,
-                'platform_msg_id'    => $result->platformMsgId,
-                'direction'          => Message::DIRECTION_OUT,
-                'kind'               => 'text',
-                'body'               => $chunk,
-                'is_ai'              => true,
-                'confidence'         => $meta['confidence'] ?? null,
-                'intent'             => $meta['intent'] ?? null,
-                'sent_at'            => now(),
+                'conversation_id' => $conversation->id,
+                'customer_id' => $customer->id,
+                'platform_msg_id' => $result->platformMsgId,
+                'direction' => Message::DIRECTION_OUT,
+                'kind' => 'text',
+                'body' => $chunk,
+                'is_ai' => true,
+                'confidence' => $meta['confidence'] ?? null,
+                'intent' => $meta['intent'] ?? null,
+                'sent_at' => now(),
             ]);
 
             // Small natural pause between chunks.
@@ -246,8 +248,10 @@ class ReplyEngine
             // Merge tail into the third chunk.
             $head = array_slice($paragraphs, 0, 2);
             $tail = implode("\n\n", array_slice($paragraphs, 2));
+
             return array_merge($head, [$tail]);
         }
+
         return $paragraphs;
     }
 
@@ -259,13 +263,13 @@ class ReplyEngine
 
         Message::create([
             'conversation_id' => $conversation->id,
-            'customer_id'     => $customer->id,
-            'direction'       => Message::DIRECTION_OUT,
-            'kind'            => 'image',
-            'body'            => $caption,
-            'media_json'      => ['url' => $imageUrl],
-            'is_ai'           => true,
-            'sent_at'         => now(),
+            'customer_id' => $customer->id,
+            'direction' => Message::DIRECTION_OUT,
+            'kind' => 'image',
+            'body' => $caption,
+            'media_json' => ['url' => $imageUrl],
+            'is_ai' => true,
+            'sent_at' => now(),
         ]);
     }
 }

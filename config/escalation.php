@@ -29,17 +29,17 @@ return [
     | first hit wins.
     */
     'triggers' => [
-        'intent_complaint'    => ['type' => 'intent',     'value' => 'complaint',     'urgency' => 'high'],
-        'intent_refund'       => ['type' => 'intent',     'value' => 'refund',        'urgency' => 'high'],
-        'intent_warranty'     => ['type' => 'intent',     'value' => 'warranty',      'urgency' => 'medium'],
-        'intent_legal'        => ['type' => 'intent',     'value' => 'legal',         'urgency' => 'high'],
-        'intent_manager_req'  => ['type' => 'intent',     'value' => 'manager_request','urgency' => 'high'],
-        'low_confidence'      => ['type' => 'confidence', 'value' => 0.62,            'urgency' => 'low'],
-        'negative_sentiment'  => ['type' => 'sentiment',  'value' => -0.6,            'urgency' => 'medium'],
+        'intent_complaint' => ['type' => 'intent',     'value' => 'complaint',     'urgency' => 'high'],
+        'intent_refund' => ['type' => 'intent',     'value' => 'refund',        'urgency' => 'high'],
+        'intent_warranty' => ['type' => 'intent',     'value' => 'warranty',      'urgency' => 'medium'],
+        'intent_legal' => ['type' => 'intent',     'value' => 'legal',         'urgency' => 'high'],
+        'intent_manager_req' => ['type' => 'intent',     'value' => 'manager_request', 'urgency' => 'high'],
+        'low_confidence' => ['type' => 'confidence', 'value' => 0.62,            'urgency' => 'low'],
+        'negative_sentiment' => ['type' => 'sentiment',  'value' => -0.6,            'urgency' => 'medium'],
         'product_unavailable' => ['type' => 'flag',       'value' => 'unavailable',   'urgency' => 'medium'],
-        'custom_discount'     => ['type' => 'intent',     'value' => 'discount_request','urgency' => 'low'],
-        'payment_issue'       => ['type' => 'flag',       'value' => 'payment_failed','urgency' => 'high'],
-        'toxic_language'      => ['type' => 'flag',       'value' => 'toxic',         'urgency' => 'medium'],
+        'custom_discount' => ['type' => 'intent',     'value' => 'discount_request', 'urgency' => 'low'],
+        'payment_issue' => ['type' => 'flag',       'value' => 'payment_failed', 'urgency' => 'high'],
+        'toxic_language' => ['type' => 'flag',       'value' => 'toxic',         'urgency' => 'medium'],
     ],
 
     /*

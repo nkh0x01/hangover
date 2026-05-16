@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
@@ -20,20 +19,22 @@ class AuthController extends Controller
         }
 
         $token = $user->createToken('admin-' . now()->timestamp)->plainTextToken;
+
         return response()->json([
             'token' => $token,
-            'user'  => $user->only(['id', 'name', 'email', 'role']),
+            'user' => $user->only(['id', 'name', 'email', 'role']),
         ]);
     }
 
     public function me(Request $request)
     {
-        return response()->json($request->user()?->only(['id','name','email','role']));
+        return response()->json($request->user()?->only(['id', 'name', 'email', 'role']));
     }
 
     public function logout(Request $request)
     {
         $request->user()?->currentAccessToken()?->delete();
+
         return response()->json(['ok' => true]);
     }
 }

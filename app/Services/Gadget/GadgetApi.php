@@ -17,13 +17,35 @@ class GadgetApi
         private WooCommerceClient $client,
     ) {}
 
-    public function client(): WooCommerceClient { return $this->client; }
+    public function client(): WooCommerceClient
+    {
+        return $this->client;
+    }
 
-    public function products(): Products { return new Products($this->client); }
-    public function coupons(): Coupons   { return new Coupons($this->client); }
-    public function customers(): Customers { return new Customers($this->client); }
-    public function orders(): Orders     { return new Orders($this->client); }
-    public function categories(): Categories { return new Categories($this->client); }
+    public function products(): Products
+    {
+        return new Products($this->client);
+    }
+
+    public function coupons(): Coupons
+    {
+        return new Coupons($this->client);
+    }
+
+    public function customers(): Customers
+    {
+        return new Customers($this->client);
+    }
+
+    public function orders(): Orders
+    {
+        return new Orders($this->client);
+    }
+
+    public function categories(): Categories
+    {
+        return new Categories($this->client);
+    }
 
     public function isConfigured(): bool
     {

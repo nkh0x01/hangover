@@ -23,18 +23,19 @@ use Illuminate\Support\Facades\Log;
 class WooCommerceClient
 {
     private Client $http;
+
     private array $config;
 
     public function __construct(?array $config = null)
     {
         $this->config = $config ?? (array) config('gadget');
         $this->http = new Client([
-            'base_uri'    => rtrim($this->config['base_url'], '/') . rtrim($this->config['api_path'], '/') . '/',
-            'timeout'     => (int) ($this->config['timeout'] ?? 20),
+            'base_uri' => rtrim($this->config['base_url'], '/') . rtrim($this->config['api_path'], '/') . '/',
+            'timeout' => (int) ($this->config['timeout'] ?? 20),
             'http_errors' => false,
-            'verify'      => (bool) ($this->config['verify_tls'] ?? true),
-            'auth'        => [$this->config['consumer_key'] ?? '', $this->config['consumer_secret'] ?? ''],
-            'headers'     => ['Accept' => 'application/json'],
+            'verify' => (bool) ($this->config['verify_tls'] ?? true),
+            'auth' => [$this->config['consumer_key'] ?? '', $this->config['consumer_secret'] ?? ''],
+            'headers' => ['Accept' => 'application/json'],
         ]);
     }
 
@@ -67,7 +68,7 @@ class WooCommerceClient
     public function paginate(string $path, array $query = []): \Generator
     {
         $perPage = (int) ($query['per_page'] ?? $this->config['sync']['page_size'] ?? 100);
-        $page    = 1;
+        $page = 1;
 
         do {
             $items = $this->get($path, $query + ['per_page' => $perPage, 'page' => $page]);
@@ -87,10 +88,10 @@ class WooCommerceClient
 
         beginning:
         try {
-            $res    = $this->http->request($method, ltrim($path, '/'), $opts);
+            $res = $this->http->request($method, ltrim($path, '/'), $opts);
             $status = $res->getStatusCode();
-            $body   = (string) $res->getBody();
-            $data   = $body === '' ? [] : (json_decode($body, true) ?: ['raw' => $body]);
+            $body = (string) $res->getBody();
+            $data = $body === '' ? [] : (json_decode($body, true) ?: ['raw' => $body]);
 
             if ($status >= 500 && $attempt < $retries) {
                 $this->backoff(++$attempt);

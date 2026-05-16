@@ -6,6 +6,7 @@ use App\Models\AuditLog;
 use App\Models\Order;
 use App\Models\Product;
 use App\Services\Gadget\CatalogSync;
+use App\Services\Gadget\CouponSync;
 use App\Services\Gadget\Mappers\ProductMapper;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -31,7 +32,7 @@ class GadgetWebhookController extends Controller
     public function handle(Request $request)
     {
         $topic = $request->header('X-WC-Webhook-Topic', 'unknown');
-        $body  = $request->json()->all() ?: [];
+        $body = $request->json()->all() ?: [];
 
         Log::info('gadget.webhook', ['topic' => $topic, 'id' => $body['id'] ?? null]);
         AuditLog::record('system', 'gadget.webhook.received', null, null, ['topic' => $topic, 'id' => $body['id'] ?? null]);
@@ -39,9 +40,9 @@ class GadgetWebhookController extends Controller
         try {
             match (true) {
                 str_starts_with($topic, 'product.') => $this->handleProduct($topic, $body),
-                str_starts_with($topic, 'order.')   => $this->handleOrder($topic, $body),
-                str_starts_with($topic, 'coupon.')  => $this->handleCoupon($topic, $body),
-                default                              => null,
+                str_starts_with($topic, 'order.') => $this->handleOrder($topic, $body),
+                str_starts_with($topic, 'coupon.') => $this->handleCoupon($topic, $body),
+                default => null,
             };
         } catch (\Throwable $e) {
             report($e);
@@ -56,6 +57,7 @@ class GadgetWebhookController extends Controller
             if (! empty($body['id'])) {
                 Product::where('source_id', (string) $body['id'])->update(['is_active' => false, 'stock_total' => 0]);
             }
+
             return;
         }
 
@@ -70,19 +72,23 @@ class GadgetWebhookController extends Controller
     private function handleOrder(string $topic, array $body): void
     {
         $wcId = (string) ($body['id'] ?? '');
-        if ($wcId === '') return;
+        if ($wcId === '') {
+            return;
+        }
 
         $order = Order::where('external_order_id', $wcId)->first();
-        if (! $order) return; // not one of ours
+        if (! $order) {
+            return;
+        } // not one of ours
 
         $status = $body['status'] ?? null;
-        $paid   = in_array($status, ['processing', 'completed'], true);
+        $paid = in_array($status, ['processing', 'completed'], true);
 
         $order->update(array_filter([
-            'status'         => $this->mapStatus($status),
+            'status' => $this->mapStatus($status),
             'payment_status' => $paid ? 'paid' : $order->payment_status,
-            'paid_at'        => $paid && ! $order->paid_at ? now() : $order->paid_at,
-            'fulfilled_at'   => $status === 'completed' && ! $order->fulfilled_at ? now() : $order->fulfilled_at,
+            'paid_at' => $paid && ! $order->paid_at ? now() : $order->paid_at,
+            'fulfilled_at' => $status === 'completed' && ! $order->fulfilled_at ? now() : $order->fulfilled_at,
         ], fn ($v) => $v !== null));
     }
 
@@ -90,19 +96,19 @@ class GadgetWebhookController extends Controller
     {
         // Cheaper to re-sync the one row than to special-case it.
         // CouponSync uses code as the unique key; safe to call.
-        app(\App\Services\Gadget\CouponSync::class)->run();
+        app(CouponSync::class)->run();
     }
 
     private function mapStatus(?string $wc): ?string
     {
         return match ($wc) {
-            'pending'       => Order::STATUS_DRAFT,
-            'on-hold'       => Order::STATUS_CONFIRMED,
-            'processing'    => Order::STATUS_PAID,
-            'completed'     => Order::STATUS_FULFILLED,
-            'cancelled'     => Order::STATUS_CANCELLED,
-            'refunded'      => Order::STATUS_REFUNDED,
-            default         => null,
+            'pending' => Order::STATUS_DRAFT,
+            'on-hold' => Order::STATUS_CONFIRMED,
+            'processing' => Order::STATUS_PAID,
+            'completed' => Order::STATUS_FULFILLED,
+            'cancelled' => Order::STATUS_CANCELLED,
+            'refunded' => Order::STATUS_REFUNDED,
+            default => null,
         };
     }
 }

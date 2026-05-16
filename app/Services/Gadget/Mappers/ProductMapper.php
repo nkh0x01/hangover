@@ -12,7 +12,7 @@ class ProductMapper
      */
     public function fromWoo(array $p): array
     {
-        $map     = (array) config('gadget.product_map');
+        $map = (array) config('gadget.product_map');
         $branches = (array) config('gadget.branches.meta_keys');
 
         $images = array_map(
@@ -22,24 +22,24 @@ class ProductMapper
         $images = array_values(array_filter($images));
 
         $categories = (array) Arr::get($p, $map['categories'] ?? 'categories', []);
-        $category   = $this->slugify((string) ($categories[0]['name'] ?? ($categories[0]['slug'] ?? 'misc')));
+        $category = $this->slugify((string) ($categories[0]['name'] ?? ($categories[0]['slug'] ?? 'misc')));
 
         $brand = $this->extractBrand($p, $map);
 
-        $price        = $this->num(Arr::get($p, $map['price']       ?? 'regular_price'));
-        $promoPrice   = $this->num(Arr::get($p, $map['price_promo'] ?? 'sale_price'));
-        $isPromo      = (bool) Arr::get($p, $map['is_promo']        ?? 'on_sale');
-        $manageStock  = (bool) Arr::get($p, $map['manage_stock']    ?? 'manage_stock');
-        $stockStatus  = (string) Arr::get($p, $map['stock_status']  ?? 'stock_status', 'instock');
-        $stockQty     = Arr::get($p, $map['stock']                  ?? 'stock_quantity');
+        $price = $this->num(Arr::get($p, $map['price'] ?? 'regular_price'));
+        $promoPrice = $this->num(Arr::get($p, $map['price_promo'] ?? 'sale_price'));
+        $isPromo = (bool) Arr::get($p, $map['is_promo'] ?? 'on_sale');
+        $manageStock = (bool) Arr::get($p, $map['manage_stock'] ?? 'manage_stock');
+        $stockStatus = (string) Arr::get($p, $map['stock_status'] ?? 'stock_status', 'instock');
+        $stockQty = Arr::get($p, $map['stock'] ?? 'stock_quantity');
 
         // If WC doesn't manage stock for this product, treat it as
         // "always in stock" when stock_status=instock — a common Woo
         // configuration for unlimited digital/imported goods.
         $stockTotal = match (true) {
             $manageStock && $stockQty !== null => (int) $stockQty,
-            $stockStatus === 'instock'         => 9999,
-            default                            => 0,
+            $stockStatus === 'instock' => 9999,
+            default => 0,
         };
 
         $perBranch = [];
@@ -54,33 +54,36 @@ class ProductMapper
         $attributes = $this->flattenAttributes((array) Arr::get($p, 'attributes', []));
 
         return [
-            'sku'                  => (string) ($p['sku'] ?? ''),
-            'source_id'            => (string) Arr::get($p, $map['source_id'] ?? 'id'),
-            'name'                 => (string) Arr::get($p, $map['name'] ?? 'name'),
-            'brand'                => $brand,
-            'model'                => $attributes['Model'] ?? $attributes['model'] ?? null,
-            'category'             => $category,
-            'subcategory'          => isset($categories[1]) ? $this->slugify($categories[1]['name'] ?? '') : null,
-            'description'          => strip_tags((string) Arr::get($p, $map['description'] ?? 'short_description', '')),
-            'price'                => $promoPrice ?: $price ?: 0,
-            'price_promo'          => $promoPrice ?: null,
-            'currency'             => $this->currencyFor($p),
-            'stock_total'          => $stockTotal,
+            'sku' => (string) ($p['sku'] ?? ''),
+            'source_id' => (string) Arr::get($p, $map['source_id'] ?? 'id'),
+            'name' => (string) Arr::get($p, $map['name'] ?? 'name'),
+            'brand' => $brand,
+            'model' => $attributes['Model'] ?? $attributes['model'] ?? null,
+            'category' => $category,
+            'subcategory' => isset($categories[1]) ? $this->slugify($categories[1]['name'] ?? '') : null,
+            'description' => strip_tags((string) Arr::get($p, $map['description'] ?? 'short_description', '')),
+            'price' => $promoPrice ?: $price ?: 0,
+            'price_promo' => $promoPrice ?: null,
+            'currency' => $this->currencyFor($p),
+            'stock_total' => $stockTotal,
             'stock_by_branch_json' => $perBranch ?: null,
-            'attributes_json'      => $attributes ?: null,
-            'compatibility_json'   => $this->extractCompatibility($attributes, $metaIndex),
-            'images_json'          => $images ?: null,
-            'url'                  => (string) Arr::get($p, $map['url'] ?? 'permalink'),
-            'is_active'            => ($p['status'] ?? 'publish') === 'publish',
-            'is_promo'             => $isPromo,
-            'margin_rank'          => 0,
-            'synced_at'            => now(),
+            'attributes_json' => $attributes ?: null,
+            'compatibility_json' => $this->extractCompatibility($attributes, $metaIndex),
+            'images_json' => $images ?: null,
+            'url' => (string) Arr::get($p, $map['url'] ?? 'permalink'),
+            'is_active' => ($p['status'] ?? 'publish') === 'publish',
+            'is_promo' => $isPromo,
+            'margin_rank' => 0,
+            'synced_at' => now(),
         ];
     }
 
     private function num(mixed $v): float
     {
-        if ($v === null || $v === '') return 0.0;
+        if ($v === null || $v === '') {
+            return 0.0;
+        }
+
         return (float) $v;
     }
 
@@ -92,6 +95,7 @@ class ProductMapper
     private function slugify(string $s): string
     {
         $s = trim(mb_strtolower($s));
+
         return $s === '' ? 'misc' : $s;
     }
 
@@ -100,10 +104,13 @@ class ProductMapper
         $out = [];
         foreach ($attrs as $a) {
             $name = $a['name'] ?? $a['slug'] ?? null;
-            if (! $name) continue;
+            if (! $name) {
+                continue;
+            }
             $vals = $a['options'] ?? [];
             $out[$name] = count($vals) === 1 ? $vals[0] : $vals;
         }
+
         return $out;
     }
 
@@ -120,9 +127,12 @@ class ProductMapper
             $slug = $a['slug'] ?? '';
             if ($slug === ($map['brand_attribute'] ?? 'pa_brand') || mb_stripos($a['name'] ?? '', 'brand') !== false) {
                 $opts = $a['options'] ?? [];
-                if (! empty($opts)) return (string) $opts[0];
+                if (! empty($opts)) {
+                    return (string) $opts[0];
+                }
             }
         }
+
         return null;
     }
 
@@ -139,6 +149,7 @@ class ProductMapper
                 $candidates[$k] = $v;
             }
         }
+
         return $candidates ?: null;
     }
 }

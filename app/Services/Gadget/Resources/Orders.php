@@ -16,6 +16,7 @@ class Orders
     public function get(int $id): ?array
     {
         $o = $this->client->get("orders/$id");
+
         return $o ?: null;
     }
 
@@ -27,7 +28,7 @@ class Orders
     public function addNote(int $id, string $note, bool $customerVisible = false): array
     {
         return $this->client->post("orders/$id/notes", [
-            'note'          => $note,
+            'note' => $note,
             'customer_note' => $customerVisible,
         ]);
     }

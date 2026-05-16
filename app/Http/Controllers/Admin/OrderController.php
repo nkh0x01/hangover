@@ -21,6 +21,7 @@ class OrderController extends Controller
         if ($s = $request->input('status')) {
             $q->where('status', $s);
         }
+
         return response()->json([
             'data' => $q->limit(100)->get(),
         ]);
@@ -35,8 +36,9 @@ class OrderController extends Controller
     {
         $order = Order::findOrFail($id);
         $ok = $this->checkout->confirm($order);
+
         return response()->json([
-            'ok'      => $ok,
+            'ok' => $ok,
             'missing' => $ok ? [] : $this->checkout->missingFields($order),
         ]);
     }
@@ -44,7 +46,8 @@ class OrderController extends Controller
     public function paymentLink(int $id)
     {
         $order = Order::with('conversation')->findOrFail($id);
-        $link  = $this->payments->generate($order->id, $order->conversation);
+        $link = $this->payments->generate($order->id, $order->conversation);
+
         return response()->json(['link' => $link]);
     }
 
@@ -52,6 +55,7 @@ class OrderController extends Controller
     {
         $order = Order::findOrFail($id);
         $order->update(['status' => Order::STATUS_CANCELLED]);
+
         return response()->json(['ok' => true]);
     }
 }

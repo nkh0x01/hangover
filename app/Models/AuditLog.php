@@ -15,13 +15,13 @@ class AuditLog extends Model
     public static function record(string $actorType, string $action, ?string $subjectType = null, ?int $subjectId = null, array $payload = [], ?int $employeeId = null): void
     {
         static::create([
-            'actor_type'        => $actorType,
+            'actor_type' => $actorType,
             'actor_employee_id' => $employeeId,
-            'action'            => $action,
-            'subject_type'      => $subjectType,
-            'subject_id'        => $subjectId,
-            'payload_json'      => $payload,
-            'ip'                => request()?->ip(),
+            'action' => $action,
+            'subject_type' => $subjectType,
+            'subject_id' => $subjectId,
+            'payload_json' => $payload,
+            'ip' => request()?->ip(),
         ]);
     }
 }

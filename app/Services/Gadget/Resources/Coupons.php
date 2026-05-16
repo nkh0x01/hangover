@@ -21,12 +21,14 @@ class Coupons
     public function get(int $id): ?array
     {
         $c = $this->client->get("coupons/$id");
+
         return $c ?: null;
     }
 
     public function findByCode(string $code): ?array
     {
         $items = $this->client->get('coupons', ['code' => $code, 'per_page' => 1]);
+
         return $items[0] ?? null;
     }
 }

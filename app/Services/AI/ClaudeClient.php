@@ -17,8 +17,8 @@ class ClaudeClient
     public function __construct()
     {
         $this->http = new Client([
-            'base_uri'    => rtrim(config('ai.anthropic.base_url'), '/') . '/',
-            'timeout'     => (int) config('ai.anthropic.timeout', 60),
+            'base_uri' => rtrim(config('ai.anthropic.base_url'), '/') . '/',
+            'timeout' => (int) config('ai.anthropic.timeout', 60),
             'http_errors' => false,
         ]);
     }
@@ -42,9 +42,9 @@ class ClaudeClient
             ?? config('ai.models.' . (($args['light'] ?? false) ? 'light' : 'primary'));
 
         $body = [
-            'model'      => $model,
+            'model' => $model,
             'max_tokens' => $args['max_tokens'] ?? config('ai.limits.max_tokens', 1024),
-            'messages'   => $args['messages'],
+            'messages' => $args['messages'],
         ];
 
         if (! empty($args['system'])) {
@@ -63,9 +63,9 @@ class ClaudeClient
         }
 
         $headers = [
-            'x-api-key'         => $apiKey,
+            'x-api-key' => $apiKey,
             'anthropic-version' => config('ai.anthropic.version'),
-            'content-type'      => 'application/json',
+            'content-type' => 'application/json',
         ];
         if ($beta = config('ai.anthropic.beta')) {
             $headers['anthropic-beta'] = $beta;
@@ -73,11 +73,11 @@ class ClaudeClient
 
         $res = $this->http->post('v1/messages', [
             'headers' => $headers,
-            'body'    => json_encode($body, JSON_UNESCAPED_UNICODE),
+            'body' => json_encode($body, JSON_UNESCAPED_UNICODE),
         ]);
 
         $status = $res->getStatusCode();
-        $data   = json_decode((string) $res->getBody(), true) ?: [];
+        $data = json_decode((string) $res->getBody(), true) ?: [];
 
         if ($status >= 400) {
             Log::error('anthropic.error', ['status' => $status, 'body' => $data, 'model' => $model]);
@@ -93,8 +93,8 @@ class ClaudeClient
     public function complete(string $system, string $user, bool $light = true): string
     {
         $resp = $this->messages([
-            'light'    => $light,
-            'system'   => $system,
+            'light' => $light,
+            'system' => $system,
             'messages' => [['role' => 'user', 'content' => $user]],
             'max_tokens' => 400,
         ]);
@@ -110,6 +110,7 @@ class ClaudeClient
                 $out .= $block['text'];
             }
         }
+
         return trim($out);
     }
 }

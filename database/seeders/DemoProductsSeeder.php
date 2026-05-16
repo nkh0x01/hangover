@@ -13,9 +13,9 @@ class DemoProductsSeeder extends Seeder
             Product::updateOrCreate(
                 ['sku' => $p['sku']],
                 array_merge($p, [
-                    'is_active'   => true,
-                    'currency'    => 'GEL',
-                    'synced_at'   => now(),
+                    'is_active' => true,
+                    'currency' => 'GEL',
+                    'synced_at' => now(),
                 ]),
             );
         }

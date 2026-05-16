@@ -22,9 +22,9 @@ return [
     | total_ms = clamp(min + per_char * len(text), min, max)
     */
     'typing' => [
-        'min_ms'      => (int) env('CHATBOT_TYPING_MIN_MS', 800),
+        'min_ms' => (int) env('CHATBOT_TYPING_MIN_MS', 800),
         'per_char_ms' => (int) env('CHATBOT_TYPING_PER_CHAR_MS', 22),
-        'max_ms'      => (int) env('CHATBOT_TYPING_MAX_MS', 6000),
+        'max_ms' => (int) env('CHATBOT_TYPING_MAX_MS', 6000),
     ],
 
     /*
@@ -36,8 +36,8 @@ return [
     | to disable the gate (24/7 mode).
     */
     'working_hours' => [
-        'start'    => (int) env('CHATBOT_WORKING_HOURS_START', 10),
-        'end'      => (int) env('CHATBOT_WORKING_HOURS_END', 22),
+        'start' => (int) env('CHATBOT_WORKING_HOURS_START', 10),
+        'end' => (int) env('CHATBOT_WORKING_HOURS_END', 22),
         'timezone' => env('APP_TIMEZONE', 'Asia/Tbilisi'),
     ],
 
@@ -51,7 +51,7 @@ return [
     */
     'ai' => [
         'min_confidence' => (float) env('CHATBOT_MIN_CONFIDENCE', 0.62),
-        'history_turns'  => 12,
+        'history_turns' => 12,
     ],
 
     /*
@@ -64,23 +64,23 @@ return [
     'tones' => [
         'short_punchy' => [
             'description' => 'Customer writes 1-line, quick replies. Match length.',
-            'max_words'   => 18,
-            'emoji_rate'  => 0.1,
+            'max_words' => 18,
+            'emoji_rate' => 0.1,
         ],
         'friendly_warm' => [
             'description' => 'Customer is emotional or polite. Mirror warmth.',
-            'max_words'   => 60,
-            'emoji_rate'  => 0.4,
+            'max_words' => 60,
+            'emoji_rate' => 0.4,
         ],
         'educational' => [
             'description' => 'Customer is confused or asking technical questions.',
-            'max_words'   => 90,
-            'emoji_rate'  => 0.1,
+            'max_words' => 90,
+            'emoji_rate' => 0.1,
         ],
         'sales_focused' => [
             'description' => 'Customer signals buying intent. Close the deal.',
-            'max_words'   => 50,
-            'emoji_rate'  => 0.2,
+            'max_words' => 50,
+            'emoji_rate' => 0.2,
         ],
     ],
 
@@ -92,11 +92,11 @@ return [
     | are interpolated from the conversation context.
     */
     'quick_replies' => [
-        'greeting'       => 'გამარჯობა! 👋 რით შემიძლია დაგეხმაროთ?',
-        'check_stock'    => 'ერთი წუთით, ვამოწმებ საწყობს.',
-        'in_dm'          => 'მოგწერთ პირად შეტყობინებაში ❤️',
-        'thanks'         => 'მადლობა, რომ აირჩიეთ Gadget! 🙏',
-        'branch_offer'   => 'შეგიძლიათ ფილიალში მობრძანდეთ ან მოვაწოდოთ კურიერით.',
+        'greeting' => 'გამარჯობა! 👋 რით შემიძლია დაგეხმაროთ?',
+        'check_stock' => 'ერთი წუთით, ვამოწმებ საწყობს.',
+        'in_dm' => 'მოგწერთ პირად შეტყობინებაში ❤️',
+        'thanks' => 'მადლობა, რომ აირჩიეთ Gadget! 🙏',
+        'branch_offer' => 'შეგიძლიათ ფილიალში მობრძანდეთ ან მოვაწოდოთ კურიერით.',
     ],
 
     /*
@@ -118,9 +118,9 @@ return [
     | up after the configured delay (once, never spammy).
     */
     'follow_up' => [
-        'enabled'         => true,
-        'delay_minutes'   => 90,
-        'max_per_customer'=> 1,
-        'quiet_hours'     => [23, 9], // [start, end]
+        'enabled' => true,
+        'delay_minutes' => 90,
+        'max_per_customer' => 1,
+        'quiet_hours' => [23, 9], // [start, end]
     ],
 ];

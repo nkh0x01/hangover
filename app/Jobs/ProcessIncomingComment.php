@@ -14,8 +14,10 @@ class ProcessIncomingComment implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $tries   = 3;
+    public int $tries = 3;
+
     public int $backoff = 15;
+
     public int $timeout = 60;
 
     public function __construct(public array $event) {}
@@ -25,13 +27,13 @@ class ProcessIncomingComment implements ShouldQueue
         $comment = Comment::firstOrCreate(
             ['comment_id' => $this->event['comment_id']],
             [
-                'platform'          => $this->event['platform'],
-                'post_id'           => $this->event['post_id'] ?? '',
+                'platform' => $this->event['platform'],
+                'post_id' => $this->event['post_id'] ?? '',
                 'parent_comment_id' => $this->event['parent_comment_id'] ?? null,
-                'platform_user_id'  => $this->event['sender_id'] ?? null,
-                'author_name'       => $this->event['sender_name'] ?? null,
-                'body'              => $this->event['text'] ?? null,
-                'posted_at'         => isset($this->event['received_at']) ? now()->setTimestamp((int) $this->event['received_at']) : now(),
+                'platform_user_id' => $this->event['sender_id'] ?? null,
+                'author_name' => $this->event['sender_name'] ?? null,
+                'body' => $this->event['text'] ?? null,
+                'posted_at' => isset($this->event['received_at']) ? now()->setTimestamp((int) $this->event['received_at']) : now(),
             ],
         );
 

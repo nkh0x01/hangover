@@ -21,22 +21,22 @@ class CustomerMapper
 
         $billing = array_filter([
             'first_name' => $first,
-            'last_name'  => $last,
-            'phone'      => $order?->customer_phone ?? $customer->phone,
-            'city'       => $order?->city,
-            'address_1'  => $order?->address,
-            'country'    => 'GE',
-            'email'      => $email,
+            'last_name' => $last,
+            'phone' => $order?->customer_phone ?? $customer->phone,
+            'city' => $order?->city,
+            'address_1' => $order?->address,
+            'country' => 'GE',
+            'email' => $email,
         ]);
 
         return array_filter([
-            'email'      => $email,
+            'email' => $email,
             'first_name' => $first,
-            'last_name'  => $last,
-            'username'   => $this->usernameFor($customer),
-            'billing'    => $billing,
-            'shipping'   => $billing,
-            'meta_data'  => [
+            'last_name' => $last,
+            'username' => $this->usernameFor($customer),
+            'billing' => $billing,
+            'shipping' => $billing,
+            'meta_data' => [
                 ['key' => 'gadget_chatbot_platform',        'value' => $customer->platform],
                 ['key' => 'gadget_chatbot_platform_user',   'value' => $customer->platform_user_id],
                 ['key' => 'gadget_chatbot_locale',          'value' => $customer->locale ?? 'ka'],
@@ -58,8 +58,8 @@ class CustomerMapper
         }
 
         $patch = array_filter([
-            'email'             => $wc['email'] ?? null,
-            'preferred_city'    => $wc['billing']['city'] ?? null,
+            'email' => $wc['email'] ?? null,
+            'preferred_city' => $wc['billing']['city'] ?? null,
             'preferred_address' => $wc['billing']['address_1'] ?? null,
         ]);
         $customer->profile_json = array_replace_recursive($customer->profile_json ?? [], $patch);
@@ -69,8 +69,11 @@ class CustomerMapper
     private function splitName(string $name): array
     {
         $name = preg_replace('/\s+/', ' ', trim($name));
-        if ($name === '') return ['', ''];
+        if ($name === '') {
+            return ['', ''];
+        }
         $parts = explode(' ', $name, 2);
+
         return [$parts[0], $parts[1] ?? ''];
     }
 

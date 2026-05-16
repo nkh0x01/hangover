@@ -17,7 +17,7 @@ use Throwable;
  */
 class CustomerMemory
 {
-    private const SCHEMA_HINT = <<<JSON
+    private const SCHEMA_HINT = <<<'JSON'
 {
   "ecosystem": "apple|samsung|xiaomi|huawei|other|null",
   "phone_model": "string|null",
@@ -39,7 +39,7 @@ JSON;
             return;
         }
 
-        $system = "You are a memory extractor for a Georgian gadget retailer. " .
+        $system = 'You are a memory extractor for a Georgian gadget retailer. ' .
             "Read the latest customer message and the assistant's reply and emit ONLY a JSON object " .
             "matching this schema (keys may be omitted; never invent facts):\n" .
             self::SCHEMA_HINT;
@@ -50,6 +50,7 @@ JSON;
             $raw = $this->claude->complete($system, $user, light: true);
         } catch (Throwable $e) {
             Log::info('memory.skip', ['reason' => $e->getMessage()]);
+
             return;
         }
 
@@ -72,6 +73,7 @@ JSON;
         if (preg_match('/\{.*\}/s', $raw, $m)) {
             return json_decode($m[0], true);
         }
+
         return null;
     }
 }

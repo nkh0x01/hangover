@@ -30,13 +30,13 @@ class ProductCardSender
         $driver = $this->channels->driver($conversation->platform);
 
         $price = $this->formatPrice($product);
-        $body  = $this->renderBody($product, $price);
+        $body = $this->renderBody($product, $price);
 
         $image = $product->primaryImage();
         $header = $image ? new MediaPayload('image', $image, $product->name) : null;
 
         $buttons = $this->buttonsFor($product, $opts);
-        $footer  = $product->isInStock() ? 'საწყობში: ' . (int) $product->stock_total . ' ცალი' : 'მიმდინარეობს მოლოდინი';
+        $footer = $product->isInStock() ? 'საწყობში: ' . (int) $product->stock_total . ' ცალი' : 'მიმდინარეობს მოლოდინი';
 
         $result = $driver->sendInteractiveButtons(
             $conversation->thread_id,
@@ -48,20 +48,20 @@ class ProductCardSender
 
         Message::create([
             'conversation_id' => $conversation->id,
-            'customer_id'     => $customer->id,
+            'customer_id' => $customer->id,
             'platform_msg_id' => $result->platformMsgId,
-            'direction'       => Message::DIRECTION_OUT,
-            'kind'            => 'interactive',
-            'body'            => $body,
-            'media_json'      => $image ? ['url' => $image] : null,
+            'direction' => Message::DIRECTION_OUT,
+            'kind' => 'interactive',
+            'body' => $body,
+            'media_json' => $image ? ['url' => $image] : null,
             'tool_calls_json' => ['product_card' => ['sku' => $product->sku, 'buttons' => $buttons]],
-            'is_ai'           => true,
-            'sent_at'         => now(),
+            'is_ai' => true,
+            'sent_at' => now(),
         ]);
 
         $conversation->update([
             'last_outbound_at' => now(),
-            'lead_status'      => Conversation::STATUS_PRODUCT_RECOMMENDED,
+            'lead_status' => Conversation::STATUS_PRODUCT_RECOMMENDED,
         ]);
     }
 
@@ -74,6 +74,7 @@ class ProductCardSender
         if ($desc) {
             $lines[] = $desc;
         }
+
         return implode("\n", $lines);
     }
 
@@ -84,8 +85,10 @@ class ProductCardSender
 
         if ($product->price_promo && $product->price > $product->price_promo) {
             $old = number_format((float) $product->price, 0, '.', ' ');
+
             return "ფასი: *{$formatted}* (იყო ~{$old} ₾~) 🎉";
         }
+
         return "ფასი: *{$formatted}*";
     }
 
@@ -97,7 +100,7 @@ class ProductCardSender
             return [
                 ['id' => "alts_{$product->sku}",     'title' => 'ალტერნატივა'],
                 ['id' => "notify_{$product->sku}",   'title' => 'შემატყობინე'],
-                ['id' => "talk_human",                'title' => 'ოპერატორი'],
+                ['id' => 'talk_human',                'title' => 'ოპერატორი'],
             ];
         }
 

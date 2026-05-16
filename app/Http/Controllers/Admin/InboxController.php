@@ -22,7 +22,7 @@ class InboxController extends Controller
         return response()->json([
             'data' => $this->inbox->list(
                 filters: $request->only(['platform', 'status', 'escalated', 'unanswered', 'q']),
-                limit:   (int) $request->input('limit', 50),
+                limit: (int) $request->input('limit', 50),
             ),
         ]);
     }
@@ -42,15 +42,15 @@ class InboxController extends Controller
         $result = $driver->sendText($conv->thread_id, $request->string('body'));
 
         Message::create([
-            'conversation_id'   => $conv->id,
-            'customer_id'       => $conv->customer_id,
-            'platform_msg_id'   => $result->platformMsgId,
-            'direction'         => Message::DIRECTION_OUT,
-            'kind'              => 'text',
-            'body'              => $request->string('body'),
-            'is_ai'             => false,
-            'author_employee_id'=> $request->user()?->id,
-            'sent_at'           => now(),
+            'conversation_id' => $conv->id,
+            'customer_id' => $conv->customer_id,
+            'platform_msg_id' => $result->platformMsgId,
+            'direction' => Message::DIRECTION_OUT,
+            'kind' => 'text',
+            'body' => $request->string('body'),
+            'is_ai' => false,
+            'author_employee_id' => $request->user()?->id,
+            'sent_at' => now(),
         ]);
         $conv->update(['last_outbound_at' => now()]);
 
@@ -63,10 +63,11 @@ class InboxController extends Controller
     {
         $conv = Conversation::findOrFail($id);
         $conv->update([
-            'ai_paused'            => true,
+            'ai_paused' => true,
             'assigned_employee_id' => $request->user()?->id,
         ]);
         AuditLog::record('employee', 'takeover', 'conversation', $conv->id, [], $request->user()?->id);
+
         return response()->json(['ok' => true]);
     }
 
@@ -74,12 +75,13 @@ class InboxController extends Controller
     {
         $conv = Conversation::findOrFail($id);
         $conv->update([
-            'ai_paused'            => false,
-            'escalated'            => false,
-            'escalation_reason'    => null,
+            'ai_paused' => false,
+            'escalated' => false,
+            'escalation_reason' => null,
             'assigned_employee_id' => null,
         ]);
         AuditLog::record('employee', 'release', 'conversation', $conv->id, [], $request->user()?->id);
+
         return response()->json(['ok' => true]);
     }
 
@@ -88,6 +90,7 @@ class InboxController extends Controller
         $request->validate(['memory' => 'required|array']);
         $conv = Conversation::with('customer')->findOrFail($id);
         $conv->customer->patchMemory($request->input('memory'));
+
         return response()->json(['ok' => true, 'memory' => $conv->customer->fresh()->profile_json]);
     }
 
@@ -96,6 +99,7 @@ class InboxController extends Controller
         $request->validate(['status' => 'required|string|in:new,interested,product_recommended,waiting,payment_pending,order_created,converted,escalated,lost']);
         $conv = Conversation::findOrFail($id);
         $conv->update(['lead_status' => $request->input('status')]);
+
         return response()->json(['ok' => true]);
     }
 
@@ -105,6 +109,7 @@ class InboxController extends Controller
         $conv->customer->update(['is_spam' => true]);
         $conv->update(['ai_paused' => true, 'lead_status' => Conversation::STATUS_LOST]);
         AuditLog::record('employee', 'flag.spam', 'conversation', $id, [], $request->user()?->id);
+
         return response()->json(['ok' => true]);
     }
 }

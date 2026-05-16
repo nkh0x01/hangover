@@ -15,9 +15,9 @@ class Customer extends Model
 
     protected $casts = [
         'profile_json' => 'array',
-        'is_vip'       => 'bool',
-        'is_blocked'   => 'bool',
-        'is_spam'      => 'bool',
+        'is_vip' => 'bool',
+        'is_blocked' => 'bool',
+        'is_spam' => 'bool',
         'last_seen_at' => 'datetime',
     ];
 

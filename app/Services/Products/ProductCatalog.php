@@ -48,10 +48,10 @@ class ProductCatalog
             foreach ($tokens as $t) {
                 $q->where(function ($qq) use ($t) {
                     $qq->where('name', 'like', "%$t%")
-                       ->orWhere('description', 'like', "%$t%")
-                       ->orWhere('brand', 'like', "%$t%")
-                       ->orWhere('model', 'like', "%$t%")
-                       ->orWhere('sku', 'like', "%$t%");
+                        ->orWhere('description', 'like', "%$t%")
+                        ->orWhere('brand', 'like', "%$t%")
+                        ->orWhere('model', 'like', "%$t%")
+                        ->orWhere('sku', 'like', "%$t%");
                 });
             }
         }

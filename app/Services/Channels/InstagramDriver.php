@@ -31,12 +31,12 @@ class InstagramDriver extends AbstractMetaDriver
                 }
 
                 $text = $msg['text'] ?? null;
-                $att  = $msg['attachments'][0] ?? null;
+                $att = $msg['attachments'][0] ?? null;
                 $kind = $att['type'] ?? 'text';
                 $media = $att ? ['url' => $att['payload']['url'] ?? null] : [];
 
                 if (! empty($msg['quick_reply']['payload'])) {
-                    $kind  = 'interactive';
+                    $kind = 'interactive';
                     $media = ['payload' => $msg['quick_reply']['payload']];
                 }
 
@@ -44,37 +44,39 @@ class InstagramDriver extends AbstractMetaDriver
                 $receivedAt = $ts !== null ? intdiv((int) $ts, 1000) : time();
 
                 $events[] = new InboundEvent(
-                    platform:      'instagram',
+                    platform: 'instagram',
                     platformMsgId: (string) ($msg['mid'] ?? ''),
-                    threadId:      (string) $senderId,
-                    senderId:      (string) $senderId,
-                    senderName:    null,
-                    kind:          $kind === 'text' ? 'text' : $kind,
-                    text:          $text,
-                    media:         $media,
-                    receivedAt:    $receivedAt,
-                    raw:           $m,
+                    threadId: (string) $senderId,
+                    senderId: (string) $senderId,
+                    senderName: null,
+                    kind: $kind === 'text' ? 'text' : $kind,
+                    text: $text,
+                    media: $media,
+                    receivedAt: $receivedAt,
+                    raw: $m,
                 );
             }
 
             // Instagram comments
             foreach (data_get($entry, 'changes', []) as $change) {
-                if (($change['field'] ?? null) !== 'comments') continue;
+                if (($change['field'] ?? null) !== 'comments') {
+                    continue;
+                }
                 $v = $change['value'] ?? [];
 
                 $events[] = new InboundEvent(
-                    platform:        'instagram',
-                    platformMsgId:   (string) ($v['id'] ?? ''),
-                    threadId:        (string) ($v['media']['id'] ?? ''),
-                    senderId:        (string) ($v['from']['id'] ?? ''),
-                    senderName:      $v['from']['username'] ?? null,
-                    kind:            'comment',
-                    text:            $v['text'] ?? null,
-                    media:           [],
-                    receivedAt:      time(),
-                    raw:             $v,
-                    commentId:       (string) ($v['id'] ?? ''),
-                    postId:          (string) ($v['media']['id'] ?? ''),
+                    platform: 'instagram',
+                    platformMsgId: (string) ($v['id'] ?? ''),
+                    threadId: (string) ($v['media']['id'] ?? ''),
+                    senderId: (string) ($v['from']['id'] ?? ''),
+                    senderName: $v['from']['username'] ?? null,
+                    kind: 'comment',
+                    text: $v['text'] ?? null,
+                    media: [],
+                    receivedAt: time(),
+                    raw: $v,
+                    commentId: (string) ($v['id'] ?? ''),
+                    postId: (string) ($v['media']['id'] ?? ''),
                     parentCommentId: $v['parent_id'] ?? null,
                 );
             }
@@ -88,9 +90,9 @@ class InstagramDriver extends AbstractMetaDriver
         return $this->asSendResult($this->graphPost(
             ($this->config['ig_account_id'] ?? 'me') . '/messages',
             [
-                'recipient'      => ['id' => $recipient],
+                'recipient' => ['id' => $recipient],
                 'messaging_type' => 'RESPONSE',
-                'message'        => ['text' => $text],
+                'message' => ['text' => $text],
             ],
         ));
     }
@@ -100,11 +102,11 @@ class InstagramDriver extends AbstractMetaDriver
         return $this->asSendResult($this->graphPost(
             ($this->config['ig_account_id'] ?? 'me') . '/messages',
             [
-                'recipient'      => ['id' => $recipient],
+                'recipient' => ['id' => $recipient],
                 'messaging_type' => 'RESPONSE',
-                'message'        => [
+                'message' => [
                     'attachment' => [
-                        'type'    => $media->kind,
+                        'type' => $media->kind,
                         'payload' => ['url' => $media->url],
                     ],
                 ],
@@ -117,7 +119,7 @@ class InstagramDriver extends AbstractMetaDriver
         $this->graphPost(
             ($this->config['ig_account_id'] ?? 'me') . '/messages',
             [
-                'recipient'     => ['id' => $recipient],
+                'recipient' => ['id' => $recipient],
                 'sender_action' => $on ? 'typing_on' : 'typing_off',
             ],
         );
@@ -136,9 +138,9 @@ class InstagramDriver extends AbstractMetaDriver
         return $this->asSendResult($this->graphPost(
             ($this->config['ig_account_id'] ?? 'me') . '/messages',
             [
-                'recipient'      => ['comment_id' => $commentId],
+                'recipient' => ['comment_id' => $commentId],
                 'messaging_type' => 'RESPONSE',
-                'message'        => ['text' => $text],
+                'message' => ['text' => $text],
             ],
         ));
     }
@@ -153,8 +155,8 @@ class InstagramDriver extends AbstractMetaDriver
         // Instagram supports up to 13 quick replies.
         $quickReplies = array_slice(array_map(fn ($b) => [
             'content_type' => 'text',
-            'title'        => mb_substr((string) ($b['title'] ?? ''), 0, 20),
-            'payload'      => mb_substr((string) ($b['id'] ?? $b['title'] ?? ''), 0, 1000),
+            'title' => mb_substr((string) ($b['title'] ?? ''), 0, 20),
+            'payload' => mb_substr((string) ($b['id'] ?? $b['title'] ?? ''), 0, 1000),
         ], $buttons), 0, 11);
 
         $message = ['text' => $bodyText];
@@ -165,9 +167,9 @@ class InstagramDriver extends AbstractMetaDriver
         return $this->asSendResult($this->graphPost(
             ($this->config['ig_account_id'] ?? 'me') . '/messages',
             [
-                'recipient'      => ['id' => $recipient],
+                'recipient' => ['id' => $recipient],
                 'messaging_type' => 'RESPONSE',
-                'message'        => $message,
+                'message' => $message,
             ],
         ));
     }

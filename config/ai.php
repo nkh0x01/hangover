@@ -4,24 +4,24 @@ return [
     'provider' => 'anthropic',
 
     'anthropic' => [
-        'api_key'        => env('ANTHROPIC_API_KEY'),
-        'base_url'       => 'https://api.anthropic.com',
-        'version'        => '2023-06-01',
+        'api_key' => env('ANTHROPIC_API_KEY'),
+        'base_url' => 'https://api.anthropic.com',
+        'version' => '2023-06-01',
         // Prompt caching is now GA — no beta header required. Set the
         // ANTHROPIC_BETA env var if a specific beta feature is needed.
-        'beta'           => env('ANTHROPIC_BETA'),
-        'timeout'        => 60,
+        'beta' => env('ANTHROPIC_BETA'),
+        'timeout' => 60,
     ],
 
     'models' => [
         // Heavy reasoning, sales conversations, tool use.
         'primary' => env('ANTHROPIC_MODEL_PRIMARY', 'claude-opus-4-7'),
         // Cheap classification, sentiment, memory extraction.
-        'light'   => env('ANTHROPIC_MODEL_LIGHT', 'claude-haiku-4-5'),
+        'light' => env('ANTHROPIC_MODEL_LIGHT', 'claude-haiku-4-5'),
     ],
 
     'limits' => [
-        'max_tokens'    => (int) env('ANTHROPIC_MAX_TOKENS', 1024),
+        'max_tokens' => (int) env('ANTHROPIC_MAX_TOKENS', 1024),
         'history_chars' => 16000,
     ],
 
@@ -33,7 +33,7 @@ return [
     */
     'brand_voice' => [
         'company_name' => 'Gadget',
-        'language'     => 'Georgian (ka)',
+        'language' => 'Georgian (ka)',
         'voice' => [
             'Friendly, warm, never robotic.',
             'Speaks like a real Gadget store consultant — knowledgeable, casual, respectful.',

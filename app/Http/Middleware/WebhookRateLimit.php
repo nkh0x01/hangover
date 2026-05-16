@@ -15,7 +15,7 @@ class WebhookRateLimit
         // 600 per minute per platform — generous, but a brake on bursty
         // retries from misconfigured Meta apps.
         $platform = $request->route('channel', 'unknown');
-        $key      = 'webhook:' . $platform;
+        $key = 'webhook:' . $platform;
 
         if ($this->limiter->tooManyAttempts($key, 600)) {
             return response('too_many_requests', 429);

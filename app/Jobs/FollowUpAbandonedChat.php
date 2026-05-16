@@ -9,7 +9,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Carbon;
 
 /**
  * Dispatched by a scheduled command. If a conversation reached
@@ -42,13 +41,17 @@ class FollowUpAbandonedChat implements ShouldQueue
         [$qh1, $qh2] = config('chatbot.follow_up.quiet_hours', [23, 9]);
         $h = (int) now()->hour;
         if ($qh1 < $qh2) {
-            if ($h >= $qh1 && $h < $qh2) return;
+            if ($h >= $qh1 && $h < $qh2) {
+                return;
+            }
         } else {
-            if ($h >= $qh1 || $h < $qh2) return;
+            if ($h >= $qh1 || $h < $qh2) {
+                return;
+            }
         }
 
-        $text = "კიდევ ერთხელ გამარჯობა 👋 ვამოწმებ — გადაწყვიტეთ რა გაინტერესებთ? " .
-                "თუ რამე კითხვა გაქვთ, აქ ვარ.";
+        $text = 'კიდევ ერთხელ გამარჯობა 👋 ვამოწმებ — გადაწყვიტეთ რა გაინტერესებთ? ' .
+                'თუ რამე კითხვა გაქვთ, აქ ვარ.';
 
         $driver = $channels->driver($c->platform);
         $driver->sendText($c->thread_id, $text);

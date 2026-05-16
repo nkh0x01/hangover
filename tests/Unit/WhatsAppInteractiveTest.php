@@ -21,19 +21,21 @@ class WhatsAppInteractiveTest extends TestCase
         $stack->push(function (callable $h) use (&$sent) {
             return function (Request $req, array $opts) use ($h, &$sent) {
                 $sent[] = ['method' => $req->getMethod(), 'uri' => (string) $req->getUri(), 'body' => json_decode((string) $req->getBody(), true)];
+
                 return $h($req, $opts);
             };
         });
         $http = new Client(['handler' => $stack, 'http_errors' => false]);
 
         $driver = new WhatsAppDriver([
-            'graph_base'      => 'https://graph.facebook.com',
-            'graph_version'   => 'v20.0',
+            'graph_base' => 'https://graph.facebook.com',
+            'graph_version' => 'v20.0',
             'phone_number_id' => '999',
-            'access_token'    => 'tok',
+            'access_token' => 'tok',
         ]);
         // Inject our mocked Guzzle.
-        $rc = new \ReflectionClass($driver); $p = $rc->getProperty('http');
+        $rc = new \ReflectionClass($driver);
+        $p = $rc->getProperty('http');
         $p->setValue($driver, $http);
 
         $r = $driver->sendInteractiveButtons(
@@ -53,10 +55,10 @@ class WhatsAppInteractiveTest extends TestCase
 
         $body = $sent[0]['body'];
         $this->assertSame('interactive', $body['type']);
-        $this->assertSame('button',       $body['interactive']['type']);
+        $this->assertSame('button', $body['interactive']['type']);
         $this->assertCount(3, $body['interactive']['action']['buttons']);
         $this->assertSame('buy_X1', $body['interactive']['action']['buttons'][0]['reply']['id']);
-        $this->assertSame('image',  $body['interactive']['header']['type']);
+        $this->assertSame('image', $body['interactive']['header']['type']);
         $this->assertSame('საწყობში: 12 ცალი', $body['interactive']['footer']['text']);
     }
 
@@ -68,6 +70,7 @@ class WhatsAppInteractiveTest extends TestCase
         $stack->push(function ($h) use (&$sent) {
             return function ($req, $opts) use ($h, &$sent) {
                 $sent[] = json_decode((string) $req->getBody(), true);
+
                 return $h($req, $opts);
             };
         });
@@ -76,7 +79,8 @@ class WhatsAppInteractiveTest extends TestCase
             'graph_base' => 'https://graph.facebook.com', 'graph_version' => 'v20.0',
             'phone_number_id' => '1', 'access_token' => 't',
         ]);
-        $rc = new \ReflectionClass($driver); $p = $rc->getProperty('http');
+        $rc = new \ReflectionClass($driver);
+        $p = $rc->getProperty('http');
         $p->setValue($driver, $http);
 
         $driver->sendInteractiveButtons('1', 'x', [

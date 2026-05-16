@@ -13,20 +13,20 @@ class DemoEmployeesSeeder extends Seeder
         Employee::updateOrCreate(
             ['email' => 'owner@gadget.ge'],
             [
-                'name'           => 'Owner',
-                'password'       => Hash::make('password'),
+                'name' => 'Owner',
+                'password' => Hash::make('password'),
                 'whatsapp_phone' => env('ESCALATION_WHATSAPP_TO'),
-                'role'           => 'owner',
-                'is_active'      => true,
+                'role' => 'owner',
+                'is_active' => true,
             ],
         );
 
         Employee::updateOrCreate(
             ['email' => 'agent@gadget.ge'],
             [
-                'name'      => 'Agent Demo',
-                'password'  => Hash::make('password'),
-                'role'      => 'agent',
+                'name' => 'Agent Demo',
+                'password' => Hash::make('password'),
+                'role' => 'agent',
                 'is_active' => true,
             ],
         );

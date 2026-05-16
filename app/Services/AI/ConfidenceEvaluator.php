@@ -22,7 +22,7 @@ class ConfidenceEvaluator
         }
 
         return [
-            'meta'  => $meta,
+            'meta' => $meta,
             'clean' => trim(preg_replace(self::TAG_RE, '', $reply)),
         ];
     }
@@ -32,6 +32,7 @@ class ConfidenceEvaluator
         if ($confidence === null) {
             return true; // missing metadata — let it through but log
         }
+
         return $confidence >= (float) config('chatbot.ai.min_confidence', 0.62);
     }
 }

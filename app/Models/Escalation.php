@@ -10,15 +10,17 @@ class Escalation extends Model
 {
     use HasFactory;
 
-    public const URGENCY_LOW    = 'low';
+    public const URGENCY_LOW = 'low';
+
     public const URGENCY_MEDIUM = 'medium';
-    public const URGENCY_HIGH   = 'high';
+
+    public const URGENCY_HIGH = 'high';
 
     protected $guarded = ['id'];
 
     protected $casts = [
-        'acknowledged'     => 'bool',
-        'acknowledged_at'  => 'datetime',
+        'acknowledged' => 'bool',
+        'acknowledged_at' => 'datetime',
     ];
 
     public function conversation(): BelongsTo

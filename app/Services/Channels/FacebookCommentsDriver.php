@@ -2,7 +2,6 @@
 
 namespace App\Services\Channels;
 
-use App\Services\Channels\DTO\InboundEvent;
 use App\Services\Channels\DTO\MediaPayload;
 use App\Services\Channels\DTO\SendResult;
 
@@ -51,9 +50,9 @@ class FacebookCommentsDriver extends AbstractMetaDriver
         return $this->asSendResult($this->graphPost(
             'me/messages',
             [
-                'recipient'      => ['comment_id' => $commentId],
+                'recipient' => ['comment_id' => $commentId],
                 'messaging_type' => 'RESPONSE',
-                'message'        => ['text' => $text],
+                'message' => ['text' => $text],
             ],
             $this->config['page_access_token'] ?? null,
         ));

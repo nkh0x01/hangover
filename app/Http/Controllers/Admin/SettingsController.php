@@ -22,19 +22,19 @@ class SettingsController extends Controller
     public function savePrompt(Request $request)
     {
         $data = $request->validate([
-            'slug'  => 'required|string|max:64',
-            'body'  => 'required|string|max:20000',
+            'slug' => 'required|string|max:64',
+            'body' => 'required|string|max:20000',
             'notes' => 'nullable|string|max:1000',
         ]);
 
         $latest = AiPrompt::where('slug', $data['slug'])->max('version') ?? 0;
 
         $prompt = AiPrompt::create([
-            'slug'       => $data['slug'],
-            'version'    => $latest + 1,
-            'is_active'  => false,
-            'body'       => $data['body'],
-            'notes'      => $data['notes'] ?? null,
+            'slug' => $data['slug'],
+            'version' => $latest + 1,
+            'is_active' => false,
+            'body' => $data['body'],
+            'notes' => $data['notes'] ?? null,
             'created_by' => $request->user()?->id,
         ]);
 

@@ -23,7 +23,9 @@ class CustomerLink
 
     public function syncToWoo(Customer $customer, ?Order $order = null): ?int
     {
-        if (! $this->api->isConfigured()) return null;
+        if (! $this->api->isConfigured()) {
+            return null;
+        }
 
         try {
             // 1. Already linked?
@@ -31,6 +33,7 @@ class CustomerLink
                 $wc = $this->api->customers()->get((int) $customer->external_id);
                 if ($wc) {
                     $this->api->customers()->update((int) $customer->external_id, $this->mapper->toWoo($customer, $order));
+
                     return (int) $customer->external_id;
                 }
             }
@@ -43,6 +46,7 @@ class CustomerLink
                     $customer->update(['external_id' => $wc['id']]);
                     $this->mapper->fromWoo($wc, $customer);
                     $this->api->customers()->update((int) $wc['id'], $this->mapper->toWoo($customer, $order));
+
                     return (int) $wc['id'];
                 }
             }
@@ -54,6 +58,7 @@ class CustomerLink
                 if ($wc) {
                     $customer->update(['external_id' => $wc['id']]);
                     $this->mapper->fromWoo($wc, $customer);
+
                     return (int) $wc['id'];
                 }
             }
@@ -62,14 +67,16 @@ class CustomerLink
             $created = $this->api->customers()->create($this->mapper->toWoo($customer, $order));
             if (! empty($created['id'])) {
                 $customer->update(['external_id' => $created['id']]);
+
                 return (int) $created['id'];
             }
         } catch (\Throwable $e) {
             Log::warning('gadget.customer_link.failed', [
                 'customer' => $customer->id,
-                'msg'      => $e->getMessage(),
+                'msg' => $e->getMessage(),
             ]);
         }
+
         return null;
     }
 }

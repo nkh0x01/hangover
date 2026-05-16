@@ -22,6 +22,7 @@ class MetaWebhookController extends Controller
     public function verify(Request $request, string $channel)
     {
         $challenge = $this->channels->driver($channel)->verifyWebhook($request);
+
         return $challenge !== null
             ? response($challenge, 200)
             : response('forbidden', 403);
@@ -36,6 +37,7 @@ class MetaWebhookController extends Controller
             $events = $driver->parseInbound($request->json()->all() ?? []);
         } catch (Throwable $e) {
             report($e);
+
             // Always 200 to Meta — they retry aggressively on non-200.
             return response('ok', 200);
         }

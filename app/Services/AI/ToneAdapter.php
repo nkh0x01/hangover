@@ -27,19 +27,21 @@ class ToneAdapter
             return 'friendly_warm';
         }
 
-        $avgLen   = array_sum(array_map('mb_strlen', $recent)) / count($recent);
-        $emojis   = $this->emojiCount(implode(' ', $recent));
-        $allCaps  = $this->looksAngry(implode(' ', $recent));
-        $hasQs    = str_contains(implode(' ', $recent), '?') || str_contains(implode(' ', $recent), '?');
-        $sales    = $this->salesSignals(implode(' ', $recent));
+        $avgLen = array_sum(array_map('mb_strlen', $recent)) / count($recent);
+        $emojis = $this->emojiCount(implode(' ', $recent));
+        $allCaps = $this->looksAngry(implode(' ', $recent));
+        $hasQs = str_contains(implode(' ', $recent), '?') || str_contains(implode(' ', $recent), '?');
+        $sales = $this->salesSignals(implode(' ', $recent));
 
+        // Order matters: short style wins over sales-signal so a
+        // "ფასი?" stays brief instead of triggering a sales pitch.
         return match (true) {
-            $allCaps          => 'friendly_warm',     // de-escalate
-            $sales            => 'sales_focused',
-            $avgLen <= 25     => 'short_punchy',
-            $hasQs            => 'educational',
-            $emojis >= 2      => 'friendly_warm',
-            default           => 'friendly_warm',
+            $allCaps => 'friendly_warm',     // de-escalate
+            $avgLen <= 25 => 'short_punchy',
+            $sales => 'sales_focused',
+            $hasQs => 'educational',
+            $emojis >= 2 => 'friendly_warm',
+            default => 'friendly_warm',
         };
     }
 
@@ -50,13 +52,19 @@ class ToneAdapter
 
     private function looksAngry(string $text): bool
     {
-        if (preg_match_all('/[A-ZА-Я\x{10A0}-\x{10FF}]/u', $text) > 30) {
+        // ALL-CAPS check: only Latin + Cyrillic. Georgian script has no
+        // upper/lower distinction in normal use, so its presence must
+        // not count as shouting.
+        if (preg_match_all('/[A-ZА-Я]/u', $text) > 30) {
             return true;
         }
         $angryWords = ['რა?!', '!!!', 'უხეში', 'საშინელება', 'ვუჩივი', 'არ მუშაობს', 'მენეჯერი'];
         foreach ($angryWords as $w) {
-            if (mb_stripos($text, $w) !== false) return true;
+            if (mb_stripos($text, $w) !== false) {
+                return true;
+            }
         }
+
         return false;
     }
 
@@ -64,8 +72,11 @@ class ToneAdapter
     {
         $buy = ['ვიყიდი', 'მინდა', 'მაქვს ფული', 'როდის მოვა', 'მიყიდე', 'ვაიღო', 'ფასი', 'ფასდაკლება', 'შემიძლია', 'მინდა შევუკვეთო'];
         foreach ($buy as $w) {
-            if (mb_stripos($text, $w) !== false) return true;
+            if (mb_stripos($text, $w) !== false) {
+                return true;
+            }
         }
+
         return false;
     }
 }

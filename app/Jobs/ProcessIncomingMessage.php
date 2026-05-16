@@ -28,8 +28,10 @@ class ProcessIncomingMessage implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $tries   = 5;
+    public int $tries = 5;
+
     public int $backoff = 8;
+
     public int $timeout = 30;
 
     public function __construct(public array $event) {}
@@ -71,14 +73,14 @@ class ProcessIncomingMessage implements ShouldQueue
 
             Message::create([
                 'conversation_id' => $conversation->id,
-                'customer_id'     => $customer->id,
+                'customer_id' => $customer->id,
                 'platform_msg_id' => $this->event['platform_msg_id'] ?? null,
-                'direction'       => Message::DIRECTION_IN,
-                'kind'            => $this->event['kind'] ?? 'text',
-                'body'            => $this->event['text'] ?? null,
-                'media_json'      => $this->event['media'] ?? null,
-                'raw_json'        => $this->event['raw'] ?? null,
-                'sent_at'         => now()->setTimestamp((int) ($this->event['received_at'] ?? time())),
+                'direction' => Message::DIRECTION_IN,
+                'kind' => $this->event['kind'] ?? 'text',
+                'body' => $this->event['text'] ?? null,
+                'media_json' => $this->event['media'] ?? null,
+                'raw_json' => $this->event['raw'] ?? null,
+                'sent_at' => now()->setTimestamp((int) ($this->event['received_at'] ?? time())),
             ]);
 
             $conversation->update(['last_inbound_at' => now()]);
@@ -99,9 +101,9 @@ class ProcessIncomingMessage implements ShouldQueue
 
             AuditLog::record('system', 'message.in', 'conversation', $conversation->id, [
                 'platform_msg_id' => $this->event['platform_msg_id'] ?? null,
-                'kind'            => $this->event['kind'] ?? 'text',
-                'len'             => mb_strlen((string) ($this->event['text'] ?? '')),
-                'debounce_s'      => $delay,
+                'kind' => $this->event['kind'] ?? 'text',
+                'len' => mb_strlen((string) ($this->event['text'] ?? '')),
+                'debounce_s' => $delay,
             ]);
         });
     }

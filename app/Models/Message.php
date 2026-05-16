@@ -10,17 +10,18 @@ class Message extends Model
 {
     use HasFactory;
 
-    public const DIRECTION_IN  = 'inbound';
+    public const DIRECTION_IN = 'inbound';
+
     public const DIRECTION_OUT = 'outbound';
 
     protected $guarded = ['id'];
 
     protected $casts = [
-        'is_ai'           => 'bool',
-        'media_json'      => 'array',
+        'is_ai' => 'bool',
+        'media_json' => 'array',
         'tool_calls_json' => 'array',
-        'raw_json'        => 'array',
-        'sent_at'         => 'datetime',
+        'raw_json' => 'array',
+        'sent_at' => 'datetime',
     ];
 
     public function conversation(): BelongsTo

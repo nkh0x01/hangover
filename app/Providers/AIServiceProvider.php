@@ -9,7 +9,6 @@ use App\Services\AI\PromptBuilder;
 use App\Services\AI\ReplyEngine;
 use App\Services\AI\ToneAdapter;
 use App\Services\AI\ToolRegistry;
-use App\Services\Channels\ChannelManager;
 use App\Services\Comments\CommentResponder;
 use App\Services\Escalation\EscalationDispatcher;
 use App\Services\Memory\CustomerMemory;

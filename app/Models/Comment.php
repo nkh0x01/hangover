@@ -12,9 +12,9 @@ class Comment extends Model
     protected $guarded = ['id'];
 
     protected $casts = [
-        'replied'                 => 'bool',
-        'escalated'               => 'bool',
+        'replied' => 'bool',
+        'escalated' => 'bool',
         'private_reply_attempted' => 'bool',
-        'posted_at'               => 'datetime',
+        'posted_at' => 'datetime',
     ];
 }

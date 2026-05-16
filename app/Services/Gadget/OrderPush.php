@@ -48,7 +48,7 @@ class OrderPush
 
             DB::transaction(function () use ($order, $created) {
                 $order->update([
-                    'external_order_id'    => (string) $created['id'],
+                    'external_order_id' => (string) $created['id'],
                     'payment_provider_ref' => $order->payment_provider_ref ?: ($created['order_key'] ?? null),
                 ]);
                 AuditLog::record('system', 'order.pushed_to_woo', 'orders', $order->id, [
@@ -57,12 +57,13 @@ class OrderPush
             });
 
             return [
-                'ok'                => true,
+                'ok' => true,
                 'external_order_id' => (string) $created['id'],
-                'wc_status'         => $created['status'] ?? null,
+                'wc_status' => $created['status'] ?? null,
             ];
         } catch (WooApiException $e) {
             Log::error('gadget.order_push.failed', ['order' => $order->id, 'status' => $e->status, 'msg' => $e->getMessage(), 'body' => $e->body]);
+
             return ['ok' => false, 'reason' => 'wc_api_error', 'detail' => $e->getMessage()];
         }
     }

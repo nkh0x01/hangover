@@ -22,6 +22,7 @@ class ChannelManager
         }
 
         $class = $config['driver'];
+
         return $this->drivers[$platform] = new $class($config);
     }
 

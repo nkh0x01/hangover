@@ -13,14 +13,14 @@ class Product extends Model
 
     protected $casts = [
         'stock_by_branch_json' => 'array',
-        'attributes_json'      => 'array',
-        'compatibility_json'   => 'array',
-        'images_json'          => 'array',
-        'is_active'            => 'bool',
-        'is_promo'             => 'bool',
-        'price'                => 'decimal:2',
-        'price_promo'          => 'decimal:2',
-        'synced_at'            => 'datetime',
+        'attributes_json' => 'array',
+        'compatibility_json' => 'array',
+        'images_json' => 'array',
+        'is_active' => 'bool',
+        'is_promo' => 'bool',
+        'price' => 'decimal:2',
+        'price_promo' => 'decimal:2',
+        'synced_at' => 'datetime',
     ];
 
     public function effectivePrice(): float
@@ -40,6 +40,7 @@ class Product extends Model
     public function primaryImage(): ?string
     {
         $imgs = $this->images_json ?? [];
+
         return $imgs[0] ?? null;
     }
 }

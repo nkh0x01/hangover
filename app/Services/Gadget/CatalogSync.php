@@ -5,7 +5,6 @@ namespace App\Services\Gadget;
 use App\Models\Product;
 use App\Services\Gadget\Exceptions\WooApiException;
 use App\Services\Gadget\Mappers\ProductMapper;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -31,9 +30,9 @@ class CatalogSync
             return ['ok' => false, 'reason' => 'wc_not_configured'];
         }
 
-        $seen     = [];
+        $seen = [];
         $upserted = 0;
-        $errors   = 0;
+        $errors = 0;
 
         try {
             foreach ($this->api->products()->each() as $p) {
@@ -49,6 +48,7 @@ class CatalogSync
             }
         } catch (WooApiException $e) {
             Log::error('catalog.sync.failed', ['status' => $e->status, 'msg' => $e->getMessage(), 'body' => $e->body]);
+
             return ['ok' => false, 'reason' => 'wc_api_error', 'detail' => $e->getMessage()];
         }
 
@@ -61,10 +61,10 @@ class CatalogSync
         }
 
         return [
-            'ok'          => true,
-            'upserted'    => $upserted,
+            'ok' => true,
+            'upserted' => $upserted,
             'deactivated' => $deactivated,
-            'errors'      => $errors,
+            'errors' => $errors,
         ];
     }
 
@@ -74,15 +74,20 @@ class CatalogSync
      */
     public function refreshSku(string $sku): ?Product
     {
-        if (! $this->api->isConfigured()) return null;
+        if (! $this->api->isConfigured()) {
+            return null;
+        }
 
         $woo = $this->api->products()->findBySku($sku);
-        if (! $woo) return null;
+        if (! $woo) {
+            return null;
+        }
 
         $row = $this->mapper->fromWoo($woo);
         $row['sku'] = $row['sku'] ?: $sku;
 
         $p = Product::updateOrCreate(['sku' => $row['sku']], $row);
+
         return $p->fresh();
     }
 }

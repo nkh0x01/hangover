@@ -18,6 +18,7 @@ class VerifyWooSignature
             if (app()->environment('production')) {
                 return response('webhook_secret_missing', 500);
             }
+
             return $next($request); // permissive in local/dev
         }
 

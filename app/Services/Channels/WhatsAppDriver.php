@@ -32,16 +32,16 @@ class WhatsAppDriver extends AbstractMetaDriver
                     [$kind, $text, $media] = $this->extractContent($m);
 
                     $events[] = new InboundEvent(
-                        platform:      'whatsapp',
+                        platform: 'whatsapp',
                         platformMsgId: (string) ($m['id'] ?? ''),
-                        threadId:      (string) $from,
-                        senderId:      (string) $from,
-                        senderName:    $name,
-                        kind:          $kind,
-                        text:          $text,
-                        media:         $media,
-                        receivedAt:    (int) ($m['timestamp'] ?? time()),
-                        raw:           $m,
+                        threadId: (string) $from,
+                        senderId: (string) $from,
+                        senderName: $name,
+                        kind: $kind,
+                        text: $text,
+                        media: $media,
+                        receivedAt: (int) ($m['timestamp'] ?? time()),
+                        raw: $m,
                     );
                 }
             }
@@ -55,14 +55,14 @@ class WhatsAppDriver extends AbstractMetaDriver
         $type = $m['type'] ?? 'text';
 
         return match ($type) {
-            'text'        => ['text', $m['text']['body'] ?? null, []],
-            'image'       => ['image', $m['image']['caption'] ?? null, ['id' => $m['image']['id'] ?? null, 'mime' => $m['image']['mime_type'] ?? null]],
-            'audio'       => ['audio', null, ['id' => $m['audio']['id'] ?? null, 'mime' => $m['audio']['mime_type'] ?? null]],
-            'video'       => ['video', $m['video']['caption'] ?? null, ['id' => $m['video']['id'] ?? null]],
-            'document'    => ['document', $m['document']['caption'] ?? null, ['id' => $m['document']['id'] ?? null]],
+            'text' => ['text', $m['text']['body'] ?? null, []],
+            'image' => ['image', $m['image']['caption'] ?? null, ['id' => $m['image']['id'] ?? null, 'mime' => $m['image']['mime_type'] ?? null]],
+            'audio' => ['audio', null, ['id' => $m['audio']['id'] ?? null, 'mime' => $m['audio']['mime_type'] ?? null]],
+            'video' => ['video', $m['video']['caption'] ?? null, ['id' => $m['video']['id'] ?? null]],
+            'document' => ['document', $m['document']['caption'] ?? null, ['id' => $m['document']['id'] ?? null]],
             'interactive' => ['interactive', $this->interactiveText($m['interactive'] ?? []), $this->interactiveMeta($m['interactive'] ?? [])],
-            'button'      => ['interactive', $m['button']['text'] ?? null, ['payload' => $m['button']['payload'] ?? null]],
-            default       => [$type, null, []],
+            'button' => ['interactive', $m['button']['text'] ?? null, ['payload' => $m['button']['payload'] ?? null]],
+            default => [$type, null, []],
         };
     }
 
@@ -76,6 +76,7 @@ class WhatsAppDriver extends AbstractMetaDriver
     private function interactiveMeta(array $i): array
     {
         $id = $i['button_reply']['id'] ?? $i['list_reply']['id'] ?? null;
+
         return $id ? ['payload' => $id] : [];
     }
 
@@ -85,9 +86,9 @@ class WhatsAppDriver extends AbstractMetaDriver
             $this->config['phone_number_id'] . '/messages',
             [
                 'messaging_product' => 'whatsapp',
-                'to'                => $recipient,
-                'type'              => 'text',
-                'text'              => ['preview_url' => false, 'body' => $text],
+                'to' => $recipient,
+                'type' => 'text',
+                'text' => ['preview_url' => false, 'body' => $text],
             ],
         );
 
@@ -100,10 +101,10 @@ class WhatsAppDriver extends AbstractMetaDriver
             $this->config['phone_number_id'] . '/messages',
             [
                 'messaging_product' => 'whatsapp',
-                'to'                => $recipient,
-                'type'              => $media->kind,
-                $media->kind        => array_filter([
-                    'link'    => $media->url,
+                'to' => $recipient,
+                'type' => $media->kind,
+                $media->kind => array_filter([
+                    'link' => $media->url,
                     'caption' => $media->caption,
                 ]),
             ],
@@ -132,9 +133,9 @@ class WhatsAppDriver extends AbstractMetaDriver
         $buttons = array_slice($buttons, 0, 3);
 
         $action = ['buttons' => array_map(fn ($b) => [
-            'type'  => 'reply',
+            'type' => 'reply',
             'reply' => [
-                'id'    => mb_substr((string) ($b['id']    ?? ''), 0, 256),
+                'id' => mb_substr((string) ($b['id'] ?? ''), 0, 256),
                 'title' => mb_substr((string) ($b['title'] ?? ''), 0, 20),
             ],
         ], $buttons)];
@@ -145,7 +146,7 @@ class WhatsAppDriver extends AbstractMetaDriver
             $interactive['header'] = match ($header->kind) {
                 'image' => ['type' => 'image', 'image' => array_filter(['link' => $header->url])],
                 'video' => ['type' => 'video', 'video' => array_filter(['link' => $header->url])],
-                default => ['type' => 'text',  'text'  => mb_substr($header->caption ?? '', 0, 60)],
+                default => ['type' => 'text',  'text' => mb_substr($header->caption ?? '', 0, 60)],
             };
         }
         if ($footerText) {
@@ -156,10 +157,10 @@ class WhatsAppDriver extends AbstractMetaDriver
             $this->config['phone_number_id'] . '/messages',
             [
                 'messaging_product' => 'whatsapp',
-                'recipient_type'    => 'individual',
-                'to'                => $recipient,
-                'type'              => 'interactive',
-                'interactive'       => $interactive,
+                'recipient_type' => 'individual',
+                'to' => $recipient,
+                'type' => 'interactive',
+                'interactive' => $interactive,
             ],
         ));
     }
@@ -174,11 +175,11 @@ class WhatsAppDriver extends AbstractMetaDriver
             $this->config['phone_number_id'] . '/messages',
             [
                 'messaging_product' => 'whatsapp',
-                'to'                => $recipient,
-                'type'              => 'template',
-                'template'          => array_filter([
-                    'name'       => $templateName,
-                    'language'   => ['code' => $languageCode],
+                'to' => $recipient,
+                'type' => 'template',
+                'template' => array_filter([
+                    'name' => $templateName,
+                    'language' => ['code' => $languageCode],
                     'components' => $components ?: null,
                 ]),
             ],

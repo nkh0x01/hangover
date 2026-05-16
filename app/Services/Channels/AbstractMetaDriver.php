@@ -4,6 +4,7 @@ namespace App\Services\Channels;
 
 use App\Exceptions\WebhookVerificationException;
 use App\Services\Channels\Contracts\ChannelDriver;
+use App\Services\Channels\DTO\MediaPayload;
 use App\Services\Channels\DTO\SendResult;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
@@ -21,22 +22,23 @@ use Illuminate\Support\Facades\Log;
 abstract class AbstractMetaDriver implements ChannelDriver
 {
     protected array $config;
+
     protected Client $http;
 
     public function __construct(array $config)
     {
         $this->config = $config;
         $this->http = new Client([
-            'base_uri'    => rtrim($config['graph_base'] ?? 'https://graph.facebook.com', '/') . '/' . ($config['graph_version'] ?? 'v20.0') . '/',
-            'timeout'     => 15,
+            'base_uri' => rtrim($config['graph_base'] ?? 'https://graph.facebook.com', '/') . '/' . ($config['graph_version'] ?? 'v20.0') . '/',
+            'timeout' => 15,
             'http_errors' => false,
         ]);
     }
 
     public function verifyWebhook(Request $r): ?string
     {
-        $mode      = $r->query('hub_mode');
-        $token     = $r->query('hub_verify_token');
+        $mode = $r->query('hub_mode');
+        $token = $r->query('hub_verify_token');
         $challenge = $r->query('hub_challenge');
 
         if ($mode === 'subscribe' && hash_equals((string) $this->config['verify_token'], (string) $token)) {
@@ -54,6 +56,7 @@ abstract class AbstractMetaDriver implements ChannelDriver
             if (app()->environment('production')) {
                 throw new WebhookVerificationException('no_app_secret_configured');
             }
+
             return;
         }
 
@@ -79,14 +82,14 @@ abstract class AbstractMetaDriver implements ChannelDriver
             $res = $this->http->post(ltrim($path, '/'), [
                 'headers' => [
                     'Authorization' => 'Bearer ' . $token,
-                    'Content-Type'  => 'application/json',
+                    'Content-Type' => 'application/json',
                 ],
                 'body' => json_encode($json, JSON_UNESCAPED_UNICODE),
             ]);
 
             $status = $res->getStatusCode();
-            $body   = (string) $res->getBody();
-            $data   = json_decode($body, true) ?: ['raw' => $body];
+            $body = (string) $res->getBody();
+            $data = json_decode($body, true) ?: ['raw' => $body];
 
             if ($status >= 400) {
                 Log::warning('graph.error', ['platform' => $this->platform(), 'path' => $path, 'status' => $status, 'body' => $data]);
@@ -95,6 +98,7 @@ abstract class AbstractMetaDriver implements ChannelDriver
             return ['status' => $status, 'data' => $data];
         } catch (GuzzleException $e) {
             Log::error('graph.exception', ['platform' => $this->platform(), 'path' => $path, 'msg' => $e->getMessage()]);
+
             return ['status' => 0, 'data' => ['error' => ['message' => $e->getMessage()]]];
         }
     }
@@ -102,13 +106,14 @@ abstract class AbstractMetaDriver implements ChannelDriver
     protected function asSendResult(array $resp): SendResult
     {
         $status = $resp['status'] ?? 0;
-        $data   = $resp['data']   ?? [];
+        $data = $resp['data'] ?? [];
 
         if ($status >= 200 && $status < 300) {
             $id = $data['messages'][0]['id']
                 ?? $data['message_id']
                 ?? $data['id']
                 ?? null;
+
             return SendResult::ok($id, $data);
         }
 
@@ -142,7 +147,7 @@ abstract class AbstractMetaDriver implements ChannelDriver
         string $recipient,
         string $bodyText,
         array $buttons,
-        ?\App\Services\Channels\DTO\MediaPayload $header = null,
+        ?MediaPayload $header = null,
         ?string $footerText = null,
     ): SendResult {
         $lines = [$bodyText];
@@ -153,6 +158,7 @@ abstract class AbstractMetaDriver implements ChannelDriver
             $lines[] = '';
             $lines[] = $footerText;
         }
+
         return $this->sendText($recipient, implode("\n", $lines));
     }
 

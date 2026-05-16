@@ -10,34 +10,34 @@ class ProductMapperTest extends TestCase
     public function test_maps_a_typical_woocommerce_product(): void
     {
         $woo = [
-            'id'                => 4242,
-            'sku'               => 'IP15-CASE-CLR',
-            'name'              => 'iPhone 15 გამჭვირვალე ქეისი',
-            'permalink'         => 'https://gadget.ge/product/ip15-case-clr/',
+            'id' => 4242,
+            'sku' => 'IP15-CASE-CLR',
+            'name' => 'iPhone 15 გამჭვირვალე ქეისი',
+            'permalink' => 'https://gadget.ge/product/ip15-case-clr/',
             'short_description' => '<p>გამძლე და მსუბუქი</p>',
-            'regular_price'     => '49.00',
-            'sale_price'        => '39.00',
-            'on_sale'           => true,
-            'manage_stock'      => true,
-            'stock_quantity'    => 12,
-            'stock_status'      => 'instock',
-            'status'            => 'publish',
-            'currency'          => 'GEL',
-            'images'            => [['src' => 'https://gadget.ge/img/a.jpg'], ['src' => 'https://gadget.ge/img/b.jpg']],
-            'categories'        => [['name' => 'Cases', 'slug' => 'cases']],
-            'attributes'        => [
+            'regular_price' => '49.00',
+            'sale_price' => '39.00',
+            'on_sale' => true,
+            'manage_stock' => true,
+            'stock_quantity' => 12,
+            'stock_status' => 'instock',
+            'status' => 'publish',
+            'currency' => 'GEL',
+            'images' => [['src' => 'https://gadget.ge/img/a.jpg'], ['src' => 'https://gadget.ge/img/b.jpg']],
+            'categories' => [['name' => 'Cases', 'slug' => 'cases']],
+            'attributes' => [
                 ['name' => 'Color', 'slug' => 'pa_color', 'options' => ['Clear']],
                 ['name' => 'Brand', 'slug' => 'pa_brand', 'options' => ['Spigen']],
                 ['name' => 'Compatibility', 'slug' => 'pa_compat', 'options' => ['iPhone 15', 'iPhone 15 Pro']],
             ],
-            'meta_data'         => [
+            'meta_data' => [
                 ['key' => 'stock_saburtalo', 'value' => '4'],
                 ['key' => 'stock_vake',      'value' => '5'],
                 ['key' => 'stock_gldani',    'value' => '3'],
             ],
         ];
 
-        $row = (new ProductMapper())->fromWoo($woo);
+        $row = (new ProductMapper)->fromWoo($woo);
 
         $this->assertSame('IP15-CASE-CLR', $row['sku']);
         $this->assertSame('4242', $row['source_id']);
@@ -61,7 +61,7 @@ class ProductMapperTest extends TestCase
             'regular_price' => '10', 'manage_stock' => false,
             'stock_status' => 'instock', 'status' => 'publish',
         ];
-        $row = (new ProductMapper())->fromWoo($woo);
+        $row = (new ProductMapper)->fromWoo($woo);
         $this->assertGreaterThan(0, $row['stock_total']);
     }
 
@@ -72,7 +72,7 @@ class ProductMapperTest extends TestCase
             'regular_price' => '10', 'manage_stock' => false,
             'stock_status' => 'outofstock', 'status' => 'publish',
         ];
-        $row = (new ProductMapper())->fromWoo($woo);
+        $row = (new ProductMapper)->fromWoo($woo);
         $this->assertSame(0, $row['stock_total']);
     }
 }

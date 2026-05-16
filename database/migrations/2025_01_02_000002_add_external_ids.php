@@ -20,6 +20,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('customers', fn (Blueprint $t) => $t->dropColumn('external_id'));
-        Schema::table('orders',    fn (Blueprint $t) => $t->dropColumn('external_order_id'));
+        Schema::table('orders', fn (Blueprint $t) => $t->dropColumn('external_order_id'));
     }
 };
