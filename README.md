@@ -218,13 +218,72 @@ php artisan queue:work redis &
 php artisan serve
 ```
 
-Webhook endpoints (point Meta App Dashboard at these):
+Webhook endpoints:
 
 ```
+# Meta (verification handshake on GET, events on POST)
 POST /webhooks/whatsapp
 POST /webhooks/messenger
 POST /webhooks/instagram
-GET  /webhooks/{channel}     # verification handshake
+
+# gadget.ge (WooCommerce) push events
+POST /webhooks/gadget
 ```
 
 See `ARCHITECTURE.md` for the deep dive.
+
+---
+
+## gadget.ge integration (WooCommerce REST API)
+
+`config/gadget.php` configures everything the chatbot needs to talk to
+gadget.ge. Auth uses the standard WooCommerce consumer-key + secret over
+HTTPS Basic.
+
+What we read from WC:
+
+- **Products + stock** — paginated `/products`, mirrored into the local
+  `products` table every 15 min (`gadget:sync-products`). Per-branch
+  stock is read from `meta_data` keys configurable in `config/gadget.php`.
+- **Coupons / promos** — `/coupons` every 30 min (`gadget:sync-coupons`),
+  exposed to the AI via the `find_active_coupons` tool.
+
+What we write to WC:
+
+- **Customers** — `CustomerLink` matches by phone → email → WC id, and
+  upserts the chat customer into WC's customer registry. The WC id is
+  stored in `customers.external_id`.
+- **Orders** — when `CheckoutCollector::confirm()` succeeds, `OrderPush`
+  POSTs the order to `/orders` with the correct `payment_method`,
+  `shipping_lines` and `meta_data`. The WC id lands in
+  `orders.external_order_id`; re-pushing the same order is a no-op.
+
+What we receive from WC:
+
+- **Webhooks** at `POST /webhooks/gadget` for `product.*`, `order.*`,
+  `coupon.*` topics. HMAC-SHA256 signature is verified against
+  `GADGET_WC_WEBHOOK_SECRET`. WC order status flows back here — when WC
+  marks an order `processing` or `completed` we update `payment_status`,
+  `paid_at`, `fulfilled_at` on the local row.
+
+AI tools that hit gadget.ge:
+
+- `search_products` / `check_stock` / `recommend_alternatives` —
+  served from the local mirror (fast, cheap).
+- `gadget_live_stock(sku)` — bypasses the mirror for a right-now stock
+  read directly from WC (use when the customer is impatient).
+- `find_active_coupons({sku?, category?})` — returns valid coupon codes
+  the model can mention before closing the sale.
+
+Required env:
+
+```
+GADGET_WC_BASE_URL=https://gadget.ge
+GADGET_WC_CONSUMER_KEY=ck_xxxxxxxxxxxx
+GADGET_WC_CONSUMER_SECRET=cs_xxxxxxxxxxxx
+GADGET_WC_WEBHOOK_SECRET=<paste from /wp-admin webhook screen>
+```
+
+In WordPress: **WooCommerce → Settings → Advanced → REST API → Add key**
+(read/write), then **Advanced → Webhooks** for each topic above pointing
+to `/webhooks/gadget`.

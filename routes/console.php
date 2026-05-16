@@ -15,9 +15,22 @@ Artisan::command('inspire', function () {
 // Hourly analytics rollups.
 Schedule::job(new RollupAnalytics)->hourlyAt(5);
 
-// Catalog sync every N minutes.
+// Legacy catalog sync (kept for non-Woo sources).
 Schedule::command('catalog:sync')
-    ->cron('*/' . (int) config('catalog.sync_interval_min', 15) . ' * * * *');
+    ->cron('*/' . (int) config('catalog.sync_interval_min', 15) . ' * * * *')
+    ->skip(fn () => ! empty(config('gadget.consumer_key')));
+
+// gadget.ge (WooCommerce) product mirror.
+Schedule::command('gadget:sync-products')
+    ->cron('*/' . (int) config('gadget.sync.products_minutes', 15) . ' * * * *')
+    ->skip(fn () => empty(config('gadget.consumer_key')))
+    ->withoutOverlapping(30);
+
+// gadget.ge coupons / promos.
+Schedule::command('gadget:sync-coupons')
+    ->cron('*/' . (int) config('gadget.sync.coupons_minutes', 30) . ' * * * *')
+    ->skip(fn () => empty(config('gadget.consumer_key')))
+    ->withoutOverlapping(30);
 
 // Daily summary at 21:30 Tbilisi time.
 Schedule::job(new DailyWhatsAppSummary)

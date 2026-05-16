@@ -104,6 +104,17 @@ class CheckoutCollector
             'status'       => Order::STATUS_CONFIRMED,
             'confirmed_at' => now(),
         ]);
+
+        // Push to gadget.ge (WooCommerce). Idempotent — won't double-write.
+        $push = app(\App\Services\Gadget\OrderPush::class)->push($order->fresh());
+        if (! ($push['ok'] ?? false)) {
+            \Illuminate\Support\Facades\Log::warning('checkout.confirm.woo_push_failed', [
+                'order'  => $order->id,
+                'reason' => $push['reason']  ?? null,
+                'detail' => $push['detail']  ?? null,
+            ]);
+        }
+
         return true;
     }
 

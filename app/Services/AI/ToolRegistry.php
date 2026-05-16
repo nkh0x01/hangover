@@ -3,8 +3,10 @@
 namespace App\Services\AI;
 
 use App\Models\Conversation;
+use App\Models\Coupon;
 use App\Models\Customer;
 use App\Services\Escalation\EscalationDispatcher;
+use App\Services\Gadget\CatalogSync;
 use App\Services\Products\ProductCatalog;
 use App\Services\Products\RecommendationEngine;
 use App\Services\Sales\CheckoutCollector;
@@ -22,6 +24,7 @@ class ToolRegistry
         private CheckoutCollector $checkout,
         private PaymentLinkGenerator $payments,
         private EscalationDispatcher $escalation,
+        private CatalogSync $gadgetCatalog,
     ) {}
 
     /** Tool schemas passed to Anthropic Messages API. */
@@ -93,6 +96,26 @@ class ToolRegistry
                 ],
             ],
             [
+                'name'        => 'find_active_coupons',
+                'description' => 'Return the currently active gadget.ge coupons/promos. Optionally filter by SKU or category — useful when the customer asks "გაქვთ აქცია?" or you want to mention a relevant discount before closing the sale. Do NOT invent codes; only mention what this returns.',
+                'input_schema' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'sku'      => ['type' => 'string'],
+                        'category' => ['type' => 'string'],
+                    ],
+                ],
+            ],
+            [
+                'name'        => 'gadget_live_stock',
+                'description' => 'Bypass the mirror and fetch right-now stock for a SKU directly from gadget.ge. Use when the customer explicitly asks "ახლა გაქვთ?" / "სასწრაფოდ მჭირდება" or when check_stock returned a borderline value.',
+                'input_schema' => [
+                    'type' => 'object',
+                    'properties' => ['sku' => ['type' => 'string']],
+                    'required'   => ['sku'],
+                ],
+            ],
+            [
                 'name'        => 'escalate_to_human',
                 'description' => 'Hand the conversation to a human employee. Call this when confidence is low, the customer is angry, the request is out of scope, or any factual claim cannot be verified through other tools.',
                 'input_schema' => [
@@ -120,9 +143,56 @@ class ToolRegistry
             'recommend_alternatives'  => $this->recommendAlternatives($input),
             'create_order_draft'      => $this->createOrderDraft($input, $customer, $conversation),
             'generate_payment_link'   => $this->generatePaymentLink($input, $conversation),
+            'find_active_coupons'     => $this->findActiveCoupons($input),
+            'gadget_live_stock'       => $this->gadgetLiveStock($input),
             'escalate_to_human'       => $this->escalate($input, $customer, $conversation),
             default                   => ['error' => "unknown tool: $name"],
         };
+    }
+
+    private function findActiveCoupons(array $i): array
+    {
+        $sku      = (string) ($i['sku']      ?? '');
+        $category = (string) ($i['category'] ?? '');
+
+        $coupons = Coupon::query()
+            ->where('is_active', true)
+            ->where(fn ($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>', now()))
+            ->limit(20)
+            ->get();
+
+        $relevant = $coupons->filter(function (Coupon $c) use ($sku, $category) {
+            if ($sku === '' && $category === '') return true;
+            return $c->appliesToSku($sku, $category ?: null);
+        })->take(5);
+
+        return ['coupons' => $relevant->map(fn (Coupon $c) => [
+            'code'          => $c->code,
+            'discount_type' => $c->discount_type,
+            'amount'        => (float) $c->amount,
+            'min_amount'    => $c->min_amount !== null ? (float) $c->min_amount : null,
+            'expires_at'    => optional($c->expires_at)->toIso8601String(),
+            'free_shipping' => $c->free_shipping,
+            'description'   => $c->description,
+        ])->values()->all()];
+    }
+
+    private function gadgetLiveStock(array $i): array
+    {
+        $sku = (string) ($i['sku'] ?? '');
+        if ($sku === '') return ['error' => 'missing_sku'];
+
+        $product = $this->gadgetCatalog->refreshSku($sku);
+        if (! $product) {
+            return ['error' => 'sku_not_found'];
+        }
+        return [
+            'sku'        => $product->sku,
+            'in_stock'   => $product->isInStock(),
+            'stock_total'=> (int) $product->stock_total,
+            'per_branch' => $product->stock_by_branch_json ?? [],
+            'refreshed_at' => $product->synced_at?->toIso8601String(),
+        ];
     }
 
     private function searchProducts(array $i): array
