@@ -12,6 +12,24 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
+/*
+|--------------------------------------------------------------------------
+| Cron-driven queue worker (cPanel / shared hosting)
+|--------------------------------------------------------------------------
+| When QUEUE_CONNECTION=database (the cPanel default), we can't run a
+| long-lived `queue:work` daemon. Instead we let the scheduler drain
+| the queue once a minute. Each invocation runs for up to 58s, then
+| exits cleanly so the next minute's tick can take over.
+|
+| If QUEUE_CONNECTION=redis is set, this is a no-op — start a real
+| daemon via supervisor instead.
+*/
+Schedule::command('queue:work --stop-when-empty --max-time=58 --tries=3 --queue=inbound,reply,comments,default')
+    ->everyMinute()
+    ->withoutOverlapping(2)
+    ->skip(fn () => config('queue.default') !== 'database')
+    ->runInBackground();
+
 // Hourly analytics rollups.
 Schedule::job(new RollupAnalytics)->hourlyAt(5);
 
