@@ -1,0 +1,64 @@
+<!--
+  Hangover Driver — iOS Info.plist additions.
+-->
+
+<key>CFBundleDisplayName</key>
+<string>Hangover Driver</string>
+
+<!-- Foreground location for matching offers + GPS pump while in-trip. -->
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>Hangover Driver uses your location to receive nearby ride offers and share your live position with passengers.</string>
+
+<!-- "Always" required so iOS keeps streaming GPS while the driver is
+     in-trip and the phone screen is off. We only request it AFTER
+     the driver flips to "Online" — never at first launch. -->
+<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+<string>Hangover Driver shares your live position with passengers during a ride, even when the screen is off.</string>
+<key>NSLocationAlwaysUsageDescription</key>
+<string>Live ride tracking requires location access in the background.</string>
+
+<key>NSCameraUsageDescription</key>
+<string>Take a photo of your vehicle for onboarding verification.</string>
+
+<key>LSApplicationQueriesSchemes</key>
+<array>
+    <string>tel</string>
+    <string>geo</string>
+    <string>comgooglemaps</string>
+    <string>waze</string>
+</array>
+
+<key>GMSApiKey</key>
+<string>$(MAPS_API_KEY)</string>
+
+<key>FirebaseAppDelegateProxyEnabled</key>
+<true/>
+
+<!-- Background modes:
+       - location              : GPS pump while in-trip.
+       - remote-notification   : silent + visible ride-offer push.
+       - audio                 : alert sound on offer (driver's screen
+                                  is locked while waiting). -->
+<key>UIBackgroundModes</key>
+<array>
+    <string>location</string>
+    <string>remote-notification</string>
+    <string>audio</string>
+    <string>fetch</string>
+</array>
+
+<key>UIStatusBarStyle</key>
+<string>UIStatusBarStyleDarkContent</string>
+<key>UIViewControllerBasedStatusBarAppearance</key>
+<false/>
+
+<key>NSAppTransportSecurity</key>
+<dict>
+    <key>NSAllowsArbitraryLoads</key>
+    <false/>
+</dict>
+
+<key>UISupportedInterfaceOrientations</key>
+<array>
+    <string>UIInterfaceOrientationPortrait</string>
+</array>

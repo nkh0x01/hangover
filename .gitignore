@@ -1,14 +1,102 @@
-# cache files for sublime text
+# Editor / OS
 *.tmlanguage.cache
 *.tmPreferences.cache
 *.stTheme.cache
-
-# workspace files are user-specific
 *.sublime-workspace
-
-# project files should be checked into the repository, unless a significant
-# proportion of contributors will probably not be using SublimeText
 *.sublime-project
-
-# sftp configuration file
 sftp-config.json
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/settings.example.json
+*.swp
+*.swo
+
+# Laravel backend
+backend/vendor/
+backend/node_modules/
+backend/public/build/
+backend/public/hot/
+backend/public/storage
+backend/storage/*.key
+backend/storage/app/private/*
+!backend/storage/app/private/.gitkeep
+backend/storage/app/public/*
+!backend/storage/app/public/.gitkeep
+backend/storage/framework/cache/*
+!backend/storage/framework/cache/data/
+!backend/storage/framework/cache/.gitkeep
+backend/storage/framework/cache/data/*
+!backend/storage/framework/cache/data/.gitkeep
+backend/storage/framework/sessions/*
+!backend/storage/framework/sessions/.gitkeep
+backend/storage/framework/testing/*
+!backend/storage/framework/testing/.gitkeep
+backend/storage/framework/views/*
+!backend/storage/framework/views/.gitkeep
+backend/storage/logs/*
+!backend/storage/logs/.gitkeep
+backend/.phpunit.result.cache
+backend/.phpunit.cache/
+backend/.php-cs-fixer.cache
+backend/composer.phar
+backend/.env
+backend/.env.backup
+backend/.env.production
+backend/auth.json
+backend/bootstrap/cache/*.php
+backend/storage/pail
+backend/.phpstan-cache/
+backend/.scribe/
+
+# Flutter mobile
+mobile/.dart_tool/
+mobile/.packages
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/**/.dart_tool/
+mobile/**/.packages
+mobile/**/.flutter-plugins
+mobile/**/.flutter-plugins-dependencies
+mobile/**/build/
+mobile/**/ios/Pods/
+mobile/**/ios/.symlinks/
+mobile/**/ios/Flutter/Flutter.framework
+mobile/**/ios/Flutter/Flutter.podspec
+mobile/**/ios/Flutter/App.framework
+mobile/**/android/.gradle/
+mobile/**/android/local.properties
+mobile/**/android/app/release/
+mobile/**/android/captures/
+mobile/**/macos/Pods/
+mobile/**/windows/build/
+mobile/**/linux/build/
+mobile/**/coverage/
+mobile/pubspec.lock
+mobile/**/pubspec.lock
+mobile/**/*.g.dart
+mobile/**/*.freezed.dart
+!mobile/**/keep/*.g.dart
+mobile/.melos_tool/
+
+# Generated codegen output we DO want to commit (override): allow .gen.dart
+!mobile/**/*.gen.dart
+
+# Secrets
+*.pem
+*.key
+!**/keys/.gitkeep
+*.p12
+*.keystore
+google-services.json
+GoogleService-Info.plist
+firebase_app_id_file.json
+
+# CI / coverage
+coverage/
+*.lcov
+.nyc_output/
+
+# OS
+desktop.ini

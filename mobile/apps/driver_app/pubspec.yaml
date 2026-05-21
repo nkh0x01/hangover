@@ -1,0 +1,46 @@
+name: driver_app
+description: Hangover Mobility — driver-side mobile app.
+version: 0.1.0+1
+publish_to: 'none'
+
+environment:
+  sdk: '>=3.5.0 <4.0.0'
+  flutter: '>=3.27.0'
+
+dependencies:
+  auth:
+    path: ../../packages/auth
+  core:
+    path: ../../packages/core
+  cupertino_icons: ^1.0.8
+  firebase_core: ^3.6.0
+  firebase_messaging: ^15.1.2
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^2.5.1
+  go_router: ^14.6.1
+  localization:
+    path: ../../packages/localization
+  maps:
+    path: ../../packages/maps
+  network:
+    path: ../../packages/network
+  realtime:
+    path: ../../packages/realtime
+  rides:
+    path: ../../packages/rides
+  google_maps_flutter: ^2.9.0
+  riverpod_annotation: ^2.3.5
+  ui_kit:
+    path: ../../packages/ui_kit
+  uuid: ^4.5.1
+
+dev_dependencies:
+  build_runner: ^2.4.13
+  flutter_lints: ^4.0.0
+  flutter_test:
+    sdk: flutter
+  riverpod_generator: ^2.4.3
+
+flutter:
+  uses-material-design: true

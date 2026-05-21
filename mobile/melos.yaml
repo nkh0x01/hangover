@@ -1,0 +1,52 @@
+name: hangover
+
+packages:
+  - apps/*
+  - packages/*
+
+ide:
+  intellij: true
+
+command:
+  bootstrap:
+    runPubGetInParallel: true
+    usePubspecOverrides: true
+  version:
+    branch: master
+    workspaceChangelog: true
+
+scripts:
+  analyze:
+    description: dart analyze across all packages and apps
+    exec: flutter analyze --no-fatal-infos
+    concurrency: 4
+
+  format-check:
+    description: dart format --output=none --set-exit-if-changed .
+    exec: dart format --output=none --set-exit-if-changed .
+    concurrency: 4
+
+  format:
+    description: dart format .
+    exec: dart format .
+    concurrency: 4
+
+  test:
+    description: flutter test
+    exec: flutter test --no-pub
+    concurrency: 1
+    packageFilters:
+      flutter: true
+
+  gen:
+    description: Run build_runner across packages and apps that have it.
+    exec: dart run build_runner build --delete-conflicting-outputs
+    concurrency: 1
+    packageFilters:
+      dependsOn:
+        - build_runner
+
+  clean:
+    description: flutter clean across the workspace
+    exec: flutter clean
+    concurrency: 4

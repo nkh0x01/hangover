@@ -1,0 +1,29 @@
+# Hangover Podfile additions.
+#
+# Append these blocks to the Podfile that `flutter create` generates
+# (or copy-overwrite the bottom `post_install` hook).
+
+platform :ios, '13.0'
+
+# Disable Flutter framework checks that occasionally fail on first
+# CocoaPods install with custom build phases.
+ENV['COCOAPODS_DISABLE_STATS'] = 'true'
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    flutter_additional_ios_build_settings(target)
+    target.build_configurations.each do |config|
+      # Required for `firebase_messaging` on Xcode 15+
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+
+      # PERMISSION_LOCATION + PERMISSION_NOTIFICATIONS for
+      # `permission_handler`. Trim when other permissions are added.
+      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= [
+        '$(inherited)',
+        'PERMISSION_LOCATION=1',
+        'PERMISSION_LOCATION_WHENINUSE=1',
+        'PERMISSION_NOTIFICATIONS=1',
+      ]
+    end
+  end
+end

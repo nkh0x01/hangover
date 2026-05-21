@@ -1,0 +1,18 @@
+# melos_managed_dependency_overrides: auth,core,localization,maps,network,realtime,rides,ui_kit
+dependency_overrides:
+  auth:
+    path: ../../packages/auth
+  core:
+    path: ../../packages/core
+  localization:
+    path: ../../packages/localization
+  maps:
+    path: ../../packages/maps
+  network:
+    path: ../../packages/network
+  realtime:
+    path: ../../packages/realtime
+  rides:
+    path: ../../packages/rides
+  ui_kit:
+    path: ../../packages/ui_kit

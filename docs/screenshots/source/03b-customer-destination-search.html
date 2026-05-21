@@ -1,0 +1,111 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="_shared.css"></head>
+<body>
+<div class="phone gradient">
+  <div class="status-bar">
+    <span>9:41</span>
+    <div class="right"><span>5G</span><span>WiFi</span><span>100%</span></div>
+  </div>
+
+  <!-- Search header -->
+  <div style="padding: var(--m) var(--l); display: flex; align-items: center; gap: var(--m);">
+    <div style="width: 40px; height: 40px; background: #FFF; border-radius: 50%;
+                box-shadow: var(--sh-card);
+                display: flex; align-items: center; justify-content: center; font-size: 18px;">←</div>
+    <div style="flex: 1; height: 52px; background: #FFF; border-radius: var(--r-l);
+                box-shadow: var(--sh-card);
+                padding: 0 var(--l); display: flex; align-items: center; gap: 10px;">
+      <span style="font-size: 18px; color: var(--ink-soft);">🔍</span>
+      <span style="font-size: 15px; font-weight: 500; color: var(--ink);">Vake</span>
+      <span style="margin-left: auto; color: var(--seed); font-weight: 700; font-size: 16px;">|</span>
+    </div>
+  </div>
+
+  <!-- Saved chips -->
+  <div style="padding: 0 var(--l) var(--l); display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--s);">
+    <div class="card" style="padding: var(--m);">
+      <div style="width: 32px; height: 32px; background: var(--surface-2); border-radius: 50%;
+                  display: flex; align-items: center; justify-content: center; font-size: 14px;">🏠</div>
+      <div class="gap-s"></div>
+      <div class="t-body-strong">Home</div>
+      <div class="t-caption">Saburtalo</div>
+    </div>
+    <div class="card" style="padding: var(--m);">
+      <div style="width: 32px; height: 32px; background: var(--surface-2); border-radius: 50%;
+                  display: flex; align-items: center; justify-content: center; font-size: 14px;">💼</div>
+      <div class="gap-s"></div>
+      <div class="t-body-strong">Work</div>
+      <div class="t-caption">Vake</div>
+    </div>
+    <div class="card-soft" style="padding: var(--m); border: 1.5px dashed var(--outline);">
+      <div style="width: 32px; height: 32px; background: var(--outline-subtle); border-radius: 50%;
+                  display: flex; align-items: center; justify-content: center; font-size: 14px;
+                  color: var(--ink-soft);">+</div>
+      <div class="gap-s"></div>
+      <div class="t-body-strong">Add</div>
+      <div class="t-caption">&nbsp;</div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div style="padding: 0 var(--l);">
+    <div class="t-label" style="margin-bottom: var(--s);">Matches in Tbilisi</div>
+
+    <div style="background: #FFF; border-radius: var(--r-l); box-shadow: var(--sh-card); overflow: hidden;">
+      <div style="display: flex; align-items: center; gap: var(--m); padding: var(--l);
+                  border-bottom: 1px solid var(--outline-subtle);">
+        <div style="width: 40px; height: 40px; background: rgba(31,143,96,0.10); border-radius: 50%;
+                    display: flex; align-items: center; justify-content: center; color: var(--seed); font-size: 18px;">📍</div>
+        <div style="flex: 1;">
+          <div class="t-title-m"><b>Vake</b> Park</div>
+          <div class="t-caption">Vake district · Tbilisi · 2.7 km</div>
+        </div>
+        <span style="color: var(--ink-muted); font-size: 14px;">↖</span>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: var(--m); padding: var(--l);
+                  border-bottom: 1px solid var(--outline-subtle);">
+        <div style="width: 40px; height: 40px; background: rgba(31,143,96,0.10); border-radius: 50%;
+                    display: flex; align-items: center; justify-content: center; color: var(--seed); font-size: 18px;">📍</div>
+        <div style="flex: 1;">
+          <div class="t-title-m"><b>Vake</b> Cemetery</div>
+          <div class="t-caption">Vake district · Tbilisi · 3.1 km</div>
+        </div>
+        <span style="color: var(--ink-muted); font-size: 14px;">↖</span>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: var(--m); padding: var(--l);">
+        <div style="width: 40px; height: 40px; background: rgba(31,143,96,0.10); border-radius: 50%;
+                    display: flex; align-items: center; justify-content: center; color: var(--seed); font-size: 18px;">📍</div>
+        <div style="flex: 1;">
+          <div class="t-title-m"><b>Vake</b>li Café</div>
+          <div class="t-caption">Café · Chavchavadze Ave · 1.4 km</div>
+        </div>
+        <span style="color: var(--ink-muted); font-size: 14px;">↖</span>
+      </div>
+    </div>
+
+    <div class="gap-l"></div>
+    <div class="t-label" style="margin-bottom: var(--s);">Recent</div>
+    <div style="background: #FFF; border-radius: var(--r-l); box-shadow: var(--sh-card); overflow: hidden;">
+      <div style="display: flex; align-items: center; gap: var(--m); padding: var(--l);
+                  border-bottom: 1px solid var(--outline-subtle);">
+        <div style="width: 40px; height: 40px; background: var(--surface-2); border-radius: 50%;
+                    display: flex; align-items: center; justify-content: center; color: var(--ink-soft); font-size: 16px;">🕘</div>
+        <div style="flex: 1;">
+          <div class="t-title-m">Rustaveli Theatre</div>
+          <div class="t-caption">1 week ago · 6.2 GEL</div>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: var(--m); padding: var(--l);">
+        <div style="width: 40px; height: 40px; background: var(--surface-2); border-radius: 50%;
+                    display: flex; align-items: center; justify-content: center; color: var(--ink-soft); font-size: 16px;">🕘</div>
+        <div style="flex: 1;">
+          <div class="t-title-m">Tbilisi Mall</div>
+          <div class="t-caption">2 weeks ago · 12.2 GEL</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body></html>

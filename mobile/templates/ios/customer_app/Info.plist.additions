@@ -1,0 +1,64 @@
+<!--
+  Hangover Customer — iOS Info.plist additions.
+
+  Merge these keys into the Info.plist that `flutter create` generates.
+  The XML below is presented as plain <key>/<value> pairs so it's
+  trivial to copy them between the <dict> tags in Info.plist.
+-->
+
+<key>CFBundleDisplayName</key>
+<string>Hangover</string>
+
+<!-- Location: customer needs current location to drop a pickup pin. -->
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>Hangover uses your location to show nearby drivers and set your pickup point.</string>
+
+<!-- Required string for the camera-based "verify driver" snapshot (post-MVP feature). -->
+<key>NSCameraUsageDescription</key>
+<string>Hangover can take a photo to verify your driver at pickup.</string>
+
+<!-- Phone-call intent so the customer can ring the driver from the active-ride card. -->
+<key>LSApplicationQueriesSchemes</key>
+<array>
+    <string>tel</string>
+    <string>geo</string>
+    <string>comgooglemaps</string>
+    <string>waze</string>
+</array>
+
+<!-- Google Maps SDK key. Read in AppDelegate via Bundle.main.object(forInfoDictionaryKey:). -->
+<key>GMSApiKey</key>
+<string>$(MAPS_API_KEY)</string>
+
+<!-- FCM: enable foreground delivery + content-available pushes. -->
+<key>FirebaseAppDelegateProxyEnabled</key>
+<true/>
+
+<!-- Background modes:
+       - remote-notification : silent push for ride status pings.
+       - fetch                : occasional ride-state poll fallback. -->
+<key>UIBackgroundModes</key>
+<array>
+    <string>remote-notification</string>
+    <string>fetch</string>
+</array>
+
+<!-- Force light navigation bar on Cupertino splash to match brand. -->
+<key>UIStatusBarStyle</key>
+<string>UIStatusBarStyleDarkContent</string>
+<key>UIViewControllerBasedStatusBarAppearance</key>
+<false/>
+
+<!-- App Transport Security: HTTPS-only in production. Dev/staging
+     overrides are applied per-Scheme via xcconfig. -->
+<key>NSAppTransportSecurity</key>
+<dict>
+    <key>NSAllowsArbitraryLoads</key>
+    <false/>
+</dict>
+
+<!-- Supported orientations: portrait + portrait-upside-down only -->
+<key>UISupportedInterfaceOrientations</key>
+<array>
+    <string>UIInterfaceOrientationPortrait</string>
+</array>

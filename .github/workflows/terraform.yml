@@ -1,0 +1,38 @@
+name: terraform
+
+on:
+  pull_request:
+    paths:
+      - "infrastructure/terraform/**"
+      - ".github/workflows/terraform.yml"
+  push:
+    branches: [master]
+    paths:
+      - "infrastructure/terraform/**"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  fmt-validate-plan:
+    name: fmt + validate (dev/staging/prod)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        env: [dev, staging, prod]
+    defaults:
+      run:
+        working-directory: infrastructure/terraform/envs/${{ matrix.env }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.0"
+      - name: terraform fmt
+        run: terraform fmt -check -recursive ../..
+      - name: terraform init (no backend)
+        run: terraform init -backend=false
+      - name: terraform validate
+        run: terraform validate

@@ -1,0 +1,64 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="_shared.css"></head>
+<body>
+<div class="phone" style="background: var(--grad-primary); color: #FFF; position: relative; overflow: hidden;">
+
+  <!-- decorative rings -->
+  <div style="position: absolute; top: -120px; left: -120px; width: 320px; height: 320px;
+              border: 3px solid rgba(255,255,255,0.08); border-radius: 50%;"></div>
+  <div style="position: absolute; bottom: -150px; right: -100px; width: 360px; height: 360px;
+              border: 3px solid rgba(255,255,255,0.06); border-radius: 50%;"></div>
+  <div style="position: absolute; top: 200px; right: 20px; width: 110px; height: 110px;
+              border: 2px solid rgba(255,255,255,0.05); border-radius: 50%;"></div>
+  <div style="position: absolute; top: 320px; left: 30px; width: 60px; height: 60px;
+              border: 2px solid rgba(255,255,255,0.05); border-radius: 50%;"></div>
+
+  <div class="status-bar on-dark">
+    <span>9:41</span>
+    <div class="right"><span>5G</span><span>WiFi</span><span>100%</span></div>
+  </div>
+
+  <!-- Centered brand mark -->
+  <div style="position: absolute; left: 0; right: 0; top: 280px; display: flex; flex-direction: column; align-items: center;">
+    <div style="width: 104px; height: 104px; border-radius: 50%;
+                background: #FFF;
+                box-shadow: 0 0 60px rgba(255,255,255,0.5);
+                display: flex; align-items: center; justify-content: center;">
+      <div style="position: relative; width: 56px; height: 56px;">
+        <div style="position: absolute; inset: 0; width: 24px; height: 24px;
+                    border-left: 6px solid var(--seed); border-right: 6px solid var(--seed);
+                    border-radius: 4px; margin: 16px auto;">
+        </div>
+        <div style="position: absolute; top: 28px; left: 0; right: 0;
+                    height: 6px; background: var(--seed); border-radius: 3px; margin: 0 16px;"></div>
+        <div style="position: absolute; bottom: 4px; right: 4px;
+                    width: 14px; height: 14px;
+                    background: var(--accent); border-radius: 50%;
+                    box-shadow: 0 0 0 4px #FFF;"></div>
+      </div>
+    </div>
+
+    <div style="height: var(--xl);"></div>
+
+    <div style="font-size: 32px; font-weight: 800; letter-spacing: -0.3px;">Hangover Mobility</div>
+    <div style="height: var(--xs);"></div>
+    <div style="font-size: 14px; opacity: 0.9; text-align: center;">
+      Tbilisi-ში სკუტერი ერთი დაკაკუნებით.
+    </div>
+    <div style="font-size: 14px; opacity: 0.65;">
+      Tbilisi on two wheels.
+    </div>
+  </div>
+
+  <!-- Loading indicator -->
+  <div style="position: absolute; left: 0; right: 0; bottom: 60px;
+              display: flex; flex-direction: column; align-items: center; gap: 12px;">
+    <div style="width: 32px; height: 32px;
+                border: 2.5px solid rgba(255,255,255,0.3);
+                border-top-color: #FFF;
+                border-radius: 50%;"></div>
+    <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.7px;
+                text-transform: uppercase; opacity: 0.7;">Preparing your map</div>
+  </div>
+</div>
+</body></html>

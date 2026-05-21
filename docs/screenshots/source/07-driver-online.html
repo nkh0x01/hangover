@@ -1,0 +1,87 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="_shared.css"></head>
+<body>
+<div class="phone">
+  <div class="map">
+    <div class="map-road-h" style="top: 18%;"></div>
+    <div class="map-road-h" style="top: 72%;"></div>
+    <div class="map-road-v" style="left: 28%;"></div>
+    <div class="map-road-v" style="left: 70%;"></div>
+    <div class="map-river"></div>
+  </div>
+
+  <div class="status-bar">
+    <span>9:41</span>
+    <div class="right"><span>5G</span><span>WiFi</span><span>100%</span></div>
+  </div>
+
+  <!-- self marker -->
+  <div class="pin pin-driver live" style="top: 42%; left: 50%; width: 52px; height: 52px; font-size: 24px;">🛵</div>
+
+  <!-- Hero online toggle -->
+  <div style="position: absolute; top: 56px; left: var(--l); right: var(--l); z-index: 3;">
+    <div class="online-hero">
+      <div class="lozenge">⚡</div>
+      <div>
+        <div style="font-size: 18px; font-weight: 800;">You are online</div>
+        <div style="font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.85);">Tbilisi · accepting rides</div>
+      </div>
+      <div class="switch"></div>
+    </div>
+  </div>
+
+  <!-- Earnings card -->
+  <div style="position: absolute; top: 170px; left: var(--l); right: var(--l); z-index: 3;">
+    <div class="earnings-card">
+      <div class="ring">
+        <svg width="64" height="64" viewBox="0 0 64 64">
+          <circle cx="32" cy="32" r="28" stroke="rgba(255,255,255,0.15)" stroke-width="5" fill="none"></circle>
+          <circle cx="32" cy="32" r="28" stroke="#E07A3C" stroke-width="5" fill="none"
+                  stroke-dasharray="135 175" stroke-linecap="round"></circle>
+        </svg>
+        <div class="label">77%</div>
+      </div>
+      <div style="flex: 1;">
+        <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.7px;
+                    text-transform: uppercase; color: rgba(255,255,255,0.65);">Today's earnings</div>
+        <div style="font-size: 28px; font-weight: 800; letter-spacing: -0.4px; margin-top: 2px;">
+          87.50 <span style="font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.65);">GEL</span>
+        </div>
+        <div style="font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.8); margin-top: 2px;">
+          Goal: 113 GEL · 6 trips today
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom waiting sheet -->
+  <div class="sheet">
+    <div class="handle"></div>
+
+    <div style="display: flex; align-items: center; gap: var(--m);">
+      <div class="pill success live"><span class="dot"></span> Live</div>
+      <div class="t-title-l">Waiting for ride requests</div>
+    </div>
+
+    <div class="gap-xs"></div>
+    <div class="t-body">12 scooters online nearby · Saburtalo is busiest right now.</div>
+
+    <div class="gap-l"></div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--s);">
+      <div class="card-soft" style="text-align: center; padding: var(--m);">
+        <div class="t-label">Trips</div>
+        <div class="t-title-m" style="margin-top: 4px;">6</div>
+      </div>
+      <div class="card-soft" style="text-align: center; padding: var(--m);">
+        <div class="t-label">Hours</div>
+        <div class="t-title-m" style="margin-top: 4px;">3h 12m</div>
+      </div>
+      <div class="card-soft" style="text-align: center; padding: var(--m);">
+        <div class="t-label">Rating</div>
+        <div class="t-title-m" style="margin-top: 4px;">★ 4.91</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body></html>

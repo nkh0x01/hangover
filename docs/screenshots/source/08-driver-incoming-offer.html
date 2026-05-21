@@ -1,0 +1,104 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="_shared.css"></head>
+<body>
+<div class="phone">
+  <div class="map" style="filter: brightness(0.6);">
+    <div class="map-road-h" style="top: 18%;"></div>
+    <div class="map-road-h" style="top: 72%;"></div>
+    <div class="map-road-v" style="left: 28%;"></div>
+    <div class="map-road-v" style="left: 70%;"></div>
+    <div class="map-river"></div>
+  </div>
+
+  <div class="status-bar on-dark">
+    <span>9:41</span>
+    <div class="right"><span>5G</span><span>WiFi</span><span>100%</span></div>
+  </div>
+
+  <div class="modal-scrim">
+    <!-- Sheet wrapped in urgent glow -->
+    <div style="width: 100%; padding: 0;">
+      <div style="border-radius: var(--r-xl) var(--r-xl) 0 0;
+                  box-shadow: 0 -8px 40px rgba(31,143,96,0.45),
+                              0 0 0 2px rgba(31,143,96,0.6);">
+        <div class="sheet" style="margin: 0; box-shadow: none;">
+          <div class="handle"></div>
+
+          <div style="display: flex; align-items: center;">
+            <div class="pill accent live"><span class="dot"></span> New ride</div>
+            <div style="margin-left: auto;" class="ring-cd">
+              <svg width="56" height="56" viewBox="0 0 56 56">
+                <circle cx="28" cy="28" r="24" stroke="#E9E4D6" stroke-width="5" fill="none"></circle>
+                <circle cx="28" cy="28" r="24" stroke="#1F8F60" stroke-width="5" fill="none"
+                        stroke-dasharray="118 200" stroke-linecap="round"></circle>
+              </svg>
+              <div class="label">9s</div>
+            </div>
+          </div>
+
+          <div class="gap-l"></div>
+
+          <div class="t-h-m">Accept this ride</div>
+
+          <div class="gap-l"></div>
+
+          <!-- HERO fare -->
+          <div style="background: var(--grad-primary); border-radius: var(--r-l);
+                      padding: var(--l); color: #FFF; position: relative; overflow: hidden;
+                      box-shadow: var(--sh-hero-green);">
+            <div style="position: absolute; right: -30px; top: -30px; width: 130px; height: 130px;
+                        border: 5px solid rgba(255,255,255,0.10); border-radius: 50%;"></div>
+            <div style="display: flex; align-items: center; position: relative; z-index: 2;">
+              <div class="t-label" style="color: rgba(255,255,255,0.78);">Fare</div>
+              <div style="margin-left: auto; display: inline-flex; align-items: center; gap: 4px;
+                          padding: 4px 10px; border-radius: 999px;
+                          background: rgba(255,255,255,0.16);
+                          border: 1px solid rgba(255,255,255,0.32);
+                          font-size: 10px; font-weight: 700; color: #FFF;">★ 4.92 customer</div>
+            </div>
+            <div style="height: 4px;"></div>
+            <div style="font-size: 38px; font-weight: 800; letter-spacing: -0.5px; position: relative; z-index: 2;">
+              7.50 <span style="font-size: 15px; font-weight: 600; color: rgba(255,255,255,0.7);">GEL</span>
+            </div>
+            <div style="height: 6px;"></div>
+            <div style="display: flex; gap: var(--m); font-size: 13px; font-weight: 600; position: relative; z-index: 2;">
+              🕘 7 min &nbsp;·&nbsp; 📏 2.7 km
+            </div>
+          </div>
+
+          <div class="gap-l"></div>
+
+          <!-- pickup / dropoff -->
+          <div style="display: flex; align-items: flex-start; gap: var(--m);">
+            <div style="width: 32px; height: 32px; border-radius: 50%;
+                        background: rgba(31,143,96,0.12);
+                        display: flex; align-items: center; justify-content: center;
+                        color: var(--seed); font-size: 14px;">●</div>
+            <div>
+              <div class="t-title-m">Marjanishvili 4</div>
+              <div class="t-body" style="margin-top: 2px;">~320 m to pickup · 2 min</div>
+            </div>
+          </div>
+          <div class="gap-s"></div>
+          <div style="display: flex; align-items: flex-start; gap: var(--m);">
+            <div style="width: 32px; height: 32px; border-radius: 50%;
+                        background: rgba(215,38,61,0.12);
+                        display: flex; align-items: center; justify-content: center;
+                        color: var(--danger); font-size: 14px;">📍</div>
+            <div>
+              <div class="t-title-m">Vake Park</div>
+              <div class="t-body" style="margin-top: 2px;">2.7 km trip · ~7 min</div>
+            </div>
+          </div>
+
+          <div class="gap-l"></div>
+
+          <button class="btn-gradient">✓ Accept ride</button>
+          <div class="gap-s"></div>
+          <button class="btn-outline">Reject</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body></html>

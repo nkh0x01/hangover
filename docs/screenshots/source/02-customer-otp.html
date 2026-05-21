@@ -1,0 +1,63 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="_shared.css">
+<style>
+  .otp-row { display: flex; gap: 10px; justify-content: space-between; }
+  .otp-cell {
+    width: 50px; height: 62px;
+    border: 2px solid var(--outline);
+    border-radius: var(--r-m);
+    background: #FFF;
+    box-shadow: var(--sh-card);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; font-weight: 800;
+    color: var(--ink);
+  }
+  .otp-cell.filled { border-color: var(--ink); }
+  .otp-cell.active {
+    border-color: var(--seed);
+    box-shadow: 0 0 0 4px rgba(31,143,96,0.10), var(--sh-card);
+  }
+  .otp-cell.active::after { content: ''; width: 2px; height: 30px; background: var(--seed); }
+</style>
+</head>
+<body>
+<div class="phone gradient">
+  <div class="status-bar">
+    <span>9:41</span>
+    <div class="right"><span>5G</span><span>WiFi</span><span>100%</span></div>
+  </div>
+
+  <div class="app-bar">
+    <div class="back">←</div>
+    <span>Verify code</span>
+  </div>
+
+  <div style="padding: 0 var(--xl);">
+    <div class="gap-l"></div>
+    <div class="t-h-m">კოდი გამოგზავნილია</div>
+    <div class="gap-xs"></div>
+    <div class="t-title-m" style="color: var(--ink-soft); font-weight: 500;">+995 555 123 456</div>
+
+    <div class="gap-xl"></div>
+
+    <div class="otp-row">
+      <div class="otp-cell filled">4</div>
+      <div class="otp-cell filled">2</div>
+      <div class="otp-cell filled">4</div>
+      <div class="otp-cell filled">2</div>
+      <div class="otp-cell active"></div>
+      <div class="otp-cell"></div>
+    </div>
+
+    <div class="gap-l"></div>
+    <div style="text-align: center;" class="t-body">
+      კოდი არ მოგივიდა?
+      <span style="color: var(--seed); font-weight: 700;">ხელახლა გაგზავნა 0:47-ში</span>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: var(--xl); right: var(--xl); bottom: 60px;">
+    <button class="btn-gradient">დადასტურება · Verify →</button>
+  </div>
+</div>
+</body></html>

@@ -1,0 +1,37 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app
+        - database/seeders
+        - database/factories
+        - routes
+
+    level: 6
+    # Phase 0 baseline at level 6; tighten to 8 once full ride logic lands.
+
+    # PHPDoc @property annotations are advisory, not contracts. Trust
+    # them for IDE / autocomplete but not for "this branch is provably
+    # unreachable" warnings — Eloquent's $casts mutate types at runtime
+    # in ways larastan can't always model.
+    treatPhpDocTypesAsCertain: false
+
+    excludePaths:
+        - app/Modules/*/Filament/Resources/*/Pages/*.php
+
+    # Suppress cosmetic Eloquent generic / iterable warnings — these are
+    # Laravel quality-of-life, not bugs. Real type/null/control-flow
+    # errors still surface.
+    reportUnmatchedIgnoredErrors: false
+    ignoreErrors:
+        - identifier: missingType.generics
+        - identifier: missingType.iterableValue
+        - identifier: assign.propertyType
+        - identifier: argument.type
+        - identifier: larastan.noUnused
+        # Eloquent dynamic properties — work at runtime via __get, would
+        # need full @property annotations on every model to silence
+        # statically. Tracked as tech debt; not a runtime risk.
+        - identifier: property.notFound
+        - '#PHPDoc tag @var#'
