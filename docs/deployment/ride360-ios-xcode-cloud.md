@@ -35,6 +35,7 @@ The scripts:
 - run `flutter build ios --release --config-only`;
 - install CocoaPods;
 - inject `IOS_MAPS_API_KEY` into `Runner/Info.plist`;
+- disable `sentry_flutter` and use an API-compatible no-op crash reporter for the Xcode Cloud iOS archive, avoiding the `sentry-cocoa` Swift Package Manager dependency;
 - force production Dart defines:
   - `API_BASE_URL=https://ride.365sakartvelo.com`
   - `RIDE360_RELEASE_BUILD=true`
@@ -92,7 +93,6 @@ Optional:
 
 - `IOS_VERSION_NAME=0.1.0`
 - `IOS_BUILD_NUMBER=<integer>`
-- `SENTRY_DSN=<production DSN>`
 - `WS_KEY=<production websocket key>`
 
 If `IOS_BUILD_NUMBER` is omitted, the script uses Xcode Cloud's `CI_BUILD_NUMBER`, then the build number from `pubspec.yaml`.

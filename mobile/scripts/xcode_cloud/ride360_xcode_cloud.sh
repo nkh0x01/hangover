@@ -126,9 +126,88 @@ inject_maps_key() {
     /usr/libexec/PlistBuddy -c "Add :GMSApiKey string $MAPS_API_KEY_VALUE" "$INFO_PLIST"
 }
 
+disable_sentry_for_cloud_build() {
+  core_dir="$REPO_ROOT/mobile/packages/core"
+  core_pubspec="$core_dir/pubspec.yaml"
+  crash_reporter="$core_dir/lib/src/observability/crash_reporter.dart"
+
+  [[ -f "$core_pubspec" ]] || fail "Core pubspec not found: $core_pubspec"
+  [[ -f "$crash_reporter" ]] || fail "CrashReporter source not found: $crash_reporter"
+
+  log "Disable sentry_flutter for Xcode Cloud iOS archive"
+  if grep -Eq '^[[:space:]]*sentry_flutter:' "$core_pubspec"; then
+    awk '
+      /^[[:space:]]*sentry_flutter:/ {
+        print "  # DISABLED_FOR_XCODE_CLOUD_IOS: " $0
+        next
+      }
+      { print }
+    ' "$core_pubspec" > "$core_pubspec.tmp"
+    mv "$core_pubspec.tmp" "$core_pubspec"
+  fi
+
+  cat > "$crash_reporter" <<'EOF_DART'
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+
+import '../env/env_config.dart';
+
+/// Xcode Cloud iOS release stub.
+///
+/// The production iOS archive disables sentry_flutter to avoid Xcode
+/// Cloud's Swift Package Manager sentry-cocoa resolution path. Keep this
+/// public API aligned with the normal CrashReporter implementation.
+class CrashReporter {
+  const CrashReporter._();
+
+  static Future<void> bootstrap({
+    required EnvConfig env,
+    required FutureOr<void> Function() appRunner,
+    String release = 'hangover@0.1.0',
+  }) async {
+    if (kDebugMode && env.sentryDsn.isNotEmpty) {
+      debugPrint('Sentry disabled for Xcode Cloud iOS archive: $release');
+    }
+    runZonedGuarded(() async => await appRunner(), (error, stack) {
+      debugPrint('UNCAUGHT: $error\n$stack');
+    });
+  }
+
+  static Future<void> captureException(
+    Object error, {
+    StackTrace? stackTrace,
+    Map<String, Object?> tags = const {},
+    String? hint,
+  }) async {
+    if (kDebugMode) {
+      debugPrint('captureException: $error${hint != null ? ' - $hint' : ''}');
+    }
+  }
+
+  static void breadcrumb(
+    String message, {
+    String? category,
+    Map<String, Object?> data = const {},
+  }) {}
+
+  static Future<void> setUser({
+    required String? userUlid,
+    required String? type,
+  }) async {}
+}
+
+NavigatorObserver sentryRouteObserver() => NavigatorObserver();
+EOF_DART
+
+  ok "sentry_flutter disabled for this Xcode Cloud checkout"
+}
+
 configure_flutter_release() {
   log "Configure Flutter production build for $ROLE"
   cd "$APP_DIR"
+  disable_sentry_for_cloud_build
   flutter pub get
 
   flutter build ios --release --config-only \
