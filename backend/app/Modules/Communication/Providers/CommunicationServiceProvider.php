@@ -34,6 +34,11 @@ final class CommunicationServiceProvider extends ServiceProvider
                     authToken: (string) ($cfg['token'] ?? ''),
                     from: (string) ($cfg['from'] ?? ''),
                 ),
+                'sender_ge' => new $cls(
+                    apiKey: (string) ($cfg['api_key'] ?? ''),
+                    sender: (string) ($cfg['sender'] ?? ''),
+                    baseUrl: (string) ($cfg['base_url'] ?? ''),
+                ),
                 default => new $cls,
             };
         });

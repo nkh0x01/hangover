@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 use App\Modules\Communication\Sms\NullSmsGateway;
+use App\Modules\Communication\Sms\SenderGeSmsGateway;
 use App\Modules\Communication\Sms\TwilioSmsGateway;
 
 return [
@@ -18,6 +19,12 @@ return [
             'sid' => env('TWILIO_ACCOUNT_SID'),
             'token' => env('TWILIO_AUTH_TOKEN'),
             'from' => env('TWILIO_FROM'),
+        ],
+        'sender_ge' => [
+            'class' => SenderGeSmsGateway::class,
+            'api_key' => env('SENDER_GE_API_KEY'),
+            'sender' => env('SENDER_GE_SENDER', 'Ride360'),
+            'base_url' => env('SENDER_GE_BASE_URL', 'https://sender.ge/api/send.php'),
         ],
     ],
 

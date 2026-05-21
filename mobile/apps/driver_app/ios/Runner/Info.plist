@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Ride 360</string>
+	<string>Ride 360 Driver</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -15,7 +15,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Ride 360</string>
+	<string>Ride 360 Driver</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -30,8 +30,12 @@
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Ride 360 Driver uses your location while you are online or in an active ride so customers can follow trip progress.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Ride 360 Driver uses background location during active driver sessions and trips.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Ride 360 uses your location to set your pickup point, show nearby rides, and track active trips.</string>
+	<string>Ride 360 Driver uses your location to show pickup routes, drop-off routes, and nearby ride requests.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
