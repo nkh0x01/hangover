@@ -1,0 +1,60 @@
+name: Build Customer iOS
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: "Optional CFBundleShortVersionString override, for example 1.0.0"
+        required: false
+        type: string
+      build_number:
+        description: "Optional CFBundleVersion override, must be an integer"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ride360-customer-ios-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-testflight:
+    name: Customer IPA to TestFlight
+    runs-on: macos-14
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Build, export, and upload Customer IPA
+        env:
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          IOS_MAPS_API_KEY: ${{ secrets.IOS_MAPS_API_KEY }}
+          API_BASE_URL: https://ride.365sakartvelo.com
+          RIDE360_RELEASE_BUILD: "true"
+          DEV_BYPASS_ENABLED: "false"
+          IOS_VERSION_NAME: ${{ inputs.version_name }}
+          IOS_BUILD_NUMBER: ${{ inputs.build_number }}
+        run: bash mobile/scripts/github_actions/build_ios_testflight.sh customer
+
+      - name: Upload Customer IPA artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ride360-Customer-iOS
+          if-no-files-found: ignore
+          path: |
+            build/github-actions-ios/customer/*.ipa
+            build/github-actions-ios/customer/*.sha256

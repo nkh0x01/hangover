@@ -1,6 +1,14 @@
 # Ride 360 iOS Xcode Cloud Release Builds
 
-Ride 360 iOS releases are built by Xcode Cloud in App Store Connect. Local Xcode archive builds are not required.
+This Xcode Cloud path is preserved as a legacy/alternative workflow. The active no-local-Xcode iOS release workflow is now GitHub Actions:
+
+- `docs/deployment/ride360-ios-github-actions.md`
+- `.github/workflows/ios-customer-testflight.yml`
+- `.github/workflows/ios-driver-testflight.yml`
+
+The rest of this document is retained for reference if Xcode Cloud is re-enabled later.
+
+Ride 360 iOS releases can be built by Xcode Cloud in App Store Connect. Local Xcode archive builds are not required.
 
 ## Apps
 
