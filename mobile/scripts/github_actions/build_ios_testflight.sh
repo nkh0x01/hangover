@@ -122,68 +122,20 @@ esac
 
 BUILD_TIMESTAMP="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
 GIT_COMMIT="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
-SELECTED_XCODE_VERSION=""
-FIREBASE_IOS_CI_DISABLED="false"
+FIREBASE_IOS_CI_DISABLED="true"
 
-select_xcode() {
+print_xcode_debug() {
   log "Select Xcode for Flutter iOS build"
+  ok "using the default Xcode selected by the GitHub macOS runner"
 
-  local -a candidates=()
-  if [[ -n "${XCODE_DEVELOPER_DIR:-}" ]]; then
-    candidates+=("$XCODE_DEVELOPER_DIR")
-  fi
+  log "xcode-select -p"
+  xcode-select -p || true
 
-  while IFS= read -r xcode_app; do
-    [[ -n "$xcode_app" ]] || continue
-    candidates+=("$xcode_app/Contents/Developer")
-  done < <(
-    find /Applications -maxdepth 1 -type d -name 'Xcode_16*.app' -print 2>/dev/null |
-      awk '
-        {
-          path=$0
-          name=$0
-          sub(/^.*Xcode_/, "", name)
-          sub(/\.app$/, "", name)
-          parts=split(name, version, ".")
-          major=version[1]+0
-          minor=(parts > 1 ? version[2]+0 : 0)
-          patch=(parts > 2 ? version[3]+0 : 0)
-          printf "%03d%03d%03d %s\n", major, minor, patch, path
-        }
-      ' |
-      sort -r |
-      awk '{ $1=""; sub(/^ /, ""); print }'
-  )
+  log "Installed Xcode apps"
+  ls /Applications | grep Xcode || true
 
-  candidates+=(
-    "/Applications/Xcode.app/Contents/Developer"
-    "${DEVELOPER_DIR:-}"
-    "/Applications/Xcode_15.4.app/Contents/Developer"
-  )
-
-  local selected=""
-  local candidate=""
-  for candidate in "${candidates[@]}"; do
-    [[ -n "$candidate" ]] || continue
-    if [[ -d "$candidate/Contents/Developer" ]]; then
-      candidate="$candidate/Contents/Developer"
-    fi
-    [[ -x "$candidate/usr/bin/xcodebuild" ]] || continue
-    selected="$candidate"
-    break
-  done
-
-  [[ -n "$selected" ]] || fail "No usable Xcode installation found on the GitHub runner"
-
-  export DEVELOPER_DIR="$selected"
-  SELECTED_XCODE_VERSION="$(xcodebuild -version | awk '/^Xcode / { print $2; exit }')"
-  ok "DEVELOPER_DIR=$DEVELOPER_DIR"
   log "xcodebuild -version"
-  xcodebuild -version
-  log "selected toolchain"
-  xcrun --find xcodebuild || command -v xcodebuild || true
-  xcrun --find swiftc || true
-  xcrun swiftc --version | head -1 || true
+  xcodebuild -version || true
 }
 
 remove_pubspec_dependency() {
@@ -200,29 +152,9 @@ remove_pubspec_dependency() {
   mv "$tmp_path" "$pubspec_path"
 }
 
-should_disable_firebase_for_ios_ci() {
-  local mode="${DISABLE_FIREBASE_FOR_IOS_CI:-auto}"
-  case "$mode" in
-    true|1|yes) return 0 ;;
-    false|0|no) return 1 ;;
-    auto)
-      local xcode_major
-      xcode_major="$(printf '%s\n' "$SELECTED_XCODE_VERSION" | awk -F. '{ print $1 + 0 }')"
-      [[ "$xcode_major" -lt 16 ]]
-      ;;
-    *) fail "DISABLE_FIREBASE_FOR_IOS_CI must be auto, true, or false; got '$mode'" ;;
-  esac
-}
-
-disable_firebase_for_ios_ci_if_needed() {
-  if ! should_disable_firebase_for_ios_ci; then
-    ok "Firebase iOS CI fallback is disabled; selected Xcode can build Firebase Swift packages"
-    return
-  fi
-
-  FIREBASE_IOS_CI_DISABLED="true"
+disable_firebase_for_ios_ci() {
   log "Disable Firebase for this iOS CI checkout"
-  ok "reason: selected Xcode ${SELECTED_XCODE_VERSION:-unknown} cannot compile current Firebase Swift sources"
+  ok "reason: GitHub Actions iOS lane builds without Firebase until Firebase Swift/Xcode compatibility is resolved"
 
   remove_pubspec_dependency "$REPO_ROOT/mobile/packages/core/pubspec.yaml" "firebase_core"
   remove_pubspec_dependency "$REPO_ROOT/mobile/packages/core/pubspec.yaml" "firebase_messaging"
@@ -233,8 +165,8 @@ disable_firebase_for_ios_ci_if_needed() {
 import '../logging/app_logger.dart';
 import 'push_service.dart';
 
-/// No-op Firebase push adapter used only by iOS cloud release builds when the
-/// selected GitHub runner Xcode cannot compile the current Firebase Swift pods.
+/// No-op Firebase push adapter used only by iOS cloud release builds until the
+/// Firebase Swift/Xcode compatibility issue is resolved.
 class FirebasePushService extends NullPushService {
   FirebasePushService({required AppLogger logger}) {
     logger.i('Firebase push disabled for this iOS CI build');
@@ -627,11 +559,11 @@ ok "bundle id: $BUNDLE_ID"
 ok "version: $VERSION_NAME_VALUE ($BUILD_NUMBER_VALUE)"
 ok "api: $API_BASE_URL_VALUE"
 
-select_xcode
+print_xcode_debug
 prepare_app_store_connect_key
 prepare_manual_signing_assets
 inject_maps_key
-disable_firebase_for_ios_ci_if_needed
+disable_firebase_for_ios_ci
 configure_flutter
 install_pods
 configure_xcode_signing

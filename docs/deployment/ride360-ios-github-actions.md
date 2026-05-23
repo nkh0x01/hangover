@@ -31,9 +31,9 @@ The helper script also rejects final IPA strings containing localhost, `10.0.2.2
 
 ## Xcode and Firebase
 
-The GitHub Actions helper selects the newest installed Xcode 16.x toolchain before running Flutter, CocoaPods, `xcodebuild archive`, or `xcodebuild -exportArchive`. It prints `DEVELOPER_DIR`, `xcodebuild -version`, and the selected Swift toolchain in every build log.
+The GitHub Actions helper uses the default Xcode selected by the hosted macOS runner. It prints `xcode-select -p`, installed Xcode apps, and `xcodebuild -version || true` in every build log without making that debug output fatal.
 
-If a hosted runner only has Xcode 15.x available, the helper disables `firebase_core` and `firebase_messaging` only inside that temporary CI checkout before `flutter pub get`, and replaces the Firebase push adapter with a no-op implementation. This avoids the Firebase Swift `sending`/access-level import compatibility failure while keeping Google Maps and the production API configuration enabled. Set `DISABLE_FIREBASE_FOR_IOS_CI=false` only after Firebase is confirmed to compile with the selected Xcode.
+The helper always disables `firebase_core` and `firebase_messaging` only inside that temporary CI checkout before `flutter pub get`, and replaces the Firebase push adapter with a no-op implementation. This avoids the Firebase Swift `sending`/access-level import compatibility failure while keeping Google Maps and the production API configuration enabled.
 
 ## Required GitHub Secrets
 
