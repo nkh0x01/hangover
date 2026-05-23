@@ -55,7 +55,8 @@ The templates cover:
   and `setUser`. Falls back to `runZonedGuarded` + `debugPrint` when
   no DSN is configured.
 - Phone-number PII scrubbing via `before_send` regex `\+?\d{8,15}`.
-- `sentry_flutter ^8.9.0` pinned in `core/pubspec.yaml`.
+- Mobile remote crash reporting package removed while iOS cloud
+  dependency resolution is being fixed.
 - Backend: `sentry/sentry-laravel ^4.10` added to composer.json,
   `bootstrap/app.php` forwards non-domain exceptions, `config/sentry.php`
   declares `App\Support\Observability\SentryScrub::beforeSend` to mask

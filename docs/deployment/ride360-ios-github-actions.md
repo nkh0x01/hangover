@@ -27,7 +27,7 @@ The workflows force these values:
 - `APP_ENV=production`
 - `SENTRY_DSN=`
 
-The helper script also rejects final IPA strings containing localhost, `10.0.2.2`, staging API hosts, `https://ride.365sakartvelo.com/api/v1`, or Sentry iOS package strings.
+The helper script also rejects final IPA strings containing localhost, `10.0.2.2`, staging API hosts, or `https://ride.365sakartvelo.com/api/v1`.
 
 ## Required GitHub Secrets
 
@@ -73,9 +73,9 @@ The `IOS_MAPS_API_KEY` value must allow these iOS bundle IDs:
 
 Use separate Google Maps keys only if your Google Cloud policy requires one key per bundle ID.
 
-## Sentry
+## Crash Reporting
 
-Sentry is disabled only inside the GitHub Actions iOS release checkout until the `sentry_flutter` / `sentry-cocoa` Swift Package Manager issue is solved. The script comments out `sentry_flutter` in the CI checkout and writes a no-op crash reporter with the same public API before `flutter pub get`.
+Remote crash reporting is disabled in committed source until the iOS package resolution issue is solved. The core package keeps the same `CrashReporter` public API with a no-op implementation.
 
 This does not change app logic in the repository and does not affect Android builds.
 

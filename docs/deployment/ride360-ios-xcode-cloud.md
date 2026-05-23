@@ -43,7 +43,7 @@ The scripts:
 - run `flutter build ios --release --config-only`;
 - install CocoaPods;
 - inject `IOS_MAPS_API_KEY` into `Runner/Info.plist`;
-- disable `sentry_flutter` and use an API-compatible no-op crash reporter for the Xcode Cloud iOS archive, avoiding the `sentry-cocoa` Swift Package Manager dependency;
+- use the committed API-compatible no-op crash reporter while remote crash reporting is disabled;
 - force production Dart defines:
   - `API_BASE_URL=https://ride.365sakartvelo.com`
   - `RIDE360_RELEASE_BUILD=true`

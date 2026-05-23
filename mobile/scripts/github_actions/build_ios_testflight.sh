@@ -36,7 +36,6 @@ esac
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 APP_DIR="$REPO_ROOT/mobile/apps/$APP"
 IOS_DIR="$APP_DIR/ios"
-CORE_DIR="$REPO_ROOT/mobile/packages/core"
 INFO_PLIST="$IOS_DIR/Runner/Info.plist"
 ARTIFACT_DIR="$REPO_ROOT/build/github-actions-ios/$ROLE"
 ARCHIVE_PATH="$ARTIFACT_DIR/$APP_NAME.xcarchive"
@@ -105,82 +104,6 @@ path.write_text(key)
 path.chmod(0o600)
 PY
   ok "App Store Connect API key installed for xcodebuild/altool"
-}
-
-disable_sentry_for_cloud_build() {
-  local core_pubspec="$CORE_DIR/pubspec.yaml"
-  local crash_reporter="$CORE_DIR/lib/src/observability/crash_reporter.dart"
-
-  [[ -f "$core_pubspec" ]] || fail "Core pubspec not found: $core_pubspec"
-  [[ -f "$crash_reporter" ]] || fail "CrashReporter source not found: $crash_reporter"
-
-  log "Disable sentry_flutter for GitHub Actions iOS archive"
-  if grep -Eq '^[[:space:]]*sentry_flutter:' "$core_pubspec"; then
-    awk '
-      /^[[:space:]]*sentry_flutter:/ {
-        print "  # DISABLED_FOR_GITHUB_ACTIONS_IOS: " $0
-        next
-      }
-      { print }
-    ' "$core_pubspec" > "$core_pubspec.tmp"
-    mv "$core_pubspec.tmp" "$core_pubspec"
-  fi
-
-  cat > "$crash_reporter" <<'EOF_DART'
-import 'dart:async';
-
-import 'package:flutter/foundation.dart';
-import 'package:flutter/widgets.dart';
-
-import '../env/env_config.dart';
-
-/// GitHub Actions iOS release stub.
-///
-/// The production iOS cloud archive disables sentry_flutter until the
-/// sentry-cocoa Swift Package Manager resolution issue is fixed. Keep
-/// this public API aligned with the normal CrashReporter implementation.
-class CrashReporter {
-  const CrashReporter._();
-
-  static Future<void> bootstrap({
-    required EnvConfig env,
-    required FutureOr<void> Function() appRunner,
-    String release = 'hangover@0.1.0',
-  }) async {
-    if (kDebugMode && env.sentryDsn.isNotEmpty) {
-      debugPrint('Sentry disabled for GitHub Actions iOS archive: $release');
-    }
-    runZonedGuarded(() async => await appRunner(), (error, stack) {
-      debugPrint('UNCAUGHT: $error\n$stack');
-    });
-  }
-
-  static Future<void> captureException(
-    Object error, {
-    StackTrace? stackTrace,
-    Map<String, Object?> tags = const {},
-    String? hint,
-  }) async {
-    if (kDebugMode) {
-      debugPrint('captureException: $error${hint != null ? ' - $hint' : ''}');
-    }
-  }
-
-  static void breadcrumb(
-    String message, {
-    String? category,
-    Map<String, Object?> data = const {},
-  }) {}
-
-  static Future<void> setUser({
-    required String? userUlid,
-    required String? type,
-  }) async {}
-}
-
-NavigatorObserver sentryRouteObserver() => NavigatorObserver();
-EOF_DART
-  ok "sentry_flutter disabled for this GitHub Actions checkout"
 }
 
 inject_maps_key() {
@@ -291,10 +214,10 @@ verify_ipa_strings() {
   find "$TMP_VERIFY_DIR/Payload" -type f -print0 |
     xargs -0 strings 2>/dev/null > "$strings_file" || true
 
-  forbidden_pattern='10\.0\.2\.2|127\.0\.0\.1:8000|localhost:8000|api\.hangover|api\.staging|https://ride\.365sakartvelo\.com/api/v1|http://ride\.365sakartvelo\.com|sentry-cocoa|SentryFlutter'
+  forbidden_pattern='10\.0\.2\.2|127\.0\.0\.1:8000|localhost:8000|api\.hangover|api\.staging|https://ride\.365sakartvelo\.com/api/v1|http://ride\.365sakartvelo\.com'
   if grep -Eq "$forbidden_pattern" "$strings_file"; then
     grep -En "$forbidden_pattern" "$strings_file" >&2 || true
-    fail "IPA contains a forbidden non-production or Sentry string"
+    fail "IPA contains a forbidden non-production string"
   fi
   ok "production IPA string scan passed"
 }
@@ -315,7 +238,6 @@ ok "version: $VERSION_NAME_VALUE ($BUILD_NUMBER_VALUE)"
 ok "api: $API_BASE_URL_VALUE"
 
 prepare_app_store_connect_key
-disable_sentry_for_cloud_build
 inject_maps_key
 configure_flutter
 install_pods
