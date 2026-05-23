@@ -41,6 +41,8 @@ ARTIFACT_DIR="$REPO_ROOT/build/github-actions-ios/$ROLE"
 ARCHIVE_PATH="$ARTIFACT_DIR/$APP_NAME.xcarchive"
 EXPORT_PATH="$ARTIFACT_DIR/export"
 EXPORT_OPTIONS="$ARTIFACT_DIR/ExportOptions.plist"
+CUSTOMER_APP_DIR="$REPO_ROOT/mobile/apps/customer_app"
+DRIVER_APP_DIR="$REPO_ROOT/mobile/apps/driver_app"
 ASC_PRIVATE_KEYS_DIR="$HOME/.appstoreconnect/private_keys"
 MANUAL_PROFILE_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
 MANUAL_SIGNING_PROFILE_SECRET="${IOS_APP_STORE_PROFILE_BASE64:-}"
@@ -123,6 +125,7 @@ esac
 BUILD_TIMESTAMP="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
 GIT_COMMIT="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
 FIREBASE_IOS_CI_DISABLED="true"
+FIREBASE_SCAN_PATTERN='firebase_core|firebase_messaging|FirebaseMessaging|FirebaseCore|GoogleDataTransport'
 
 print_xcode_debug() {
   log "Select Xcode for Flutter iOS build"
@@ -152,14 +155,37 @@ remove_pubspec_dependency() {
   mv "$tmp_path" "$pubspec_path"
 }
 
+clean_flutter_generated_dependency_state() {
+  local app_path=""
+  for app_path in "$CUSTOMER_APP_DIR" "$DRIVER_APP_DIR"; do
+    rm -rf \
+      "$app_path/.dart_tool" \
+      "$app_path/.flutter-plugins" \
+      "$app_path/.flutter-plugins-dependencies" \
+      "$app_path/pubspec.lock" \
+      "$app_path/ios/.symlinks" \
+      "$app_path/ios/Pods" \
+      "$app_path/ios/Podfile.lock" \
+      "$app_path/ios/Runner/GeneratedPluginRegistrant.m" \
+      "$app_path/ios/Runner.xcworkspace/xcshareddata/swiftpm/Package.resolved" \
+      "$app_path/ios/Runner.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"
+  done
+
+  find "$REPO_ROOT/mobile/packages" -mindepth 2 -maxdepth 2 -name ".dart_tool" -type d -prune -exec rm -rf {} + 2>/dev/null || true
+  find "$REPO_ROOT/mobile/packages" -mindepth 2 -maxdepth 2 -name "pubspec.lock" -type f -delete 2>/dev/null || true
+}
+
 disable_firebase_for_ios_ci() {
   log "Disable Firebase for this iOS CI checkout"
   ok "reason: GitHub Actions iOS lane builds without Firebase until Firebase Swift/Xcode compatibility is resolved"
 
   remove_pubspec_dependency "$REPO_ROOT/mobile/packages/core/pubspec.yaml" "firebase_core"
   remove_pubspec_dependency "$REPO_ROOT/mobile/packages/core/pubspec.yaml" "firebase_messaging"
-  remove_pubspec_dependency "$APP_DIR/pubspec.yaml" "firebase_core"
-  remove_pubspec_dependency "$APP_DIR/pubspec.yaml" "firebase_messaging"
+  remove_pubspec_dependency "$CUSTOMER_APP_DIR/pubspec.yaml" "firebase_core"
+  remove_pubspec_dependency "$CUSTOMER_APP_DIR/pubspec.yaml" "firebase_messaging"
+  remove_pubspec_dependency "$DRIVER_APP_DIR/pubspec.yaml" "firebase_core"
+  remove_pubspec_dependency "$DRIVER_APP_DIR/pubspec.yaml" "firebase_messaging"
+  clean_flutter_generated_dependency_state
 
   cat > "$REPO_ROOT/mobile/packages/core/lib/src/push/firebase_push_service.dart" <<'EOF_DART'
 import '../logging/app_logger.dart';
@@ -174,7 +200,39 @@ class FirebasePushService extends NullPushService {
 }
 EOF_DART
 
-  ok "firebase_core/firebase_messaging removed before flutter pub get; Maps remains enabled"
+  ok "firebase_core/firebase_messaging removed and stale iOS generated state cleared before flutter pub get; Maps remains enabled"
+}
+
+verify_no_firebase_for_ios_ci() {
+  local stage="$1"
+  local scan_output="$ARTIFACT_DIR/firebase-scan.txt"
+
+  log "Verify Firebase is absent after $stage"
+  mkdir -p "$ARTIFACT_DIR"
+  printf 'grep -R -E "%s" mobile/apps/customer_app mobile/apps/driver_app mobile/packages mobile/apps/customer_app/ios mobile/apps/driver_app/ios\n' "$FIREBASE_SCAN_PATTERN"
+
+  (
+    cd "$REPO_ROOT"
+    find \
+      mobile/apps/customer_app \
+      mobile/apps/driver_app \
+      mobile/packages \
+      mobile/apps/customer_app/ios \
+      mobile/apps/driver_app/ios \
+      \( -path "*/android/*" -o -path "*/build/*" -o -path "*/.git/*" \) -prune -o \
+      -type f \
+      ! -name "*.md" \
+      ! -name "*.markdown" \
+      -print0 |
+      xargs -0 grep -n -E "$FIREBASE_SCAN_PATTERN" 2>/dev/null || true
+  ) > "$scan_output"
+
+  if [[ -s "$scan_output" ]]; then
+    cat "$scan_output" >&2
+    fail "Firebase dependency still appears in the iOS CI build tree after $stage"
+  fi
+
+  ok "no active Firebase dependency found after $stage"
 }
 
 prepare_app_store_connect_key() {
@@ -273,6 +331,7 @@ configure_flutter() {
   log "Configure Flutter production build"
   cd "$APP_DIR"
   flutter pub get
+  verify_no_firebase_for_ios_ci "flutter pub get"
   flutter build ios --release --config-only \
     --target lib/main_prod.dart \
     --build-name "$VERSION_NAME_VALUE" \
@@ -292,12 +351,14 @@ configure_flutter() {
     --dart-define="HANGOVER_BUILD_COMMIT=$GIT_COMMIT" \
     --dart-define="WS_KEY=${WS_KEY:-}" \
     --dart-define="SENTRY_DSN="
+  verify_no_firebase_for_ios_ci "Flutter iOS config generation"
 }
 
 install_pods() {
   log "Install CocoaPods"
   cd "$APP_DIR"
   pod install --project-directory=ios
+  verify_no_firebase_for_ios_ci "pod install"
 }
 
 configure_xcode_signing() {

@@ -5,7 +5,7 @@ import 'dart:async';
 /// Phase 1.6 → 2.0 ships this interface plus a stub `NullPushService`.
 /// The concrete `FirebasePushService` lives in the apps' DI layer (so
 /// the core package stays Firebase-agnostic and can be unit-tested
-/// without `firebase_messaging`).
+/// without the Firebase messaging package).
 ///
 /// Lifecycle (called once at app boot, after auth):
 ///

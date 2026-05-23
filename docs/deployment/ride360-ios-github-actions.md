@@ -33,7 +33,7 @@ The helper script also rejects final IPA strings containing localhost, `10.0.2.2
 
 The GitHub Actions helper uses the default Xcode selected by the hosted macOS runner. It prints `xcode-select -p`, installed Xcode apps, and `xcodebuild -version || true` in every build log without making that debug output fatal.
 
-The helper always disables `firebase_core` and `firebase_messaging` only inside that temporary CI checkout before `flutter pub get`, and replaces the Firebase push adapter with a no-op implementation. This avoids the Firebase Swift `sending`/access-level import compatibility failure while keeping Google Maps and the production API configuration enabled.
+The helper always disables `firebase_core` and `firebase_messaging` only inside that temporary CI checkout before `flutter pub get`, clears stale Flutter/iOS generated dependency files, and replaces the Firebase push adapter with a no-op implementation. It verifies after `flutter pub get`, Flutter iOS config generation, and `pod install` that the iOS CI build tree no longer contains active Firebase/Firebase Messaging/GoogleDataTransport dependencies. This avoids the Firebase Swift `sending`/access-level import compatibility failure while keeping Google Maps and the production API configuration enabled.
 
 ## Required GitHub Secrets
 
