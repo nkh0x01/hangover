@@ -144,6 +144,74 @@ install_pods() {
   pod install --project-directory=ios
 }
 
+configure_xcode_signing() {
+  log "Configure Runner signing and disable dependency signing"
+  ruby - "$IOS_DIR/Runner.xcodeproj" "$IOS_DIR/Pods/Pods.xcodeproj" "$BUNDLE_ID" "$APPLE_TEAM_ID" <<'RUBY'
+require 'xcodeproj'
+
+runner_project_path, pods_project_path, bundle_id, team_id = ARGV
+
+def runner_release_config?(config)
+  %w[Release Profile].include?(config.name)
+end
+
+def disable_target_signing(target)
+  target.build_configurations.each do |config|
+    settings = config.build_settings
+    settings['CODE_SIGNING_ALLOWED'] = 'NO'
+    settings['CODE_SIGNING_REQUIRED'] = 'NO'
+    settings['CODE_SIGN_IDENTITY'] = ''
+    settings['CODE_SIGN_IDENTITY[sdk=iphoneos*]'] = ''
+    settings['EXPANDED_CODE_SIGN_IDENTITY'] = ''
+    settings.delete('DEVELOPMENT_TEAM')
+    settings.delete('PROVISIONING_PROFILE')
+    settings.delete('PROVISIONING_PROFILE_SPECIFIER')
+  end
+end
+
+def configure_runner_target(target, bundle_id, team_id)
+  target.build_configurations.each do |config|
+    settings = config.build_settings
+    settings['CODE_SIGN_STYLE'] = 'Automatic'
+    settings['DEVELOPMENT_TEAM'] = team_id
+    settings['PRODUCT_BUNDLE_IDENTIFIER'] = bundle_id
+
+    next unless runner_release_config?(config)
+
+    settings['CODE_SIGN_IDENTITY[sdk=iphoneos*]'] = 'Apple Distribution'
+    settings.delete('CODE_SIGNING_ALLOWED')
+    settings.delete('CODE_SIGNING_REQUIRED')
+    settings.delete('EXPANDED_CODE_SIGN_IDENTITY')
+    settings.delete('PROVISIONING_PROFILE')
+    settings.delete('PROVISIONING_PROFILE_SPECIFIER')
+  end
+end
+
+runner_project = Xcodeproj::Project.open(runner_project_path)
+runner_target = runner_project.targets.find { |target| target.name == 'Runner' }
+abort("Runner target not found in #{runner_project_path}") unless runner_target
+
+runner_project.targets.each do |target|
+  if target.name == 'Runner'
+    configure_runner_target(target, bundle_id, team_id)
+  else
+    disable_target_signing(target)
+  end
+end
+
+runner_project.save
+
+if File.directory?(pods_project_path)
+  pods_project = Xcodeproj::Project.open(pods_project_path)
+  pods_project.targets.each do |target|
+    disable_target_signing(target)
+  end
+  pods_project.save
+end
+RUBY
+  ok "Runner uses automatic signing; dependency target signing is disabled"
+}
+
 write_export_options() {
   log "Write ExportOptions.plist"
   mkdir -p "$ARTIFACT_DIR" "$EXPORT_PATH"
@@ -184,10 +252,6 @@ archive_and_export() {
     -destination "generic/platform=iOS" \
     -archivePath "$ARCHIVE_PATH" \
     "${auth_args[@]}" \
-    DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
-    PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID" \
-    CODE_SIGN_STYLE=Automatic \
-    CODE_SIGN_IDENTITY="Apple Distribution" \
     MAPS_API_KEY="$IOS_MAPS_API_KEY"
 
   log "Export signed IPA"
@@ -241,6 +305,7 @@ prepare_app_store_connect_key
 inject_maps_key
 configure_flutter
 install_pods
+configure_xcode_signing
 write_export_options
 archive_and_export
 verify_ipa_strings
