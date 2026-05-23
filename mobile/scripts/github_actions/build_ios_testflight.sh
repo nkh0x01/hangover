@@ -14,6 +14,16 @@ ok() {
   printf '[ok] %s\n' "$*"
 }
 
+print_secret_presence() {
+  local label="$1"
+  local value="$2"
+  if [[ -n "$value" ]]; then
+    ok "$label: yes"
+  else
+    ok "$label: no"
+  fi
+}
+
 ROLE="${1:-}"
 case "$ROLE" in
   customer)
@@ -45,25 +55,21 @@ CUSTOMER_APP_DIR="$REPO_ROOT/mobile/apps/customer_app"
 DRIVER_APP_DIR="$REPO_ROOT/mobile/apps/driver_app"
 ASC_PRIVATE_KEYS_DIR="$HOME/.appstoreconnect/private_keys"
 MANUAL_PROFILE_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
-MANUAL_SIGNING_PROFILE_SECRET="${IOS_APP_STORE_PROFILE_BASE64:-}"
+MANUAL_SIGNING_PROFILE_SECRET=""
 MANUAL_SIGNING_CERT_SECRET="${IOS_DISTRIBUTION_CERTIFICATE_BASE64:-${IOS_DISTRIBUTION_CERTIFICATE_P12_BASE64:-}}"
 MANUAL_SIGNING_PROFILE_NAME=""
 MANUAL_SIGNING_KEYCHAIN_PATH=""
 
 case "$ROLE" in
   customer)
-    MANUAL_SIGNING_PROFILE_SECRET="${IOS_CUSTOMER_APP_STORE_PROFILE_BASE64:-$MANUAL_SIGNING_PROFILE_SECRET}"
+    MANUAL_SIGNING_PROFILE_SECRET="${IOS_CUSTOMER_PROVISIONING_PROFILE_BASE64:-${IOS_CUSTOMER_APP_STORE_PROFILE_BASE64:-${IOS_APP_STORE_PROFILE_BASE64:-}}}"
     ;;
   driver)
-    MANUAL_SIGNING_PROFILE_SECRET="${IOS_DRIVER_APP_STORE_PROFILE_BASE64:-$MANUAL_SIGNING_PROFILE_SECRET}"
+    MANUAL_SIGNING_PROFILE_SECRET="${IOS_DRIVER_PROVISIONING_PROFILE_BASE64:-${IOS_DRIVER_APP_STORE_PROFILE_BASE64:-${IOS_APP_STORE_PROFILE_BASE64:-}}}"
     ;;
 esac
 
-if [[ -n "$MANUAL_SIGNING_PROFILE_SECRET" ]]; then
-  SIGNING_STYLE_VALUE="${IOS_SIGNING_STYLE:-manual}"
-else
-  SIGNING_STYLE_VALUE="${IOS_SIGNING_STYLE:-automatic}"
-fi
+SIGNING_STYLE_VALUE="manual"
 
 EXPECTED_ISSUER_ID="c31a4d8b-f081-4263-be24-796d00558ddd"
 EXPECTED_KEY_ID="VWBCPRZ4JS"
@@ -90,22 +96,24 @@ API_BASE_URL_VALUE="${API_BASE_URL_VALUE%/}"
   fail "APP_STORE_CONNECT_PRIVATE_KEY GitHub secret is required"
 [[ -n "${IOS_MAPS_API_KEY:-}" ]] ||
   fail "IOS_MAPS_API_KEY GitHub secret is required for $BUNDLE_ID"
-case "$SIGNING_STYLE_VALUE" in
-  automatic|manual) ;;
-  *) fail "IOS_SIGNING_STYLE must be automatic or manual, got '$SIGNING_STYLE_VALUE'" ;;
+case "$ROLE" in
+  customer) role_profile_secret_name="IOS_CUSTOMER_PROVISIONING_PROFILE_BASE64" ;;
+  driver) role_profile_secret_name="IOS_DRIVER_PROVISIONING_PROFILE_BASE64" ;;
 esac
-if [[ "$SIGNING_STYLE_VALUE" == "manual" ]]; then
-  case "$ROLE" in
-    customer) role_profile_secret_name="IOS_CUSTOMER_APP_STORE_PROFILE_BASE64" ;;
-    driver) role_profile_secret_name="IOS_DRIVER_APP_STORE_PROFILE_BASE64" ;;
-  esac
-  [[ -n "$MANUAL_SIGNING_PROFILE_SECRET" ]] ||
-    fail "Manual iOS signing requires $role_profile_secret_name or IOS_APP_STORE_PROFILE_BASE64"
-  [[ -n "$MANUAL_SIGNING_CERT_SECRET" ]] ||
-    fail "Manual iOS signing requires IOS_DISTRIBUTION_CERTIFICATE_BASE64"
-  [[ -n "${IOS_DISTRIBUTION_CERTIFICATE_PASSWORD:-}" ]] ||
-    fail "Manual iOS signing requires IOS_DISTRIBUTION_CERTIFICATE_PASSWORD"
-fi
+
+log "Manual signing secret diagnostics"
+print_secret_presence "manual certificate secret present" "$MANUAL_SIGNING_CERT_SECRET"
+print_secret_presence "$ROLE provisioning profile secret present" "$MANUAL_SIGNING_PROFILE_SECRET"
+print_secret_presence "keychain password secret present" "${IOS_KEYCHAIN_PASSWORD:-}"
+
+[[ -n "$MANUAL_SIGNING_PROFILE_SECRET" ]] ||
+  fail "Manual iOS signing requires $role_profile_secret_name"
+[[ -n "$MANUAL_SIGNING_CERT_SECRET" ]] ||
+  fail "Manual iOS signing requires IOS_DISTRIBUTION_CERTIFICATE_BASE64"
+[[ -n "${IOS_DISTRIBUTION_CERTIFICATE_PASSWORD:-}" ]] ||
+  fail "Manual iOS signing requires IOS_DISTRIBUTION_CERTIFICATE_PASSWORD"
+[[ -n "${IOS_KEYCHAIN_PASSWORD:-}" ]] ||
+  fail "Manual iOS signing requires IOS_KEYCHAIN_PASSWORD"
 
 version_line="$(awk '$1 == "version:" { print $2; exit }' "$APP_DIR/pubspec.yaml")"
 [[ -n "$version_line" ]] || fail "Could not read version from $APP_DIR/pubspec.yaml"
@@ -269,24 +277,20 @@ PY
 }
 
 prepare_manual_signing_assets() {
-  if [[ "$SIGNING_STYLE_VALUE" != "manual" ]]; then
-    return
-  fi
-
   log "Prepare manual App Store signing assets"
   mkdir -p "$MANUAL_PROFILE_DIR"
 
   local cert_path="$ARTIFACT_DIR/ios_distribution.p12"
   local profile_path="$ARTIFACT_DIR/app_store_profile.mobileprovision"
   local profile_plist="$ARTIFACT_DIR/app_store_profile.plist"
-  local keychain_password
+  local keychain_password="$IOS_KEYCHAIN_PASSWORD"
 
   mkdir -p "$ARTIFACT_DIR"
   decode_base64_secret "$MANUAL_SIGNING_CERT_SECRET" "$cert_path"
   decode_base64_secret "$MANUAL_SIGNING_PROFILE_SECRET" "$profile_path"
 
-  keychain_password="$(uuidgen)"
   MANUAL_SIGNING_KEYCHAIN_PATH="$ARTIFACT_DIR/ride360-signing.keychain-db"
+  rm -f "$MANUAL_SIGNING_KEYCHAIN_PATH"
   security create-keychain -p "$keychain_password" "$MANUAL_SIGNING_KEYCHAIN_PATH"
   security set-keychain-settings -lut 21600 "$MANUAL_SIGNING_KEYCHAIN_PATH"
   security unlock-keychain -p "$keychain_password" "$MANUAL_SIGNING_KEYCHAIN_PATH"
@@ -295,6 +299,7 @@ prepare_manual_signing_assets() {
     -P "$IOS_DISTRIBUTION_CERTIFICATE_PASSWORD" \
     -T /usr/bin/codesign \
     -T /usr/bin/security
+  security default-keychain -s "$MANUAL_SIGNING_KEYCHAIN_PATH"
   security list-keychains -d user -s "$MANUAL_SIGNING_KEYCHAIN_PATH" $(security list-keychains -d user | tr -d '"')
   security set-key-partition-list \
     -S apple-tool:,apple:,codesign: \
@@ -302,22 +307,43 @@ prepare_manual_signing_assets() {
     -k "$keychain_password" \
     "$MANUAL_SIGNING_KEYCHAIN_PATH"
 
+  log "Imported certificate identities"
+  security find-identity -v -p codesigning || true
+  if ! security find-identity -v -p codesigning "$MANUAL_SIGNING_KEYCHAIN_PATH" | grep -Eq 'Apple Distribution|iOS Distribution'; then
+    fail "Imported certificate is not an Apple/iOS Distribution signing identity"
+  fi
+
   security cms -D -i "$profile_path" > "$profile_plist"
   MANUAL_SIGNING_PROFILE_NAME="$(/usr/libexec/PlistBuddy -c 'Print :Name' "$profile_plist")"
   local profile_uuid
   local profile_app_id
+  local profile_bundle_id
+  local profile_team_id
+  local profile_dest
   profile_uuid="$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$profile_plist")"
   profile_app_id="$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:application-identifier' "$profile_plist" 2>/dev/null || true)"
+  profile_team_id="$(/usr/libexec/PlistBuddy -c 'Print :TeamIdentifier:0' "$profile_plist" 2>/dev/null || true)"
+  profile_bundle_id="${profile_app_id#*.}"
 
   [[ -n "$MANUAL_SIGNING_PROFILE_NAME" ]] || fail "Could not read provisioning profile name"
   [[ -n "$profile_uuid" ]] || fail "Could not read provisioning profile UUID"
+  [[ "$profile_team_id" == "$APPLE_TEAM_ID" ]] ||
+    fail "Provisioning profile team '$profile_team_id' does not match $APPLE_TEAM_ID"
   case "$profile_app_id" in
     "$APPLE_TEAM_ID.$BUNDLE_ID"|*".$BUNDLE_ID") ;;
     *) fail "Provisioning profile '$MANUAL_SIGNING_PROFILE_NAME' does not match $BUNDLE_ID" ;;
   esac
 
-  cp "$profile_path" "$MANUAL_PROFILE_DIR/$profile_uuid.mobileprovision"
-  ok "manual App Store profile: $MANUAL_SIGNING_PROFILE_NAME"
+  profile_dest="$MANUAL_PROFILE_DIR/$profile_uuid.mobileprovision"
+  cp "$profile_path" "$profile_dest"
+
+  log "Installed provisioning profile"
+  ok "UUID: $profile_uuid"
+  ok "Name: $MANUAL_SIGNING_PROFILE_NAME"
+  ok "application-identifier: $profile_app_id"
+  ok "bundle id: $profile_bundle_id"
+  ok "TeamIdentifier: $profile_team_id"
+  ok "path: $profile_dest"
 }
 
 inject_maps_key() {
@@ -449,7 +475,7 @@ if File.directory?(pods_project_path)
   pods_project.save
 end
 RUBY
-  ok "Runner uses automatic signing; dependency target signing is disabled"
+  ok "Runner uses manual App Store signing; dependency target signing is disabled"
 }
 
 print_archive_debug() {
@@ -473,8 +499,7 @@ print_archive_debug() {
 write_export_options() {
   log "Write ExportOptions.plist"
   mkdir -p "$ARTIFACT_DIR" "$EXPORT_PATH"
-  if [[ "$SIGNING_STYLE_VALUE" == "manual" ]]; then
-    cat > "$EXPORT_OPTIONS" <<EOF_PLIST
+  cat > "$EXPORT_OPTIONS" <<EOF_PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -495,24 +520,6 @@ write_export_options() {
 </dict>
 </plist>
 EOF_PLIST
-  else
-    cat > "$EXPORT_OPTIONS" <<EOF_PLIST
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <key>method</key>
-  <string>app-store-connect</string>
-  <key>teamID</key>
-  <string>$APPLE_TEAM_ID</string>
-  <key>signingStyle</key>
-  <string>automatic</string>
-  <key>stripSwiftSymbols</key>
-  <true/>
-</dict>
-</plist>
-EOF_PLIST
-  fi
 }
 
 print_signing_debug() {
@@ -520,11 +527,8 @@ print_signing_debug() {
   ok "bundle id: $BUNDLE_ID"
   ok "team id: $APPLE_TEAM_ID"
   ok "selected signing style: $SIGNING_STYLE_VALUE"
-  if [[ "$SIGNING_STYLE_VALUE" == "automatic" ]]; then
-    ok "archive signing: disabled; exportArchive performs automatic App Store signing"
-  else
-    ok "manual App Store profile: $MANUAL_SIGNING_PROFILE_NAME"
-  fi
+  ok "manual App Store profile: $MANUAL_SIGNING_PROFILE_NAME"
+  ok "manual signing keychain: $MANUAL_SIGNING_KEYCHAIN_PATH"
 
   log "ExportOptions.plist"
   sed -n '1,220p' "$EXPORT_OPTIONS"
@@ -535,39 +539,17 @@ archive_and_export() {
   rm -rf "$ARCHIVE_PATH" "$EXPORT_PATH"
   mkdir -p "$ARTIFACT_DIR" "$EXPORT_PATH"
 
-  local auth_args=(
-    -allowProvisioningUpdates
-    -authenticationKeyPath "$ASC_KEY_PATH"
-    -authenticationKeyID "$APP_STORE_CONNECT_KEY_ID"
-    -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID"
-  )
-
   local -a archive_cmd
-  if [[ "$SIGNING_STYLE_VALUE" == "manual" ]]; then
-    archive_cmd=(
-      xcodebuild archive
-      -workspace "$IOS_DIR/Runner.xcworkspace"
-      -scheme Runner
-      -configuration Release
-      -destination "generic/platform=iOS"
-      -archivePath "$ARCHIVE_PATH"
-      "${auth_args[@]}"
-      DEVELOPMENT_TEAM="$APPLE_TEAM_ID"
-    )
-  else
-    archive_cmd=(
-      xcodebuild archive
-      -workspace "$IOS_DIR/Runner.xcworkspace"
-      -scheme Runner
-      -configuration Release
-      -destination "generic/platform=iOS"
-      -archivePath "$ARCHIVE_PATH"
-      "${auth_args[@]}"
-      DEVELOPMENT_TEAM="$APPLE_TEAM_ID"
-      CODE_SIGN_STYLE=Automatic
-      CODE_SIGNING_ALLOWED=NO
-    )
-  fi
+  archive_cmd=(
+    xcodebuild archive
+    -workspace "$IOS_DIR/Runner.xcworkspace"
+    -scheme Runner
+    -configuration Release
+    -destination "generic/platform=iOS"
+    -archivePath "$ARCHIVE_PATH"
+    DEVELOPMENT_TEAM="$APPLE_TEAM_ID"
+    OTHER_CODE_SIGN_FLAGS="--keychain $MANUAL_SIGNING_KEYCHAIN_PATH"
+  )
 
   print_signing_debug
   print_archive_debug "${archive_cmd[@]}"
@@ -577,8 +559,7 @@ archive_and_export() {
   xcodebuild -exportArchive \
     -archivePath "$ARCHIVE_PATH" \
     -exportPath "$EXPORT_PATH" \
-    -exportOptionsPlist "$EXPORT_OPTIONS" \
-    "${auth_args[@]}"
+    -exportOptionsPlist "$EXPORT_OPTIONS"
 
   IPA_SRC="$(find "$EXPORT_PATH" -name '*.ipa' -print | awk 'NR == 1 { print; exit }')"
   [[ -n "${IPA_SRC:-}" && -f "$IPA_SRC" ]] || fail "No IPA exported under $EXPORT_PATH"

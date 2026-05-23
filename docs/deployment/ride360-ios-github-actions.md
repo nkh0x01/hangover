@@ -55,24 +55,32 @@ The App Store Connect API key must have access to both Ride 360 apps and enough 
 
 ## Signing
 
-Default signing mode is automatic:
+Signing is manual so GitHub Actions does not depend on Apple cloud-managed distribution certificate permissions.
 
-- The archive step disables archive-time code signing so Xcode does not request an iOS App Development provisioning profile or registered devices.
-- The export step uses `method=app-store-connect`, `signingStyle=automatic`, App Store Connect API key authentication, and Team ID `5BB9G38XX8`.
+- The workflow imports an Apple Distribution `.p12` certificate into a temporary keychain.
+- The workflow installs an App Store `.mobileprovision` profile for the bundle ID being built.
+- The export step uses `method=app-store-connect`, `signingStyle=manual`, the installed provisioning profile name, and Team ID `5BB9G38XX8`.
 
-If automatic export signing cannot create or download the App Store provisioning profile on the GitHub runner, create App Store distribution signing assets in Apple Developer and add these optional secrets:
+Create App Store distribution signing assets in Apple Developer and add these repository secrets:
 
-- `IOS_SIGNING_STYLE=manual`
 - `IOS_DISTRIBUTION_CERTIFICATE_BASE64`
   - Base64-encoded `.p12` Apple Distribution certificate.
 - `IOS_DISTRIBUTION_CERTIFICATE_PASSWORD`
   - Password for the `.p12`.
-- `IOS_CUSTOMER_APP_STORE_PROFILE_BASE64`
+- `IOS_KEYCHAIN_PASSWORD`
+  - Any strong temporary keychain password used by the workflow.
+- `IOS_CUSTOMER_PROVISIONING_PROFILE_BASE64`
   - Base64-encoded App Store `.mobileprovision` for `app.ride360.customer`.
-- `IOS_DRIVER_APP_STORE_PROFILE_BASE64`
+- `IOS_DRIVER_PROVISIONING_PROFILE_BASE64`
   - Base64-encoded App Store `.mobileprovision` for `app.ride360.driver`.
-- `IOS_APP_STORE_PROFILE_BASE64`
-  - Optional generic fallback profile secret if building only one app at a time.
+
+Useful local encoding commands:
+
+```bash
+base64 -i AppleDistribution.p12 | pbcopy
+base64 -i Ride360_Customer_AppStore.mobileprovision | pbcopy
+base64 -i Ride360_Driver_AppStore.mobileprovision | pbcopy
+```
 
 ## Apple Setup
 
@@ -83,10 +91,10 @@ Verify these identifiers exist in Apple Developer and App Store Connect:
 
 Create one App Store Connect app record for Ride 360 Customer and one for Ride 360 Driver. Both app records must be connected to Apple Team ID `5BB9G38XX8`.
 
-The workflow uses App Store signing with:
+The workflow uses manual App Store signing with:
 
-- `xcodebuild -allowProvisioningUpdates`
-- App Store Connect API key authentication
+- Apple Distribution `.p12` certificate
+- App Store provisioning profile
 - Team ID `5BB9G38XX8`
 
 The workflow is intentionally written so that no local Mac signing setup is needed.

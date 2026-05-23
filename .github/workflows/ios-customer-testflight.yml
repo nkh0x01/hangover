@@ -29,6 +29,45 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Verify manual signing secrets
+        env:
+          IOS_DISTRIBUTION_CERTIFICATE_BASE64: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
+          IOS_DISTRIBUTION_CERTIFICATE_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}
+          IOS_CUSTOMER_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_CUSTOMER_PROVISIONING_PROFILE_BASE64 }}
+          IOS_KEYCHAIN_PASSWORD: ${{ secrets.IOS_KEYCHAIN_PASSWORD }}
+        run: |
+          missing=0
+
+          if [ -n "${IOS_DISTRIBUTION_CERTIFICATE_BASE64:-}" ]; then
+            echo "manual certificate secret present: yes"
+          else
+            echo "manual certificate secret present: no"
+            missing=1
+          fi
+
+          if [ -n "${IOS_CUSTOMER_PROVISIONING_PROFILE_BASE64:-}" ]; then
+            echo "customer provisioning profile secret present: yes"
+          else
+            echo "customer provisioning profile secret present: no"
+            missing=1
+          fi
+
+          if [ -n "${IOS_DISTRIBUTION_CERTIFICATE_PASSWORD:-}" ]; then
+            echo "certificate password secret present: yes"
+          else
+            echo "certificate password secret present: no"
+            missing=1
+          fi
+
+          if [ -n "${IOS_KEYCHAIN_PASSWORD:-}" ]; then
+            echo "keychain password secret present: yes"
+          else
+            echo "keychain password secret present: no"
+            missing=1
+          fi
+
+          exit "$missing"
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -42,6 +81,10 @@ jobs:
           APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           IOS_MAPS_API_KEY: ${{ secrets.IOS_MAPS_API_KEY }}
+          IOS_DISTRIBUTION_CERTIFICATE_BASE64: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
+          IOS_DISTRIBUTION_CERTIFICATE_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}
+          IOS_CUSTOMER_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_CUSTOMER_PROVISIONING_PROFILE_BASE64 }}
+          IOS_KEYCHAIN_PASSWORD: ${{ secrets.IOS_KEYCHAIN_PASSWORD }}
           API_BASE_URL: https://ride.365sakartvelo.com
           RIDE360_RELEASE_BUILD: "true"
           DEV_BYPASS_ENABLED: "false"
