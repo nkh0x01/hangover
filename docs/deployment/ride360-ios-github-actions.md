@@ -47,6 +47,27 @@ Create these repository secrets in GitHub:
 
 The App Store Connect API key must have access to both Ride 360 apps and enough permission to manage signing and upload TestFlight builds, typically App Manager or Admin.
 
+## Signing
+
+Default signing mode is automatic:
+
+- The archive step disables archive-time code signing so Xcode does not request an iOS App Development provisioning profile or registered devices.
+- The export step uses `method=app-store-connect`, `signingStyle=automatic`, App Store Connect API key authentication, and Team ID `5BB9G38XX8`.
+
+If automatic export signing cannot create or download the App Store provisioning profile on the GitHub runner, create App Store distribution signing assets in Apple Developer and add these optional secrets:
+
+- `IOS_SIGNING_STYLE=manual`
+- `IOS_DISTRIBUTION_CERTIFICATE_BASE64`
+  - Base64-encoded `.p12` Apple Distribution certificate.
+- `IOS_DISTRIBUTION_CERTIFICATE_PASSWORD`
+  - Password for the `.p12`.
+- `IOS_CUSTOMER_APP_STORE_PROFILE_BASE64`
+  - Base64-encoded App Store `.mobileprovision` for `app.ride360.customer`.
+- `IOS_DRIVER_APP_STORE_PROFILE_BASE64`
+  - Base64-encoded App Store `.mobileprovision` for `app.ride360.driver`.
+- `IOS_APP_STORE_PROFILE_BASE64`
+  - Optional generic fallback profile secret if building only one app at a time.
+
 ## Apple Setup
 
 Verify these identifiers exist in Apple Developer and App Store Connect:
@@ -56,13 +77,13 @@ Verify these identifiers exist in Apple Developer and App Store Connect:
 
 Create one App Store Connect app record for Ride 360 Customer and one for Ride 360 Driver. Both app records must be connected to Apple Team ID `5BB9G38XX8`.
 
-The workflow uses automatic signing with:
+The workflow uses App Store signing with:
 
 - `xcodebuild -allowProvisioningUpdates`
 - App Store Connect API key authentication
 - Team ID `5BB9G38XX8`
 
-If Apple blocks automatic certificate/profile creation for the API key, create the iOS Distribution signing assets in the Apple Developer portal and retry. The workflow is intentionally written so that no local Mac signing setup is needed.
+The workflow is intentionally written so that no local Mac signing setup is needed.
 
 ## Google Maps
 
