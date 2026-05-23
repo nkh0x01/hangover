@@ -155,6 +155,14 @@ def runner_release_config?(config)
   %w[Release Profile].include?(config.name)
 end
 
+def clear_signing_identity(settings)
+  settings.delete('CODE_SIGN_IDENTITY')
+  settings.delete('CODE_SIGN_IDENTITY[sdk=appletvos*]')
+  settings.delete('CODE_SIGN_IDENTITY[sdk=iphoneos*]')
+  settings.delete('CODE_SIGN_IDENTITY[sdk=watchos*]')
+  settings.delete('EXPANDED_CODE_SIGN_IDENTITY')
+end
+
 def disable_target_signing(target)
   target.build_configurations.each do |config|
     settings = config.build_settings
@@ -175,13 +183,12 @@ def configure_runner_target(target, bundle_id, team_id)
     settings['CODE_SIGN_STYLE'] = 'Automatic'
     settings['DEVELOPMENT_TEAM'] = team_id
     settings['PRODUCT_BUNDLE_IDENTIFIER'] = bundle_id
+    clear_signing_identity(settings)
 
     next unless runner_release_config?(config)
 
-    settings['CODE_SIGN_IDENTITY[sdk=iphoneos*]'] = 'Apple Distribution'
     settings.delete('CODE_SIGNING_ALLOWED')
     settings.delete('CODE_SIGNING_REQUIRED')
-    settings.delete('EXPANDED_CODE_SIGN_IDENTITY')
     settings.delete('PROVISIONING_PROFILE')
     settings.delete('PROVISIONING_PROFILE_SPECIFIER')
   end
@@ -190,6 +197,10 @@ end
 runner_project = Xcodeproj::Project.open(runner_project_path)
 runner_target = runner_project.targets.find { |target| target.name == 'Runner' }
 abort("Runner target not found in #{runner_project_path}") unless runner_target
+
+runner_project.build_configurations.each do |config|
+  clear_signing_identity(config.build_settings)
+end
 
 runner_project.targets.each do |target|
   if target.name == 'Runner'
@@ -210,6 +221,24 @@ if File.directory?(pods_project_path)
 end
 RUBY
   ok "Runner uses automatic signing; dependency target signing is disabled"
+}
+
+print_archive_debug() {
+  log "Archive command"
+  printf ' '
+  printf '%q ' "$@"
+  printf '\n'
+
+  log "Signing identity scan"
+  (
+    cd "$REPO_ROOT"
+    apple_distribution_pattern="Apple Distrib""ution"
+    grep -R "CODE_SIGN_IDENTITY\\|$apple_distribution_pattern" \
+      .github \
+      mobile/scripts \
+      mobile/apps/customer_app/ios \
+      mobile/apps/driver_app/ios || true
+  )
 }
 
 write_export_options() {
@@ -245,14 +274,20 @@ archive_and_export() {
     -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID"
   )
 
-  xcodebuild archive \
+  local archive_cmd=(
+    xcodebuild archive
     -workspace "$IOS_DIR/Runner.xcworkspace" \
     -scheme Runner \
     -configuration Release \
     -destination "generic/platform=iOS" \
     -archivePath "$ARCHIVE_PATH" \
     "${auth_args[@]}" \
-    MAPS_API_KEY="$IOS_MAPS_API_KEY"
+    DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+    CODE_SIGN_STYLE=Automatic
+  )
+
+  print_archive_debug "${archive_cmd[@]}"
+  "${archive_cmd[@]}"
 
   log "Export signed IPA"
   xcodebuild -exportArchive \
