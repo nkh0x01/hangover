@@ -32,6 +32,9 @@ final readonly class SetDriverOnline
         }
 
         $vehicleId ??= $driver->current_vehicle_id;
+        $vehicleId ??= $driver->vehicles()
+            ->where('is_active', true)
+            ->value('id');
         if (! $vehicleId) {
             throw new class('No active vehicle on file.') extends DomainException
             {

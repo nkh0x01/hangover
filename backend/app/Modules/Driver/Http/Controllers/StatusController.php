@@ -7,11 +7,11 @@ namespace App\Modules\Driver\Http\Controllers;
 use App\Modules\Driver\Actions\SetDriverOffline;
 use App\Modules\Driver\Actions\SetDriverOnline;
 use App\Modules\Driver\Http\Requests\SetOnlineRequest;
+use App\Support\Exceptions\DomainException;
 use App\Support\Geo\Point;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 
 final class StatusController extends Controller
 {
@@ -19,7 +19,7 @@ final class StatusController extends Controller
     {
         $driver = $request->user()->driver;
         if (! $driver) {
-            throw new HttpException(404, 'driver.not_found');
+            throw $this->driverNotFound();
         }
 
         $vehicleId = $request->input('vehicle_id');
@@ -41,11 +41,27 @@ final class StatusController extends Controller
     {
         $driver = $request->user()->driver;
         if (! $driver) {
-            throw new HttpException(404, 'driver.not_found');
+            throw $this->driverNotFound();
         }
 
         $action->execute($driver);
 
         return new JsonResponse(['data' => ['online' => false]]);
+    }
+
+    private function driverNotFound(): DomainException
+    {
+        return new class('Driver profile not found.') extends DomainException
+        {
+            public function code(): string
+            {
+                return 'driver.not_found';
+            }
+
+            public function status(): int
+            {
+                return 404;
+            }
+        };
     }
 }

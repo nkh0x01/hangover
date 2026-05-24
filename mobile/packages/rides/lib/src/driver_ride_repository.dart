@@ -9,15 +9,33 @@ class DriverRideRepository {
 
   final ApiClient client;
 
-  Future<void> goOnline({required LatLng position, int? vehicleId}) async {
-    await client.dio.post('/driver/status/online', data: {
+  static const onlinePath = '/driver/status/online';
+  static const offlinePath = '/driver/status/offline';
+  static const locationPath = '/driver/location';
+
+  Future<DriverOnlineResult> goOnline({
+    required LatLng position,
+    int? vehicleId,
+  }) async {
+    final response = await client.dio.post(onlinePath, data: {
       'lat': position.lat,
       'lng': position.lng,
       if (vehicleId != null) 'vehicle_id': vehicleId,
     });
+    final envelope = (response.data as Map?)?.cast<String, Object?>() ?? {};
+    final data = (envelope['data'] as Map?)?.cast<String, Object?>() ?? {};
+    return DriverOnlineResult(
+      online: data['online'] == true,
+      onlineSince: data['online_since'] as String?,
+      statusCode: response.statusCode,
+      body: envelope,
+    );
   }
 
-  Future<void> goOffline() => client.dio.post('/driver/status/offline');
+  Future<int?> goOffline() async {
+    final response = await client.dio.post(offlinePath);
+    return response.statusCode;
+  }
 
   Future<void> heartbeat({
     required LatLng position,
@@ -26,7 +44,7 @@ class DriverRideRepository {
     double? accuracyM,
     int? batteryPct,
   }) async {
-    await client.dio.post('/driver/location', data: {
+    await client.dio.post(locationPath, data: {
       'lat': position.lat,
       'lng': position.lng,
       'heading': heading,
@@ -65,8 +83,10 @@ class DriverRideRepository {
     return _parseRide(response.data as Map<String, Object?>);
   }
 
-  Future<Ride> complete(String ulid, {double? finalAmount, int? waitingSeconds}) async {
-    final response = await client.dio.post('/driver/rides/$ulid/complete', data: {
+  Future<Ride> complete(String ulid,
+      {double? finalAmount, int? waitingSeconds}) async {
+    final response =
+        await client.dio.post('/driver/rides/$ulid/complete', data: {
       if (finalAmount != null) 'final_amount': finalAmount,
       if (waitingSeconds != null) 'waiting_seconds': waitingSeconds,
     });
@@ -74,7 +94,8 @@ class DriverRideRepository {
   }
 
   Future<Ride> cancel(String ulid, String reason) async {
-    final response = await client.dio.patch('/driver/rides/$ulid/cancel', data: {'reason': reason});
+    final response = await client.dio
+        .patch('/driver/rides/$ulid/cancel', data: {'reason': reason});
     return _parseRide(response.data as Map<String, Object?>);
   }
 
@@ -82,4 +103,18 @@ class DriverRideRepository {
     final data = (envelope['data'] as Map).cast<String, Object?>();
     return Ride.fromJson(data);
   }
+}
+
+class DriverOnlineResult {
+  const DriverOnlineResult({
+    required this.online,
+    this.onlineSince,
+    this.statusCode,
+    this.body = const {},
+  });
+
+  final bool online;
+  final String? onlineSince;
+  final int? statusCode;
+  final Map<String, Object?> body;
 }

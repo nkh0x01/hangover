@@ -52,11 +52,23 @@ final class TokenIssuer
     {
         return match ($user->type) {
             'customer' => ['customer'],
-            'driver' => $user->relationLoaded('driver') && $user->driver?->status === 'approved'
-                ? ['driver']
-                : ['driver:onboarding'],
+            'driver' => $this->driverAbilitiesFor($user),
             'admin', 'dispatcher' => ['admin'],
             default => [],
         };
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function driverAbilitiesFor(User $user): array
+    {
+        $driver = $user->relationLoaded('driver')
+            ? $user->driver
+            : $user->driver()->first();
+
+        return $driver?->status === 'approved'
+            ? ['driver']
+            : ['driver:onboarding'];
     }
 }
