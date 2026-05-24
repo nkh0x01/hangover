@@ -68,6 +68,9 @@ jobs:
 
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
+        env:
+          APP_ENV: testing
+          BROADCAST_CONNECTION: log
 
       - name: Prepare environment
         run: |
