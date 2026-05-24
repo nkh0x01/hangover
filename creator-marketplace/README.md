@@ -141,15 +141,52 @@ Behavior:
     recent orders, categories, featured creators, users).
 13. ✅ About, Contact, FAQ pages.
 
+## Payments — Bank of Georgia e-commerce
+
+Direct on-platform card payments are wired end-to-end behind a generic
+`PaymentProvider` interface (`lib/payments/types.ts`) with two
+implementations:
+
+- `bogProvider` — the real Bank of Georgia e-commerce flow
+  (OAuth2 → create order → hosted 3DS → webhook → refund) in `lib/payments/bog.ts`
+- `mockProvider` — a local hosted page at `/payments/mock-bog/[id]` that
+  mimics BOG so the entire flow runs in dev with no credentials
+
+Select with `PAYMENTS_PROVIDER=bog|mock` in `.env`. With `mock` (default):
+
+1. Client clicks **გადახდა** on `/checkout/[serviceId]` → `POST /api/payments/create`
+2. The provider returns a `redirectUrl` to the mock BOG page
+3. User clicks Pay → `POST /api/payments/webhook/bog` flips status `created → held`
+4. User is redirected to `/payments/return/[paymentId]` showing escrow confirmation
+5. After delivery + client approval → `POST /api/payments/release` triggers
+   creator payout (real BOG impl uses the Business payout API; commission
+   deducted automatically)
+6. Disputes → `POST /api/payments/refund`
+
+Lifecycle: `created → processing → held → released | refunded | failed`.
+
+Real-mode setup:
+
+```bash
+PAYMENTS_PROVIDER=bog
+BOG_CLIENT_ID=<from business.bog.ge>
+BOG_CLIENT_SECRET=<from business.bog.ge>
+BOG_CALLBACK_SECRET=<shared secret for webhook HMAC>
+```
+
+The webhook handler verifies `callback-signature` against an HMAC-SHA256
+of the raw body when not in mock mode. Idempotency is enforced via
+`markEventSeen(eventId)` so duplicate deliveries from BOG don't double-
+update.
+
 ## Scaling later
 
 - **Auth**: swap the link-only register/login into NextAuth (Google,
   Apple, magic-link) + add Prisma adapter — the schema's `User` model is
   ready.
-- **Payments**: swap the placeholder "pay" link for Bank of Georgia /
-  TBC e-commerce flow (BOG API, TBC IPay) or Stripe. The `Payment` model
-  and commission math (`PLATFORM_COMMISSION_PERCENT = 12`) are already
-  in place.
+- **More payment providers**: drop a new file next to `lib/payments/bog.ts`
+  that exports a `PaymentProvider`, then add it to `getProvider()`. TBC
+  iPay and Stripe (with GEL forex) are the obvious next targets.
 - **Real-time messaging**: add Pusher / Ably / Soketi and a `MessageEvent`
   table; the `Conversation` + `Message` Prisma models are already keyed
   by order.
