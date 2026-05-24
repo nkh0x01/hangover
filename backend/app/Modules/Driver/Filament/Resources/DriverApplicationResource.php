@@ -293,8 +293,10 @@ final class DriverApplicationResource extends Resource
     {
         return [
             'draft' => 'მონახაზი',
+            'needs_completion' => 'შესავსებია',
             'submitted' => 'გაგზავნილი',
             'pending' => 'განხილვაშია',
+            'manual_review' => 'ხელით შემოწმება',
             'needs_changes' => 'ცვლილებები საჭიროა',
             'approved' => 'დამტკიცებული',
             'rejected' => 'უარყოფილი',
@@ -574,7 +576,8 @@ final class DriverApplicationResource extends Resource
         return match ($state) {
             'approved' => 'success',
             'rejected' => 'danger',
-            'submitted', 'pending', 'needs_changes' => 'warning',
+            'submitted', 'pending', 'manual_review', 'needs_changes' => 'warning',
+            'needs_completion' => 'info',
             default => 'gray',
         };
     }

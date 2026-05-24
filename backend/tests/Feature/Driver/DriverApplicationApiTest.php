@@ -7,7 +7,10 @@ use App\Modules\Driver\Models\DriverApplication;
 use App\Modules\Driver\Models\Vehicle;
 use App\Modules\Geo\Models\City;
 use App\Modules\Identity\Models\User;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
+use Tests\TestCase;
 
 function actingDriver(array $overrides = []): User
 {
@@ -63,6 +66,8 @@ it('lets an approved driver with an active vehicle go online', function (): void
 
 it('submitting a registration creates a pending application', function (): void {
     actingDriver();
+    Storage::fake('local');
+    config(['drivers.docs_disk' => 'local']);
     $city = City::factory()->create();
 
     $this->postJson('/api/v1/driver/application', [
@@ -75,16 +80,71 @@ it('submitting a registration creates a pending application', function (): void 
         'vehicle_type' => 'scooter_petrol',
         'vehicle_brand' => 'Honda',
         'vehicle_model' => 'PCX',
+        'vehicle_year' => 2024,
+        'vehicle_color' => 'Black',
         'vehicle_plate' => 'AA-123',
         'information_confirmed' => true,
         'terms_accepted' => true,
         'privacy_accepted' => true,
     ])->assertCreated();
 
+    uploadDriverApplicationDocuments($this);
+
     $this->postJson('/api/v1/driver/application/submit')
         ->assertOk()
         ->assertJsonPath('data.status', 'pending')
-        ->assertJsonPath('driver_context.application_status', 'pending');
+        ->assertJsonPath('driver_context.application_status', 'pending')
+        ->assertJsonPath('driver_context.can_go_online', false);
+});
+
+it('marks incomplete application submissions as needs completion', function (): void {
+    actingDriver();
+
+    $this->postJson('/api/v1/driver/application', [
+        'first_name' => 'Giorgi',
+        'phone_e164' => '555123456',
+    ])->assertCreated()
+        ->assertJsonPath('data.phone_e164', '+995555123456');
+
+    $this->postJson('/api/v1/driver/application/submit')
+        ->assertOk()
+        ->assertJsonPath('data.status', 'needs_completion')
+        ->assertJsonPath('data.decision_reason', 'application.incomplete')
+        ->assertJsonPath('driver_context.application_status', 'needs_completion')
+        ->assertJsonPath('driver_context.can_submit_application', true)
+        ->assertJsonPath('driver_context.can_go_online', false);
+});
+
+it('does not auto approve complete applications by default', function (): void {
+    actingDriver();
+    Storage::fake('local');
+    config(['drivers.docs_disk' => 'local']);
+    $city = City::factory()->create();
+
+    $this->postJson('/api/v1/driver/application', [
+        'first_name' => 'Nino',
+        'last_name' => 'Driver',
+        'personal_id' => '12345678902',
+        'phone_e164' => '+995555123457',
+        'city_id' => $city->id,
+        'driver_type' => 'moto',
+        'vehicle_type' => 'scooter_petrol',
+        'vehicle_brand' => 'Yamaha',
+        'vehicle_model' => 'NMax',
+        'vehicle_year' => 2024,
+        'vehicle_color' => 'Yellow',
+        'vehicle_plate' => 'BB-123',
+        'information_confirmed' => true,
+        'terms_accepted' => true,
+        'privacy_accepted' => true,
+    ])->assertCreated();
+
+    uploadDriverApplicationDocuments($this);
+
+    $this->postJson('/api/v1/driver/application/submit')
+        ->assertOk()
+        ->assertJsonPath('data.status', 'pending')
+        ->assertJsonPath('data.can_auto_approve', false);
 });
 
 it('returns rejection reason for a rejected application', function (): void {
@@ -97,3 +157,13 @@ it('returns rejection reason for a rejected application', function (): void {
         ->assertJsonPath('data.driver_context.rejection_reason', 'ფოტო ბუნდოვანია')
         ->assertJsonPath('data.driver_context.can_go_online', false);
 });
+
+function uploadDriverApplicationDocuments(TestCase $test): void
+{
+    foreach (['id_front', 'id_back', 'license_front', 'license_back', 'vehicle_registration', 'vehicle_photo', 'selfie'] as $type) {
+        $test->post('/api/v1/driver/application/documents', [
+            'doc_type' => $type,
+            'file' => UploadedFile::fake()->image($type.'.jpg', 600, 400),
+        ])->assertCreated();
+    }
+}

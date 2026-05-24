@@ -13,7 +13,10 @@ use App\Modules\Riding\StateMachine\RideStatus;
 
 final readonly class DriverProfileSummary
 {
-    public function __construct(private DriverVerificationPresenter $verification) {}
+    public function __construct(
+        private DriverVerificationPresenter $verification,
+        private DriverApplicationStatusDecider $statusDecider,
+    ) {}
 
     /**
      * @return array<string, mixed>
@@ -48,6 +51,8 @@ final readonly class DriverProfileSummary
             'driver_profile_status' => $driver->status,
             'application_status' => $application?->status,
             'application_id' => $application?->id,
+            'needs_application' => false,
+            'can_submit_application' => false,
             'vehicle_status' => $vehicleStatus,
             'vehicle_id' => $vehicle?->id,
             'verification' => $verification,
@@ -57,7 +62,13 @@ final readonly class DriverProfileSummary
             'online_status' => $canGoOnline ? (bool) $driver->online : null,
             'rejection_reason' => ($application === null ? null : $application->rejection_reason) ?? $driver->approval_notes,
             'missing_required_fields' => [],
+            'missing_fields' => [],
             'missing_documents' => $verification['missing'] ?? [],
+            'profile_completeness' => [
+                'required_fields_missing' => 0,
+                'required_documents_missing' => count($verification['missing'] ?? []),
+                'ready_for_review' => true,
+            ],
         ];
     }
 
@@ -67,8 +78,10 @@ final readonly class DriverProfileSummary
     private function withoutDriver(?DriverApplication $application): array
     {
         $missing = [];
+        $missingDocuments = [];
         if ($application !== null) {
-            $missing = $this->missingApplicationFields($application);
+            $missing = $this->statusDecider->missingFields($application);
+            $missingDocuments = $this->statusDecider->missingDocuments($application);
         }
 
         return [
@@ -77,6 +90,9 @@ final readonly class DriverProfileSummary
             'driver_profile_status' => null,
             'application_status' => $application?->status,
             'application_id' => $application?->id,
+            'needs_application' => $application === null,
+            'can_submit_application' => $application === null
+                || in_array($application->status, ['draft', 'needs_completion', 'needs_changes', 'rejected'], true),
             'vehicle_status' => null,
             'vehicle_id' => null,
             'verification' => null,
@@ -86,9 +102,13 @@ final readonly class DriverProfileSummary
             'online_status' => null,
             'rejection_reason' => $application?->rejection_reason,
             'missing_required_fields' => $missing,
-            'missing_documents' => $application === null
-                ? []
-                : $this->missingApplicationDocuments($application),
+            'missing_fields' => $missing,
+            'missing_documents' => $missingDocuments,
+            'profile_completeness' => [
+                'required_fields_missing' => count($missing),
+                'required_documents_missing' => count($missingDocuments),
+                'ready_for_review' => $application !== null && $missing === [] && $missingDocuments === [],
+            ],
         ];
     }
 
@@ -117,8 +137,9 @@ final readonly class DriverProfileSummary
         }
 
         return match ($application->status) {
-            'draft' => 'application.draft',
+            'draft', 'needs_completion' => 'application.incomplete',
             'submitted', 'pending' => 'application.pending_review',
+            'manual_review' => 'application.manual_review',
             'rejected' => 'application.rejected',
             'needs_changes' => 'application.needs_changes',
             default => 'driver.no_profile',
@@ -134,49 +155,5 @@ final readonly class DriverProfileSummary
             ->sum('driver_earnings');
 
         return number_format((float) $sum, 2, '.', '');
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function missingApplicationFields(DriverApplication $application): array
-    {
-        $required = [
-            'first_name',
-            'last_name',
-            'personal_id',
-            'phone_e164',
-            'driver_type',
-            'vehicle_type',
-            'vehicle_brand',
-            'vehicle_model',
-            'vehicle_plate',
-        ];
-
-        return array_values(array_filter(
-            $required,
-            fn (string $field): bool => blank($application->{$field}),
-        ));
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function missingApplicationDocuments(DriverApplication $application): array
-    {
-        $uploaded = $application->documents()
-            ->whereIn('status', ['pending', 'approved'])
-            ->pluck('doc_type')
-            ->all();
-
-        return array_values(array_diff([
-            'id_front',
-            'id_back',
-            'license_front',
-            'license_back',
-            'vehicle_registration',
-            'vehicle_photo',
-            'selfie',
-        ], $uploaded));
     }
 }

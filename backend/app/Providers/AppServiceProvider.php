@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Support\Idempotency\IdempotencyStore;
+use App\Support\Phone\GeorgianPhoneNumber;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -48,7 +49,7 @@ final class AppServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('auth.otp', function (Request $request) {
-            $phone = (string) $request->input('phone', '');
+            $phone = GeorgianPhoneNumber::normalizeOrOriginal((string) $request->input('phone', ''));
 
             return [
                 Limit::perMinute(3)->by('otp:ip:'.$request->ip()),
@@ -57,7 +58,7 @@ final class AppServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('auth.verify', function (Request $request) {
-            $phone = (string) $request->input('phone', '');
+            $phone = GeorgianPhoneNumber::normalizeOrOriginal((string) $request->input('phone', ''));
 
             return [Limit::perMinutes(10, 6)->by('verify:phone:'.$phone)];
         });

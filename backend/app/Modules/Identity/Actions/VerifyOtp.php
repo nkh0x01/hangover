@@ -49,8 +49,17 @@ final readonly class VerifyOtp
                     'status' => 'active',
                     'referral_code' => strtoupper(substr(Ulid::new(), 0, 8)),
                 ]);
-            } elseif ($user->phone_verified_at === null) {
-                $user->update(['phone_verified_at' => now()]);
+            } else {
+                $updates = [];
+                if ($user->phone_verified_at === null) {
+                    $updates['phone_verified_at'] = now();
+                }
+                if ($type === 'driver' && $user->type === 'customer') {
+                    $updates['type'] = 'driver';
+                }
+                if ($updates !== []) {
+                    $user->update($updates);
+                }
             }
 
             $device = UserDevice::query()->updateOrCreate(

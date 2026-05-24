@@ -6,6 +6,7 @@ namespace App\Modules\Communication\Sms;
 
 use App\Modules\Communication\Contracts\SmsGateway;
 use App\Modules\Communication\Contracts\SmsResult;
+use App\Support\Phone\GeorgianPhoneNumber;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Facades\Log;
@@ -27,10 +28,10 @@ final class SenderGeSmsGateway implements SmsGateway
         }
 
         try {
-            $phone = $this->normalizeGeorgianPhone($phoneE164);
+            $phone = GeorgianPhoneNumber::normalize($phoneE164);
         } catch (InvalidArgumentException $e) {
             Log::channel('sms')->warning('Sender.ge phone normalization failed', [
-                'phone' => $this->redactPhone($phoneE164),
+                'phone' => GeorgianPhoneNumber::mask($phoneE164),
                 'purpose' => $purpose,
                 'error' => $e->getMessage(),
             ]);
@@ -59,7 +60,7 @@ final class SenderGeSmsGateway implements SmsGateway
 
             $context = [
                 'endpoint' => $url,
-                'phone' => $this->redactPhone($phone),
+                'phone' => GeorgianPhoneNumber::mask($phone),
                 'purpose' => $purpose,
                 'sender' => $this->sender,
                 'http_status' => $status,
@@ -81,7 +82,7 @@ final class SenderGeSmsGateway implements SmsGateway
         } catch (GuzzleException $e) {
             Log::channel('sms')->warning('Sender.ge send failed', [
                 'endpoint' => $url,
-                'phone' => $this->redactPhone($phone),
+                'phone' => GeorgianPhoneNumber::mask($phone),
                 'purpose' => $purpose,
                 'sender' => $this->sender,
                 'error' => $e->getMessage(),
@@ -106,21 +107,6 @@ final class SenderGeSmsGateway implements SmsGateway
         return $base.'/api/send.php';
     }
 
-    private function normalizeGeorgianPhone(string $phone): string
-    {
-        $digits = preg_replace('/\D+/', '', $phone) ?? '';
-
-        if (strlen($digits) === 9 && str_starts_with($digits, '5')) {
-            return '+995'.$digits;
-        }
-
-        if (strlen($digits) === 12 && str_starts_with($digits, '9955')) {
-            return '+'.$digits;
-        }
-
-        throw new InvalidArgumentException('Sender.ge expects a Georgian mobile number: 5XXXXXXXX, 9955XXXXXXXX, or +9955XXXXXXXX.');
-    }
-
     private function isSuccessfulResponse(int $status, string $body): bool
     {
         if ($status < 200 || $status >= 300 || $body === '') {
@@ -128,17 +114,6 @@ final class SenderGeSmsGateway implements SmsGateway
         }
 
         return preg_match('/(error|invalid|fail|denied|incorrect|balance|blocked)/i', $body) !== 1;
-    }
-
-    private function redactPhone(string $phone): string
-    {
-        $digits = preg_replace('/\D+/', '', $phone) ?? '';
-
-        if (strlen($digits) <= 4) {
-            return '***';
-        }
-
-        return substr($digits, 0, 4).str_repeat('*', max(0, strlen($digits) - 6)).substr($digits, -2);
     }
 
     private function truncate(string $value, int $limit): string

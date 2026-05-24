@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Filament\Pages;
 
+use App\Modules\Communication\Models\SmsLog;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 
 final class AdminDiagnosticsPage extends Page
 {
@@ -39,6 +41,55 @@ final class AdminDiagnosticsPage extends Page
             'Queue connection' => (string) config('queue.default'),
             'Cache store' => (string) config('cache.default'),
             'SMS driver' => (string) config('sms.driver', 'unknown'),
+            'Sender.ge sender configured' => filled(config('sms.drivers.sender_ge.sender')) ? 'yes' : 'no',
+            'Sender.ge key configured' => filled(config('sms.drivers.sender_ge.api_key')) ? 'yes' : 'no',
         ];
+    }
+
+    /**
+     * @return array{sent: int, failed: int, total: int}
+     */
+    public function smsCounts(): array
+    {
+        if (! $this->smsLogHasDiagnostics()) {
+            return ['sent' => 0, 'failed' => 0, 'total' => 0];
+        }
+
+        return [
+            'sent' => SmsLog::query()->where('message_type', 'otp')->where('status', 'sent')->count(),
+            'failed' => SmsLog::query()->where('message_type', 'otp')->where('status', 'failed')->count(),
+            'total' => SmsLog::query()->where('message_type', 'otp')->count(),
+        ];
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function recentSmsAttempts(): array
+    {
+        if (! $this->smsLogHasDiagnostics()) {
+            return [];
+        }
+
+        return SmsLog::query()
+            ->latest('id')
+            ->limit(15)
+            ->get(['created_at', 'masked_phone', 'purpose', 'provider', 'status', 'error_reason', 'skip_reason'])
+            ->map(fn (SmsLog $log): array => [
+                'created_at' => $log->created_at?->timezone(config('app.timezone'))->format('Y-m-d H:i:s'),
+                'phone' => $log->masked_phone ?: '***',
+                'purpose' => $log->purpose,
+                'provider' => $log->provider,
+                'status' => $log->status,
+                'error' => $log->skip_reason ?: $log->error_reason,
+            ])
+            ->all();
+    }
+
+    private function smsLogHasDiagnostics(): bool
+    {
+        return Schema::hasTable('sms_log')
+            && Schema::hasColumn('sms_log', 'message_type')
+            && Schema::hasColumn('sms_log', 'masked_phone');
     }
 }

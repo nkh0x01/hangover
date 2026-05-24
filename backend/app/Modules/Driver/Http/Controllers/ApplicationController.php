@@ -6,8 +6,11 @@ namespace App\Modules\Driver\Http\Controllers;
 
 use App\Modules\Driver\Models\DriverApplication;
 use App\Modules\Driver\Models\DriverApplicationDocument;
+use App\Modules\Driver\Services\DriverApplicationApprovalService;
+use App\Modules\Driver\Services\DriverApplicationStatusDecider;
 use App\Modules\Driver\Services\DriverProfileSummary;
 use App\Modules\Identity\Models\User;
+use App\Support\Phone\GeorgianPhoneNumber;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -19,7 +22,11 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 final readonly class ApplicationController
 {
-    public function __construct(private DriverProfileSummary $summary) {}
+    public function __construct(
+        private DriverProfileSummary $summary,
+        private DriverApplicationStatusDecider $statusDecider,
+        private DriverApplicationApprovalService $approvalService,
+    ) {}
 
     public function show(Request $request): JsonResponse
     {
@@ -54,23 +61,27 @@ final readonly class ApplicationController
     public function submit(Request $request): JsonResponse
     {
         $application = $this->applicationFor($request, create: true);
-        $missing = $this->missingFields($application);
+        $user = $this->user($request);
+        $decision = $this->statusDecider->decide($application, $user);
 
-        if ($missing !== []) {
-            throw new HttpException(422, 'driver.application_incomplete');
+        if ($decision['status'] === 'approved' && $decision['can_auto_approve']) {
+            $application = $this->approvalService->approve($application, reviewerUserId: null, autoApproved: true);
+        } else {
+            $application->update([
+                'status' => $decision['status'],
+                'submitted_at' => in_array($decision['status'], ['pending', 'manual_review'], true)
+                    ? now()
+                    : $application->submitted_at,
+                'rejection_reason' => null,
+                'admin_note' => $decision['reason'],
+                'reviewed_at' => null,
+                'reviewed_by_user_id' => null,
+            ]);
         }
-
-        $application->update([
-            'status' => 'pending',
-            'submitted_at' => now(),
-            'rejection_reason' => null,
-            'reviewed_at' => null,
-            'reviewed_by_user_id' => null,
-        ]);
 
         return new JsonResponse([
             'data' => $this->serialize($application->refresh()),
-            'driver_context' => $this->summary->forUser($this->user($request)),
+            'driver_context' => $this->summary->forUser($user),
         ]);
     }
 
@@ -131,6 +142,12 @@ final readonly class ApplicationController
 
     private function upsert(Request $request): DriverApplication
     {
+        if ($request->has('phone_e164')) {
+            $request->merge([
+                'phone_e164' => GeorgianPhoneNumber::normalizeOrOriginal((string) $request->input('phone_e164')),
+            ]);
+        }
+
         $data = $request->validate([
             'first_name' => ['nullable', 'string', 'max:80'],
             'last_name' => ['nullable', 'string', 'max:80'],
@@ -156,14 +173,15 @@ final readonly class ApplicationController
         ]);
 
         $application = $this->applicationFor($request, create: true);
-        if (in_array($application->status, ['submitted', 'pending', 'approved'], true)) {
+        if (in_array($application->status, ['submitted', 'pending', 'manual_review', 'approved'], true)) {
             throw new HttpException(409, 'driver.application_locked');
         }
 
         $application->fill($data);
-        if (in_array($application->status, ['rejected', 'needs_changes'], true)) {
+        if (in_array($application->status, ['rejected', 'needs_changes', 'needs_completion'], true)) {
             $application->status = 'draft';
             $application->rejection_reason = null;
+            $application->admin_note = null;
             $application->reviewed_at = null;
             $application->reviewed_by_user_id = null;
         }
@@ -209,30 +227,7 @@ final readonly class ApplicationController
      */
     private function missingFields(DriverApplication $application): array
     {
-        $required = [
-            'first_name',
-            'last_name',
-            'personal_id',
-            'phone_e164',
-            'driver_type',
-            'vehicle_type',
-            'vehicle_brand',
-            'vehicle_model',
-            'vehicle_plate',
-        ];
-
-        $missing = array_values(array_filter(
-            $required,
-            fn (string $field): bool => blank($application->{$field}),
-        ));
-
-        foreach (['information_confirmed', 'terms_accepted', 'privacy_accepted'] as $field) {
-            if (! (bool) $application->{$field}) {
-                $missing[] = $field;
-            }
-        }
-
-        return $missing;
+        return $this->statusDecider->missingFields($application);
     }
 
     /**
@@ -240,7 +235,8 @@ final readonly class ApplicationController
      */
     private function serialize(DriverApplication $application): array
     {
-        $application->loadMissing('documents');
+        $application->loadMissing(['documents', 'user']);
+        $decision = $this->statusDecider->decide($application, $application->user);
 
         return [
             'id' => $application->id,
@@ -270,6 +266,8 @@ final readonly class ApplicationController
             'admin_note' => $application->admin_note,
             'submitted_at' => $this->dateTimeString($application->submitted_at),
             'reviewed_at' => $this->dateTimeString($application->reviewed_at),
+            'decision_reason' => $decision['reason'],
+            'manual_review_reasons' => $decision['manual_review_reasons'],
             'documents' => $application->documents->map(fn (DriverApplicationDocument $document): array => [
                 'id' => $document->id,
                 'doc_type' => $document->doc_type,
@@ -278,6 +276,8 @@ final readonly class ApplicationController
                 'review_notes' => $document->review_notes,
             ])->values()->all(),
             'missing_required_fields' => $this->missingFields($application),
+            'missing_documents' => $this->statusDecider->missingDocuments($application),
+            'can_auto_approve' => $decision['can_auto_approve'],
         ];
     }
 

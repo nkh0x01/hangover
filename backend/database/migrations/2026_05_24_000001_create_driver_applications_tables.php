@@ -17,7 +17,7 @@ return new class extends Migration
             $t->foreignId('driver_id')->nullable()->constrained('drivers')->nullOnDelete();
             $t->foreignId('vehicle_id')->nullable()->constrained('vehicles')->nullOnDelete();
 
-            $t->enum('status', ['draft', 'submitted', 'pending', 'approved', 'rejected', 'needs_changes'])
+            $t->enum('status', ['draft', 'needs_completion', 'submitted', 'pending', 'manual_review', 'approved', 'rejected', 'needs_changes'])
                 ->default('draft')
                 ->index();
 
