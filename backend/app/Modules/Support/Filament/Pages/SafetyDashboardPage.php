@@ -17,13 +17,15 @@ use Filament\Pages\Page;
  */
 final class SafetyDashboardPage extends Page
 {
-    protected static ?string $navigationGroup = 'Operations';
+    protected static ?string $navigationGroup = 'უსაფრთხოება';
+
+    protected static ?string $navigationLabel = 'უსაფრთხოების პანელი';
 
     protected static ?string $navigationIcon = 'heroicon-o-shield-check';
 
     protected static string $view = 'filament.pages.safety-dashboard';
 
-    protected static ?string $title = 'Safety dashboard';
+    protected static ?string $title = 'უსაფრთხოების პანელი';
 
     protected static ?int $navigationSort = 2;
 

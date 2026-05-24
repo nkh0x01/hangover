@@ -18,7 +18,13 @@ final class VehicleResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-truck';
 
-    protected static ?string $navigationGroup = 'Drivers';
+    protected static ?string $navigationGroup = 'ტრანსპორტი';
+
+    protected static ?string $navigationLabel = 'ტრანსპორტი';
+
+    protected static ?string $modelLabel = 'ტრანსპორტი';
+
+    protected static ?string $pluralModelLabel = 'ტრანსპორტი';
 
     protected static ?int $navigationSort = 30;
 
@@ -31,6 +37,7 @@ final class VehicleResource extends Resource
                 'scooter_petrol' => 'Scooter (petrol)',
                 'moped' => 'Moped',
                 'bicycle_electric' => 'E-bike',
+                'car' => 'Car',
             ])->required(),
             Forms\Components\TextInput::make('brand')->required()->maxLength(60),
             Forms\Components\TextInput::make('model')->required()->maxLength(60),

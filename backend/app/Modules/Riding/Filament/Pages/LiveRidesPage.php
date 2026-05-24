@@ -16,13 +16,15 @@ final class LiveRidesPage extends Page implements HasTable
 {
     use InteractsWithTable;
 
-    protected static ?string $navigationGroup = 'Operations';
+    protected static ?string $navigationGroup = 'მგზავრობები';
+
+    protected static ?string $navigationLabel = 'აქტიური მგზავრობები';
 
     protected static ?string $navigationIcon = 'heroicon-o-bolt';
 
     protected static string $view = 'filament.pages.live-rides';
 
-    protected static ?string $title = 'Active rides';
+    protected static ?string $title = 'აქტიური მგზავრობები';
 
     protected static ?int $navigationSort = 1;
 

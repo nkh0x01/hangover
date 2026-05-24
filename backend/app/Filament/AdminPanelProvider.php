@@ -12,6 +12,7 @@ use Filament\Navigation\NavigationGroup;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Enums\MaxWidth;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -28,10 +29,16 @@ final class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->default()
             ->login()
-            ->brandName('Hangover Mobility')
+            ->brandName('Ride 360 Admin')
+            ->sidebarCollapsibleOnDesktop()
+            ->maxContentWidth(MaxWidth::Full)
             ->colors([
                 'primary' => Color::Emerald,
             ])
+            ->discoverPages(
+                in: app_path('Filament/Pages'),
+                for: 'App\\Filament\\Pages',
+            )
             ->discoverResources(
                 in: app_path('Modules'),
                 for: 'App\\Modules',
@@ -45,16 +52,15 @@ final class AdminPanelProvider extends PanelProvider
                 for: 'App\\Modules',
             )
             ->navigationGroups([
-                NavigationGroup::make('Operations')->collapsible(false),
-                NavigationGroup::make('Drivers'),
-                NavigationGroup::make('Rides'),
-                NavigationGroup::make('Customers'),
-                NavigationGroup::make('Finance'),
-                NavigationGroup::make('Pricing'),
-                NavigationGroup::make('Promotions'),
-                NavigationGroup::make('Support'),
-                NavigationGroup::make('CMS'),
-                NavigationGroup::make('System'),
+                NavigationGroup::make('პანელი')->collapsible(false),
+                NavigationGroup::make('მძღოლები')->collapsible(false),
+                NavigationGroup::make('ტრანსპორტი'),
+                NavigationGroup::make('მგზავრობები'),
+                NavigationGroup::make('მომხმარებლები'),
+                NavigationGroup::make('ფინანსები'),
+                NavigationGroup::make('უსაფრთხოება'),
+                NavigationGroup::make('პარამეტრები'),
+                NavigationGroup::make('დიაგნოსტიკა'),
             ])
             ->middleware([
                 EncryptCookies::class,

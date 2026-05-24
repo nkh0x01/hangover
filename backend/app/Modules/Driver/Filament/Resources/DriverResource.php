@@ -18,7 +18,13 @@ final class DriverResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-identification';
 
-    protected static ?string $navigationGroup = 'Drivers';
+    protected static ?string $navigationGroup = 'მძღოლები';
+
+    protected static ?string $navigationLabel = 'მძღოლები';
+
+    protected static ?string $modelLabel = 'მძღოლი';
+
+    protected static ?string $pluralModelLabel = 'მძღოლები';
 
     protected static ?int $navigationSort = 20;
 

@@ -16,7 +16,13 @@ final class RideResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-map-pin';
 
-    protected static ?string $navigationGroup = 'Rides';
+    protected static ?string $navigationGroup = 'მგზავრობები';
+
+    protected static ?string $navigationLabel = 'მგზავრობები';
+
+    protected static ?string $modelLabel = 'მგზავრობა';
+
+    protected static ?string $pluralModelLabel = 'მგზავრობები';
 
     protected static ?int $navigationSort = 40;
 

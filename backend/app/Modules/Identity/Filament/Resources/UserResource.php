@@ -18,7 +18,13 @@ final class UserResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
 
-    protected static ?string $navigationGroup = 'Customers';
+    protected static ?string $navigationGroup = 'მომხმარებლები';
+
+    protected static ?string $navigationLabel = 'მომხმარებლები';
+
+    protected static ?string $modelLabel = 'მომხმარებელი';
+
+    protected static ?string $pluralModelLabel = 'მომხმარებლები';
 
     protected static ?int $navigationSort = 10;
 
