@@ -502,11 +502,13 @@ write_export_options() {
 <plist version="1.0">
 <dict>
   <key>method</key>
-  <string>app-store-connect</string>
+  <string>app-store</string>
   <key>teamID</key>
   <string>$APPLE_TEAM_ID</string>
   <key>signingStyle</key>
   <string>manual</string>
+  <key>signingCertificate</key>
+  <string>Apple Distribution</string>
   <key>provisioningProfiles</key>
   <dict>
     <key>$BUNDLE_ID</key>
@@ -517,6 +519,27 @@ write_export_options() {
 </dict>
 </plist>
 EOF_PLIST
+}
+
+print_manual_export_diagnostics() {
+  log "Manual signing diagnostics before export"
+  print_secret_presence "manual certificate secret present" "$MANUAL_SIGNING_CERT_SECRET"
+  print_secret_presence "$ROLE provisioning profile secret present" "$MANUAL_SIGNING_PROFILE_SECRET"
+  ok "profile UUID: $MANUAL_SIGNING_PROFILE_UUID"
+  ok "profile name: $MANUAL_SIGNING_PROFILE_NAME"
+  ok "profile bundle id: $MANUAL_SIGNING_PROFILE_BUNDLE_ID"
+  ok "profile team id: $MANUAL_SIGNING_PROFILE_TEAM_ID"
+  ok "expected bundle id: $BUNDLE_ID"
+  ok "expected team id: $APPLE_TEAM_ID"
+
+  log "Available code signing identities"
+  security find-identity -v -p codesigning || true
+
+  log "Installed provisioning profile file"
+  ls -l "$MANUAL_PROFILE_DIR/$MANUAL_SIGNING_PROFILE_UUID.mobileprovision" || true
+
+  log "ExportOptions.plist before exportArchive"
+  sed -n '1,220p' "$EXPORT_OPTIONS"
 }
 
 print_signing_debug() {
@@ -558,6 +581,7 @@ archive_and_export() {
   "${archive_cmd[@]}"
 
   log "Export signed IPA"
+  print_manual_export_diagnostics
   xcodebuild -exportArchive \
     -archivePath "$ARCHIVE_PATH" \
     -exportPath "$EXPORT_PATH" \
