@@ -1,0 +1,74 @@
+@import url('https://fonts.bunny.net/css?family=noto-sans-georgian:400,500,600,700|noto-serif-georgian:600,700');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    html {
+        font-family: 'Noto Sans Georgian', 'Inter', system-ui, sans-serif;
+        @apply text-brand-ink;
+    }
+
+    body {
+        @apply bg-brand-cream antialiased;
+    }
+
+    h1, h2, h3, h4 {
+        font-family: 'Noto Serif Georgian', Georgia, serif;
+        font-weight: 700;
+    }
+}
+
+@layer components {
+    .btn {
+        @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-offset-2;
+    }
+
+    .btn-primary {
+        @apply btn bg-brand-red-500 text-white hover:bg-brand-red-600 focus:ring-brand-red-500;
+    }
+
+    .btn-secondary {
+        @apply btn border border-brand-ink bg-white text-brand-ink hover:bg-brand-ink hover:text-white focus:ring-brand-ink;
+    }
+
+    .btn-gold {
+        @apply btn bg-brand-gold text-brand-ink hover:bg-brand-gold-700 hover:text-white focus:ring-brand-gold;
+    }
+
+    .card {
+        @apply rounded-2xl bg-white shadow-card transition hover:shadow-card-lg;
+    }
+
+    .badge {
+        @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium;
+    }
+
+    .badge-georgia {
+        @apply badge bg-brand-cream-200 text-brand-ink;
+    }
+
+    .badge-verified {
+        @apply badge bg-brand-gold-50 text-brand-gold-700;
+    }
+
+    .badge-handmade {
+        @apply badge bg-brand-red-50 text-brand-red-700;
+    }
+
+    .section-title {
+        @apply font-display text-3xl text-brand-ink md:text-4xl;
+    }
+
+    .gold-rule::after {
+        content: '';
+        @apply mt-3 block h-1 w-12 bg-brand-gold;
+    }
+
+    .ornament-divider {
+        background-image: linear-gradient(to right, transparent 0, currentColor 50%, transparent 100%);
+        height: 1px;
+        @apply text-brand-gold opacity-30;
+    }
+}

@@ -1,0 +1,112 @@
+name: marketplace
+
+# Local dev stack for the Georgian small-entrepreneurs marketplace.
+# Isolated from the scooter platform's /backend stack — different project
+# name, different ports.
+
+services:
+  api:
+    image: php:8.4-fpm-alpine
+    container_name: marketplace-api
+    working_dir: /var/www/html
+    volumes:
+      - ./backend:/var/www/html:cached
+    ports:
+      - "8001:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    command: >
+      sh -c "apk add --no-cache git unzip libzip-dev oniguruma-dev icu-dev libxml2-dev curl-dev mariadb-dev autoconf gcc g++ make &&
+             docker-php-ext-install pdo pdo_mysql intl mbstring bcmath exif pcntl &&
+             pecl install redis && docker-php-ext-enable redis &&
+             curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer &&
+             composer install --no-interaction &&
+             php artisan serve --host=0.0.0.0 --port=8000"
+
+  mysql:
+    image: mysql:8.0
+    container_name: marketplace-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: marketplace
+      MYSQL_USER: marketplace
+      MYSQL_PASSWORD: marketplace
+    command:
+      - --default-authentication-plugin=caching_sha2_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-umarketplace", "-pmarketplace"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+    container_name: marketplace-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6380:6379"
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.10
+    container_name: marketplace-meilisearch
+    environment:
+      MEILI_ENV: development
+      MEILI_MASTER_KEY: masterKey
+    volumes:
+      - meili_data:/meili_data
+    ports:
+      - "7700:7700"
+
+  minio:
+    image: minio/minio:latest
+    container_name: marketplace-minio
+    environment:
+      MINIO_ROOT_USER: marketplace
+      MINIO_ROOT_PASSWORD: marketplace-secret
+    command: ["server", "/data", "--console-address", ":9001"]
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9002:9000"
+      - "9003:9001"
+
+  minio-bootstrap:
+    image: minio/mc:latest
+    container_name: marketplace-minio-bootstrap
+    depends_on: [minio]
+    entrypoint: >
+      sh -c "
+        sleep 3 &&
+        mc alias set local http://minio:9000 marketplace marketplace-secret &&
+        mc mb -p local/products       || true &&
+        mc mb -p local/seller-docs    || true &&
+        mc mb -p local/funding-docs   || true &&
+        mc mb -p local/avatars        || true &&
+        mc mb -p local/cms            || true &&
+        echo 'MinIO buckets ready'
+      "
+    restart: "no"
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: marketplace-mailpit
+    ports:
+      - "1026:1025"
+      - "8026:8025"
+
+volumes:
+  mysql_data:
+  redis_data:
+  meili_data:
+  minio_data:

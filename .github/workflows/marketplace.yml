@@ -1,0 +1,58 @@
+name: marketplace
+
+on:
+  push:
+    branches: [main, master, "claude/**"]
+    paths:
+      - "marketplace/**"
+      - ".github/workflows/marketplace.yml"
+  pull_request:
+    paths:
+      - "marketplace/**"
+      - ".github/workflows/marketplace.yml"
+
+concurrency:
+  group: marketplace-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: marketplace/backend
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: pdo, pdo_sqlite, sqlite3, mbstring, bcmath, exif, intl, gd, pcntl
+          coverage: none
+
+      - name: Cache composer
+        uses: actions/cache@v4
+        with:
+          path: marketplace/backend/vendor
+          key: composer-${{ hashFiles('marketplace/backend/composer.lock') }}
+
+      - name: Install composer deps
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Copy env
+        run: cp .env.example .env
+
+      - name: Generate APP_KEY
+        run: php artisan key:generate --force
+
+      - name: Storage link
+        run: php artisan storage:link
+
+      - name: Run migrations
+        run: php artisan migrate --force
+
+      - name: PHPUnit test suite
+        run: ./vendor/bin/phpunit --testdox
