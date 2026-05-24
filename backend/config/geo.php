@@ -22,6 +22,7 @@ return [
      * Hot driver index — Redis connection used by NearbyDriverIndex.
      */
     'index' => [
+        'enabled' => env('GEO_INDEX_ENABLED', true),
         'connection' => 'geo',
         'set_prefix' => 'drivers:online',
         'driver_meta_prefix' => 'driver',

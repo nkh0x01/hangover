@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Driver\Actions;
 
 use App\Modules\Driver\Models\Driver;
+use App\Modules\Driver\Services\DriverVerificationPresenter;
 use App\Modules\Geo\Services\NearbyDriverIndex;
 use App\Support\Exceptions\DomainException;
 use App\Support\Geo\Point;
@@ -12,11 +13,14 @@ use Illuminate\Support\Facades\DB;
 
 final readonly class SetDriverOnline
 {
-    public function __construct(private NearbyDriverIndex $index) {}
+    public function __construct(
+        private NearbyDriverIndex $index,
+        private DriverVerificationPresenter $verification,
+    ) {}
 
     public function execute(Driver $driver, Point $location, ?int $vehicleId = null): Driver
     {
-        if ($driver->status !== 'approved') {
+        if (! $this->verification->canAcceptOffers($driver)) {
             throw new class('Driver not approved.') extends DomainException
             {
                 public function code(): string

@@ -35,7 +35,7 @@ final class GeoServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        Route::middleware('api')->group(__DIR__.'/../routes/api.php');
+        Route::prefix('api')->middleware('api')->group(__DIR__.'/../routes/api.php');
 
         if ($this->app->runningInConsole()) {
             $this->commands([

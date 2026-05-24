@@ -55,6 +55,11 @@ final class SentryScrub
         return $event;
     }
 
+    public static function beforeSendTransaction(mixed $event, mixed $hint = null): mixed
+    {
+        return self::beforeSend($event, $hint);
+    }
+
     public static function mask(string $s): string
     {
         // Phone numbers (E.164-ish).

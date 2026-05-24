@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+use App\Support\Observability\SentryScrub;
 
 /*
  * Sentry config (sentry/sentry-laravel ^4.10).
@@ -49,8 +50,8 @@ return [
     'send_default_pii' => false,
 
     // Strip phone numbers + Sanctum tokens from breadcrumb messages.
-    'before_send' => [\App\Support\Observability\SentryScrub::class, 'beforeSend'],
-    'before_send_transaction' => null,
+    'before_send' => [SentryScrub::class, 'beforeSend'],
+    'before_send_transaction' => [SentryScrub::class, 'beforeSendTransaction'],
 
     // Default + extra integrations
     'integrations' => [],

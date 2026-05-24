@@ -26,7 +26,7 @@ final class RidingServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        Route::middleware('api')->group(__DIR__.'/../routes/api.php');
+        Route::prefix('api')->middleware('api')->group(__DIR__.'/../routes/api.php');
 
         Event::listen(RideOffered::class, [SendOfferPush::class, 'handle']);
     }

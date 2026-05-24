@@ -44,7 +44,13 @@ final driverRideRepositoryProvider = Provider<DriverRideRepository>((ref) {
   return DriverRideRepository(client: ref.watch(apiClientProvider));
 });
 
-final mapProviderProvider = Provider<MapProvider>((ref) => GoogleMapsProvider());
+final driverProfileRepositoryProvider =
+    Provider<DriverProfileRepository>((ref) {
+  return DriverProfileRepository(client: ref.watch(apiClientProvider));
+});
+
+final mapProviderProvider =
+    Provider<MapProvider>((ref) => GoogleMapsProvider());
 
 final appLoggerProvider = Provider<AppLogger>((ref) => AppLogger());
 

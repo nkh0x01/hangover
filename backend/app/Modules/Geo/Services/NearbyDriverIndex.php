@@ -25,6 +25,11 @@ final class NearbyDriverIndex
         return Redis::connection((string) config('geo.index.connection', 'geo'));
     }
 
+    private function enabled(): bool
+    {
+        return (bool) config('geo.index.enabled', true);
+    }
+
     private function key(int $cityId): string
     {
         return sprintf('%s:%d', (string) config('geo.index.set_prefix', 'drivers:online'), $cityId);
@@ -37,6 +42,10 @@ final class NearbyDriverIndex
 
     public function upsert(int $cityId, int $driverId, Point $point, int $heading, float $speedKmh, \DateTimeInterface $recordedAt): void
     {
+        if (! $this->enabled()) {
+            return;
+        }
+
         $conn = $this->connection();
 
         $conn->geoadd($this->key($cityId), $point->lng, $point->lat, "driver:{$driverId}");
@@ -52,6 +61,10 @@ final class NearbyDriverIndex
 
     public function remove(int $cityId, int $driverId): void
     {
+        if (! $this->enabled()) {
+            return;
+        }
+
         $conn = $this->connection();
         $conn->zrem($this->key($cityId), "driver:{$driverId}");
         $conn->del($this->metaKey($driverId));
@@ -62,6 +75,10 @@ final class NearbyDriverIndex
      */
     public function nearby(int $cityId, Point $center, float $radiusKm, int $limit = 20): array
     {
+        if (! $this->enabled()) {
+            return [];
+        }
+
         // Predis's typed GEOSEARCH command applies positional argument
         // validation that doesn't quite match the Redis 6.2+ surface
         // we want. Bypass via the raw command path — works identically

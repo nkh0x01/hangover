@@ -36,6 +36,10 @@
 	<string>Ride 360 Driver uses background location during active driver sessions and trips.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Ride 360 Driver uses your location to show pickup routes, drop-off routes, and nearby ride requests.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Ride 360 Driver uses the camera to attach driver application photos and documents.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Ride 360 Driver uses your photo library to attach driver application photos and documents.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

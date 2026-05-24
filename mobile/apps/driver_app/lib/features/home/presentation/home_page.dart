@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:maps/maps.dart';
 import 'package:rides/rides.dart';
 import 'package:ui_kit/ui_kit.dart';
 
 import '../../../di/locator.dart';
 import '../../demo/presentation/demo_stepper.dart';
+import '../../profile/state/driver_profile_controller.dart';
 import '../../ride/presentation/active_ride_sheet.dart';
 import '../../ride/presentation/incoming_offer_sheet.dart';
 import '../../shift/state/shift_controller.dart';
@@ -16,7 +18,7 @@ class HomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final shift = ref.watch(shiftProvider);
-    final mapProvider = ref.watch(mapProviderProvider);
+    final me = ref.watch(driverMeProvider);
     ref.listen<String?>(
       shiftProvider.select((value) => value.error),
       (previous, next) {
@@ -26,6 +28,42 @@ class HomePage extends ConsumerWidget {
       },
     );
 
+    return me.when(
+      loading: () => const Scaffold(body: LoadingState()),
+      error: (error, _) => _DriverStateScaffold(
+        title: 'სერვერთან კავშირი ვერ მოხერხდა',
+        body: error.toString(),
+        primaryLabel: 'თავიდან ცდა',
+        onPrimary: () => ref.invalidate(driverMeProvider),
+      ),
+      data: (profile) {
+        final driverContext = profile.context;
+        if (!driverContext.canShowDashboard) {
+          return _DriverOnboardingScaffold(context: driverContext);
+        }
+        return _DriverDashboard(
+          shift: shift,
+          mapProvider: ref.watch(mapProviderProvider),
+          driverContext: driverContext,
+        );
+      },
+    );
+  }
+}
+
+class _DriverDashboard extends ConsumerWidget {
+  const _DriverDashboard({
+    required this.shift,
+    required this.mapProvider,
+    required this.driverContext,
+  });
+
+  final ShiftState shift;
+  final MapProvider mapProvider;
+  final DriverContext driverContext;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       body: Stack(
         children: [
@@ -41,7 +79,8 @@ class HomePage extends ConsumerWidget {
                   const EdgeInsets.fromLTRB(Insets.l, Insets.l, Insets.l, 0),
               child: Column(
                 children: [
-                  _OnlineToggleBar(shift: shift),
+                  if (driverContext.canShowShiftControls)
+                    _OnlineToggleBar(shift: shift),
                   const SizedBox(height: Insets.s),
                   if (shift.error != null)
                     _DriverStateCard(shift: shift)
@@ -52,10 +91,17 @@ class HomePage extends ConsumerWidget {
                       (shift.locationStatus != 'permission not asked' &&
                           shift.locationStatus != 'granted'))
                     const SizedBox(height: Insets.s),
-                  const Align(
-                    alignment: Alignment.centerRight,
-                    child: _EarningsBadge(amount: 87.50, currency: 'GEL'),
-                  ),
+                  if (driverContext.canShowEarnings)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: _EarningsBadge(
+                        amount: double.tryParse(
+                              driverContext.todayEarnings ?? '0',
+                            ) ??
+                            0,
+                        currency: 'GEL',
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -77,6 +123,102 @@ class HomePage extends ConsumerWidget {
           const Align(
               alignment: Alignment.topCenter, child: DriverDemoStepper()),
         ],
+      ),
+    );
+  }
+}
+
+class _DriverOnboardingScaffold extends ConsumerWidget {
+  const _DriverOnboardingScaffold({required this.context});
+
+  final DriverContext context;
+
+  @override
+  Widget build(BuildContext pageContext, WidgetRef ref) {
+    final title = switch (context.state) {
+      DriverRuntimeState.noDriverProfile => 'მძღოლის პროფილი არ არის ნაპოვნი',
+      DriverRuntimeState.applicationDraft => 'განაცხადი დასასრულებელია',
+      DriverRuntimeState.applicationPending => 'განაცხადი განხილვაშია',
+      DriverRuntimeState.applicationRejected => 'განაცხადი უარყოფილია',
+      DriverRuntimeState.approvedMissingVehicle =>
+        'ტრანსპორტის მონაცემები დასამატებელია',
+      DriverRuntimeState.suspended => 'მძღოლის პროფილი შეჩერებულია',
+      _ => 'მძღოლის პროფილი არ არის აქტიური',
+    };
+    final body = switch (context.state) {
+      DriverRuntimeState.applicationPending =>
+        'თქვენი განაცხადი მიღებულია და ადმინისტრატორის შემოწმებას ელოდება.',
+      DriverRuntimeState.applicationRejected => context.rejectionReason ??
+          'გთხოვთ შეასწოროთ განაცხადი და გაგზავნოთ თავიდან.',
+      DriverRuntimeState.approvedMissingVehicle =>
+        'ონლაინ გასვლამდე საჭიროა აქტიური ტრანსპორტის დამატება ან დამტკიცება.',
+      DriverRuntimeState.suspended =>
+        'დამატებითი ინფორმაციისთვის დაუკავშირდით მხარდაჭერას.',
+      _ => 'მძღოლად მუშაობისთვის შეავსეთ განაცხადი და დაელოდეთ დამტკიცებას.',
+    };
+
+    return _DriverStateScaffold(
+      title: title,
+      body: body,
+      primaryLabel: context.state == DriverRuntimeState.applicationPending
+          ? 'ჩემი განაცხადი'
+          : 'მძღოლის განაცხადის შევსება',
+      onPrimary: () => pageContext.push('/application'),
+      secondaryLabel: 'Diagnostics',
+      onSecondary: () => pageContext.push('/diagnostics'),
+    );
+  }
+}
+
+class _DriverStateScaffold extends StatelessWidget {
+  const _DriverStateScaffold({
+    required this.title,
+    required this.body,
+    required this.primaryLabel,
+    required this.onPrimary,
+    this.secondaryLabel,
+    this.onSecondary,
+  });
+
+  final String title;
+  final String body;
+  final String primaryLabel;
+  final VoidCallback onPrimary;
+  final String? secondaryLabel;
+  final VoidCallback? onSecondary;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(Insets.xl),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Row(
+                children: [
+                  BrandLogo(size: BrandLogoSize.m),
+                  Spacer(),
+                  StatusPill(label: 'Driver', tone: StatusTone.accent),
+                ],
+              ),
+              const SizedBox(height: Insets.xxl),
+              Text(title, style: Theme.of(context).textTheme.headlineMedium),
+              const SizedBox(height: Insets.s),
+              Text(body, style: Theme.of(context).textTheme.bodyLarge),
+              const Spacer(),
+              PrimaryButton(label: primaryLabel, onPressed: onPrimary),
+              if (secondaryLabel != null && onSecondary != null) ...[
+                const SizedBox(height: Insets.s),
+                OutlinedButton(
+                  onPressed: onSecondary,
+                  child: Text(secondaryLabel!),
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -7,6 +7,7 @@ namespace App\Modules\Driver\Providers;
 use App\Modules\Driver\Actions\ReviewDriverDocument;
 use App\Modules\Driver\Actions\SubmitDriverDocument;
 use App\Modules\Driver\Actions\VerifyVehicle;
+use App\Modules\Driver\Services\DriverProfileSummary;
 use App\Modules\Driver\Services\DriverVerificationPresenter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -19,6 +20,7 @@ final class DriverServiceProvider extends ServiceProvider
         $this->app->singleton(ReviewDriverDocument::class);
         $this->app->singleton(VerifyVehicle::class);
         $this->app->singleton(DriverVerificationPresenter::class);
+        $this->app->singleton(DriverProfileSummary::class);
     }
 
     public function boot(): void
@@ -30,6 +32,6 @@ final class DriverServiceProvider extends ServiceProvider
 
     private function loadRoutesFromRoot(string $file): void
     {
-        Route::middleware('api')->group($file);
+        Route::prefix('api')->middleware('api')->group($file);
     }
 }

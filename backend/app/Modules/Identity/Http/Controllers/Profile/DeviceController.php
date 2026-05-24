@@ -8,6 +8,7 @@ use App\Modules\Identity\Actions\RegisterFcmToken;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Carbon;
 
 /**
  * Manages mobile-device records for the authenticated user. Phase 2
@@ -35,8 +36,19 @@ final class DeviceController extends Controller
             'data' => [
                 'device_id' => $device->device_uuid,
                 'push_enabled' => $device->push_enabled,
-                'registered_at' => $device->last_active_at?->toIso8601String(),
+                'registered_at' => $this->dateTimeString($device->last_active_at),
             ],
         ]);
+    }
+
+    private function dateTimeString(mixed $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return $value instanceof \DateTimeInterface
+            ? Carbon::instance($value)->toIso8601String()
+            : Carbon::parse((string) $value)->toIso8601String();
     }
 }

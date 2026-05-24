@@ -29,7 +29,8 @@ class _PhonePageState extends ConsumerState<PhonePage> {
           .read(authRepositoryProvider)
           .requestOtp(phone: _controller.text.trim(), purpose: 'driver_signup');
       if (!mounted) return;
-      context.go('/auth/otp?phone=${Uri.encodeComponent(_controller.text.trim())}');
+      context.go(
+          '/auth/otp?phone=${Uri.encodeComponent(_controller.text.trim())}');
     } on ApiError catch (e) {
       setState(() => _error = e.message);
     } finally {
@@ -53,30 +54,44 @@ class _PhonePageState extends ConsumerState<PhonePage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: Insets.l),
-              Row(
+              const Row(
                 children: [
-                  const BrandLogo(size: BrandLogoSize.m),
-                  const Spacer(),
+                  BrandLogo(size: BrandLogoSize.m),
+                  Spacer(),
                   StatusPill(label: 'Driver', tone: StatusTone.accent),
                 ],
               ),
               const SizedBox(height: Insets.xxl),
-              Text('Drive Tbilisi with us', style: Theme.of(context).textTheme.headlineLarge),
+              Text('Drive Tbilisi with us',
+                  style: Theme.of(context).textTheme.headlineLarge),
               const SizedBox(height: Insets.xs),
               Text(
                 'მართე Tbilisi-ში და მიიღე გადახდა ყოველდღე.\nDaily payouts. Flexible hours.',
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
               const SizedBox(height: Insets.xxl),
-              Text('ტელეფონის ნომერი', style: Theme.of(context).textTheme.labelMedium),
+              Text('ტელეფონის ნომერი',
+                  style: Theme.of(context).textTheme.labelMedium),
               const SizedBox(height: Insets.s),
-              AppTextField(controller: _controller, keyboardType: TextInputType.phone),
+              AppTextField(
+                  controller: _controller, keyboardType: TextInputType.phone),
               if (_error != null) ...[
                 const SizedBox(height: Insets.s),
-                Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                Text(_error!,
+                    style:
+                        TextStyle(color: Theme.of(context).colorScheme.error)),
               ],
               const Spacer(),
-              PrimaryButton(label: 'კოდის გაგზავნა / Send code', onPressed: _send, busy: _busy),
+              PrimaryButton(
+                label: 'მძღოლად შესვლა / რეგისტრაცია',
+                onPressed: _send,
+                busy: _busy,
+              ),
+              const SizedBox(height: Insets.s),
+              OutlinedButton(
+                onPressed: _busy ? null : _send,
+                child: const Text('მძღოლად რეგისტრაცია'),
+              ),
               // Preview entry. Available in dev AND staging so QA can
               // demo from an installed staging APK without backend
               // round-trips. Hidden in prod by the env.isProd gate.

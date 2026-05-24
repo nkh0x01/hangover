@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:rides/rides.dart';
 import 'package:ui_kit/ui_kit.dart';
 
 import '../../../di/locator.dart';
+import '../../profile/state/driver_profile_controller.dart';
 import '../../shift/state/shift_controller.dart';
 
 class DiagnosticsPage extends ConsumerWidget {
@@ -24,6 +26,7 @@ class DiagnosticsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final env = ref.watch(envProvider);
     final shift = ref.watch(shiftProvider);
+    final me = ref.watch(driverMeProvider);
     final tokenFuture = ref.watch(tokenStoreProvider).read();
 
     return Scaffold(
@@ -105,6 +108,7 @@ class DiagnosticsPage extends ConsumerWidget {
                   label: 'Driver profile/approval state',
                   value: shift.driverProfileState,
                 ),
+                ..._driverContextRows(me),
               ],
             );
           },
@@ -116,6 +120,43 @@ class DiagnosticsPage extends ConsumerWidget {
   static String _boolOrUnknown(bool? value) {
     if (value == null) return 'unknown';
     return value ? 'yes' : 'no';
+  }
+
+  static List<Widget> _driverContextRows(AsyncValue<DriverMe> value) {
+    return value.when(
+      loading: () => const [
+        _Row(label: 'Driver context', value: 'loading'),
+      ],
+      error: (error, _) => [
+        _Row(label: 'Driver context error', value: error.toString()),
+      ],
+      data: (me) {
+        final context = me.context;
+        return [
+          _Row(label: 'Driver runtime state', value: context.state.name),
+          _Row(
+            label: 'Driver profile status',
+            value: context.driverProfileStatus ?? 'none',
+          ),
+          _Row(
+            label: 'Application status',
+            value: context.applicationStatus ?? 'none',
+          ),
+          _Row(
+            label: 'Vehicle status',
+            value: context.vehicleStatus ?? 'none',
+          ),
+          _Row(
+            label: 'Can go online',
+            value: context.canGoOnline ? 'yes' : 'no',
+          ),
+          _Row(
+            label: 'Cannot go online reason',
+            value: context.reasonIfCannotGoOnline ?? 'none',
+          ),
+        ];
+      },
+    );
   }
 }
 
