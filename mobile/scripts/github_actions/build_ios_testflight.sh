@@ -57,7 +57,10 @@ ASC_PRIVATE_KEYS_DIR="$HOME/.appstoreconnect/private_keys"
 MANUAL_PROFILE_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
 MANUAL_SIGNING_PROFILE_SECRET=""
 MANUAL_SIGNING_CERT_SECRET="${IOS_DISTRIBUTION_CERTIFICATE_BASE64:-${IOS_DISTRIBUTION_CERTIFICATE_P12_BASE64:-}}"
+MANUAL_SIGNING_PROFILE_UUID=""
 MANUAL_SIGNING_PROFILE_NAME=""
+MANUAL_SIGNING_PROFILE_BUNDLE_ID=""
+MANUAL_SIGNING_PROFILE_TEAM_ID=""
 MANUAL_SIGNING_KEYCHAIN_PATH=""
 
 case "$ROLE" in
@@ -315,34 +318,31 @@ prepare_manual_signing_assets() {
 
   security cms -D -i "$profile_path" > "$profile_plist"
   MANUAL_SIGNING_PROFILE_NAME="$(/usr/libexec/PlistBuddy -c 'Print :Name' "$profile_plist")"
-  local profile_uuid
   local profile_app_id
-  local profile_bundle_id
-  local profile_team_id
   local profile_dest
-  profile_uuid="$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$profile_plist")"
+  MANUAL_SIGNING_PROFILE_UUID="$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$profile_plist")"
   profile_app_id="$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:application-identifier' "$profile_plist" 2>/dev/null || true)"
-  profile_team_id="$(/usr/libexec/PlistBuddy -c 'Print :TeamIdentifier:0' "$profile_plist" 2>/dev/null || true)"
-  profile_bundle_id="${profile_app_id#*.}"
+  MANUAL_SIGNING_PROFILE_TEAM_ID="$(/usr/libexec/PlistBuddy -c 'Print :TeamIdentifier:0' "$profile_plist" 2>/dev/null || true)"
+  MANUAL_SIGNING_PROFILE_BUNDLE_ID="${profile_app_id#*.}"
 
   [[ -n "$MANUAL_SIGNING_PROFILE_NAME" ]] || fail "Could not read provisioning profile name"
-  [[ -n "$profile_uuid" ]] || fail "Could not read provisioning profile UUID"
-  [[ "$profile_team_id" == "$APPLE_TEAM_ID" ]] ||
-    fail "Provisioning profile team '$profile_team_id' does not match $APPLE_TEAM_ID"
+  [[ -n "$MANUAL_SIGNING_PROFILE_UUID" ]] || fail "Could not read provisioning profile UUID"
+  [[ "$MANUAL_SIGNING_PROFILE_TEAM_ID" == "$APPLE_TEAM_ID" ]] ||
+    fail "Provisioning profile team '$MANUAL_SIGNING_PROFILE_TEAM_ID' does not match $APPLE_TEAM_ID"
   case "$profile_app_id" in
     "$APPLE_TEAM_ID.$BUNDLE_ID"|*".$BUNDLE_ID") ;;
     *) fail "Provisioning profile '$MANUAL_SIGNING_PROFILE_NAME' does not match $BUNDLE_ID" ;;
   esac
 
-  profile_dest="$MANUAL_PROFILE_DIR/$profile_uuid.mobileprovision"
+  profile_dest="$MANUAL_PROFILE_DIR/$MANUAL_SIGNING_PROFILE_UUID.mobileprovision"
   cp "$profile_path" "$profile_dest"
 
   log "Installed provisioning profile"
-  ok "UUID: $profile_uuid"
+  ok "UUID: $MANUAL_SIGNING_PROFILE_UUID"
   ok "Name: $MANUAL_SIGNING_PROFILE_NAME"
   ok "application-identifier: $profile_app_id"
-  ok "bundle id: $profile_bundle_id"
-  ok "TeamIdentifier: $profile_team_id"
+  ok "bundle id: $MANUAL_SIGNING_PROFILE_BUNDLE_ID"
+  ok "TeamIdentifier: $MANUAL_SIGNING_PROFILE_TEAM_ID"
   ok "path: $profile_dest"
 }
 
@@ -393,11 +393,11 @@ configure_xcode_signing() {
     "$IOS_DIR/Pods/Pods.xcodeproj" \
     "$BUNDLE_ID" \
     "$APPLE_TEAM_ID" \
-    "$SIGNING_STYLE_VALUE" \
-    "$MANUAL_SIGNING_PROFILE_NAME" <<'RUBY'
+    "$MANUAL_SIGNING_PROFILE_NAME" \
+    "$MANUAL_SIGNING_PROFILE_UUID" <<'RUBY'
 require 'xcodeproj'
 
-runner_project_path, pods_project_path, bundle_id, team_id, signing_style, profile_name = ARGV
+runner_project_path, pods_project_path, bundle_id, team_id, profile_name, profile_uuid = ARGV
 
 def runner_release_config?(config)
   %w[Release Profile].include?(config.name)
@@ -425,22 +425,17 @@ def disable_target_signing(target)
   end
 end
 
-def configure_runner_target(target, bundle_id, team_id, signing_style, profile_name)
+def configure_runner_target(target, bundle_id, team_id, profile_name, profile_uuid)
   target.build_configurations.each do |config|
     settings = config.build_settings
     settings['DEVELOPMENT_TEAM'] = team_id
     settings['PRODUCT_BUNDLE_IDENTIFIER'] = bundle_id
-    clear_signing_identity(settings)
-
-    if signing_style == 'manual'
-      settings['CODE_SIGN_STYLE'] = 'Manual'
-      settings['PROVISIONING_PROFILE_SPECIFIER'] = profile_name
-      settings['PROVISIONING_PROFILE'] = ''
-    else
-      settings['CODE_SIGN_STYLE'] = 'Automatic'
-      settings.delete('PROVISIONING_PROFILE')
-      settings.delete('PROVISIONING_PROFILE_SPECIFIER')
-    end
+    settings['CODE_SIGN_STYLE'] = 'Manual'
+    settings['PROVISIONING_PROFILE_SPECIFIER'] = profile_name
+    settings['PROVISIONING_PROFILE'] = profile_uuid
+    settings['CODE_SIGN_IDENTITY'] = 'Apple Distribution'
+    settings['CODE_SIGN_IDENTITY[sdk=iphoneos*]'] = 'Apple Distribution'
+    settings.delete('EXPANDED_CODE_SIGN_IDENTITY')
 
     next unless runner_release_config?(config)
 
@@ -453,13 +448,9 @@ runner_project = Xcodeproj::Project.open(runner_project_path)
 runner_target = runner_project.targets.find { |target| target.name == 'Runner' }
 abort("Runner target not found in #{runner_project_path}") unless runner_target
 
-runner_project.build_configurations.each do |config|
-  clear_signing_identity(config.build_settings)
-end
-
 runner_project.targets.each do |target|
   if target.name == 'Runner'
-    configure_runner_target(target, bundle_id, team_id, signing_style, profile_name)
+    configure_runner_target(target, bundle_id, team_id, profile_name, profile_uuid)
   else
     disable_target_signing(target)
   end
@@ -476,6 +467,12 @@ if File.directory?(pods_project_path)
 end
 RUBY
   ok "Runner uses manual App Store signing; dependency target signing is disabled"
+}
+
+print_runner_project_signing_debug() {
+  log "Runner project signing settings"
+  grep -n "CODE_SIGN_STYLE\\|PROVISIONING_PROFILE_SPECIFIER\\|PROVISIONING_PROFILE\\|CODE_SIGN_IDENTITY" \
+    "$IOS_DIR/Runner.xcodeproj/project.pbxproj" || true
 }
 
 print_archive_debug() {
@@ -528,6 +525,7 @@ print_signing_debug() {
   ok "team id: $APPLE_TEAM_ID"
   ok "selected signing style: $SIGNING_STYLE_VALUE"
   ok "manual App Store profile: $MANUAL_SIGNING_PROFILE_NAME"
+  ok "manual App Store profile UUID: $MANUAL_SIGNING_PROFILE_UUID"
   ok "manual signing keychain: $MANUAL_SIGNING_KEYCHAIN_PATH"
 
   log "ExportOptions.plist"
@@ -547,7 +545,11 @@ archive_and_export() {
     -configuration Release
     -destination "generic/platform=iOS"
     -archivePath "$ARCHIVE_PATH"
+    -allowProvisioningUpdates
     DEVELOPMENT_TEAM="$APPLE_TEAM_ID"
+    CODE_SIGN_STYLE=Manual
+    PROVISIONING_PROFILE_SPECIFIER="$MANUAL_SIGNING_PROFILE_NAME"
+    PROVISIONING_PROFILE="$MANUAL_SIGNING_PROFILE_UUID"
     OTHER_CODE_SIGN_FLAGS="--keychain $MANUAL_SIGNING_KEYCHAIN_PATH"
   )
 
@@ -609,6 +611,7 @@ disable_firebase_for_ios_ci
 configure_flutter
 install_pods
 configure_xcode_signing
+print_runner_project_signing_debug
 write_export_options
 archive_and_export
 verify_ipa_strings
