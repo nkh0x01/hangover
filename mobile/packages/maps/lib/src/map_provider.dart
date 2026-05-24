@@ -10,6 +10,7 @@ abstract class MapProvider {
     required LatLng initialCenter,
     double initialZoom = 14,
     List<MapMarker> markers = const [],
+    bool myLocationEnabled = false,
     void Function(LatLng)? onTap,
   });
 
@@ -27,7 +28,8 @@ class MapMarker {
 }
 
 class PlaceSuggestion {
-  const PlaceSuggestion({required this.placeId, required this.title, this.subtitle});
+  const PlaceSuggestion(
+      {required this.placeId, required this.title, this.subtitle});
   final String placeId;
   final String title;
   final String? subtitle;

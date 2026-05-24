@@ -6,6 +6,7 @@ namespace App\Modules\Identity\Services;
 
 use App\Modules\Communication\Contracts\SmsGateway;
 use App\Modules\Identity\Exceptions\InvalidOtpException;
+use App\Modules\Identity\Exceptions\OtpDeliveryFailedException;
 use App\Modules\Identity\Exceptions\OtpThrottledException;
 use App\Modules\Identity\Models\PhoneVerification;
 use Carbon\CarbonImmutable;
@@ -58,6 +59,16 @@ final class OtpService
                 'phone' => $phoneE164,
                 'error' => $result->error,
             ]);
+
+            $row->update(['consumed_at' => now()]);
+
+            throw new OtpDeliveryFailedException(
+                'SMS კოდის გაგზავნა ვერ მოხერხდა. გთხოვთ სცადოთ თავიდან.',
+                [
+                    'provider' => (string) config('sms.driver', 'unknown'),
+                    'reason' => $result->error,
+                ],
+            );
         }
 
         return $row;

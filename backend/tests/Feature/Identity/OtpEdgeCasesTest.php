@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Communication\Contracts\SmsGateway;
 use App\Modules\Communication\Contracts\SmsResult;
 use App\Modules\Identity\Exceptions\InvalidOtpException;
+use App\Modules\Identity\Exceptions\OtpDeliveryFailedException;
 use App\Modules\Identity\Exceptions\OtpThrottledException;
 use App\Modules\Identity\Models\PhoneVerification;
 use App\Modules\Identity\Services\OtpService;
@@ -96,4 +97,23 @@ it('marks the verification consumed when the correct code is presented', functio
     $verified = $otp->verify('+995555000006', '424242', 'signup');
 
     expect($verified->consumed_at)->not->toBeNull();
+});
+
+it('returns a domain error when OTP SMS delivery fails', function (): void {
+    $this->app->instance(SmsGateway::class, new class implements SmsGateway
+    {
+        public function send(string $phoneE164, string $body, string $purpose): SmsResult
+        {
+            return SmsResult::failure('provider rejected message');
+        }
+    });
+
+    /** @var OtpService $otp */
+    $otp = app(OtpService::class);
+
+    expect(fn () => $otp->request('+995555000007', 'signup'))
+        ->toThrow(OtpDeliveryFailedException::class);
+
+    $row = PhoneVerification::query()->where('phone_e164', '+995555000007')->first();
+    expect($row?->consumed_at)->not->toBeNull();
 });

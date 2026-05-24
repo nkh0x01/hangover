@@ -8,6 +8,7 @@ import 'package:ui_kit/ui_kit.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../di/locator.dart';
+import '../../diagnostics/state/diagnostics_controller.dart';
 
 class OtpPage extends ConsumerStatefulWidget {
   const OtpPage({super.key, required this.phone});
@@ -30,6 +31,9 @@ class _OtpPageState extends ConsumerState<OtpPage> {
   }
 
   Future<void> _verify() async {
+    ref.read(diagnosticsProvider.notifier).action('otp verify tap');
+    final platform =
+        Theme.of(context).platform == TargetPlatform.iOS ? 'ios' : 'android';
     setState(() {
       _busy = true;
       _error = null;
@@ -47,22 +51,47 @@ class _OtpPageState extends ConsumerState<OtpPage> {
             code: _controller.text.trim(),
             purpose: 'signup',
             deviceUuid: deviceUuid,
-            platform: Theme.of(context).platform == TargetPlatform.iOS ? 'ios' : 'android',
+            platform: platform,
             appVersion: '0.1.0',
           );
+      ref.read(diagnosticsProvider.notifier).apiOk(200, action: 'otp verify');
       if (!mounted) return;
       context.go('/home');
     } on ApiError catch (e) {
-      setState(() => _error = e.message);
+      final message = _kaError(e);
+      ref.read(diagnosticsProvider.notifier).apiError(
+            message: message,
+            status: e.httpStatus,
+            action: 'otp verify',
+          );
+      setState(() => _error = message);
+    } on Object catch (e) {
+      const message = 'კოდის დადასტურება ვერ მოხერხდა. სცადეთ თავიდან.';
+      debugPrint('[Ride360] otp verify failed: $e');
+      ref.read(diagnosticsProvider.notifier).apiError(
+            message: message,
+            action: 'otp verify',
+          );
+      setState(() => _error = message);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
 
+  String _kaError(ApiError e) {
+    return switch (e.code) {
+      'auth.invalid_otp' => 'კოდი არასწორია ან ვადაგასულია.',
+      'auth.otp_throttled' => 'ძალიან ბევრი მცდელობაა. მოითხოვეთ ახალი კოდი.',
+      _ =>
+        e.message.isEmpty ? 'დაფიქსირდა შეცდომა. სცადეთ თავიდან.' : e.message,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(leading: const BackButton(), title: const Text('Verify code')),
+      appBar:
+          AppBar(leading: const BackButton(), title: const Text('Verify code')),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(Insets.xl),
@@ -70,11 +99,15 @@ class _OtpPageState extends ConsumerState<OtpPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: Insets.l),
-              Text('კოდი გამოგზავნილია', style: Theme.of(context).textTheme.headlineMedium),
+              Text('კოდი გამოგზავნილია',
+                  style: Theme.of(context).textTheme.headlineMedium),
               const SizedBox(height: Insets.xs),
               Text(
                 widget.phone,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.inkSoft),
+                style: Theme.of(context)
+                    .textTheme
+                    .titleMedium
+                    ?.copyWith(color: AppColors.inkSoft),
               ),
               const SizedBox(height: Insets.xl),
               _OtpDigits(controller: _controller),
@@ -93,8 +126,20 @@ class _OtpPageState extends ConsumerState<OtpPage> {
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ),
+              TextButton(
+                onPressed: () {
+                  ref
+                      .read(diagnosticsProvider.notifier)
+                      .action('diagnostics tap');
+                  context.push('/diagnostics');
+                },
+                child: const Text('Diagnostics'),
+              ),
               const Spacer(),
-              PrimaryButton(label: 'დადასტურება / Verify', onPressed: _verify, busy: _busy),
+              PrimaryButton(
+                  label: 'დადასტურება / Verify',
+                  onPressed: _verify,
+                  busy: _busy),
             ],
           ),
         ),
@@ -122,7 +167,8 @@ class _OtpDigits extends StatelessWidget {
               children: List.generate(6, (i) {
                 final filled = value[i] != ' ';
                 final active = i == controller.text.length;
-                return _DigitCell(char: value[i], filled: filled, active: active);
+                return _DigitCell(
+                    char: value[i], filled: filled, active: active);
               }),
             );
           },
@@ -149,7 +195,8 @@ class _OtpDigits extends StatelessWidget {
 }
 
 class _DigitCell extends StatelessWidget {
-  const _DigitCell({required this.char, required this.filled, required this.active});
+  const _DigitCell(
+      {required this.char, required this.filled, required this.active});
 
   final String char;
   final bool filled;
@@ -171,7 +218,10 @@ class _DigitCell extends StatelessWidget {
       ),
       child: Text(
         filled ? char : '',
-        style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
+        style: Theme.of(context)
+            .textTheme
+            .headlineMedium
+            ?.copyWith(fontWeight: FontWeight.w700),
       ),
     );
   }

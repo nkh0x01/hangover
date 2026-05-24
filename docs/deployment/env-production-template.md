@@ -104,15 +104,16 @@ MAIL_ENCRYPTION=null
 MAIL_FROM_ADDRESS="noreply@ride.365sakartvelo.com"
 MAIL_FROM_NAME="${APP_NAME}"
 
-# ─── SMS (Twilio) ──────────────────────────────────────────────────────
-SMS_DRIVER=null                       # [REQUIRED for prod] flip to 'twilio'
+# ─── SMS / OTP (sender.ge) ─────────────────────────────────────────────
+SMS_DRIVER=sender_ge                  # [REQUIRED for prod]
+SENDER_GE_API_KEY=                    # [REQUIRED] set only in server env
+SENDER_GE_SENDER=Ride360              # [REQUIRED] approved sender.ge name
+SENDER_GE_BASE_URL=https://sender.ge/api/send.php
+
+# Legacy Twilio fallback; not used by the Ride 360 production lane.
 TWILIO_ACCOUNT_SID=
 TWILIO_AUTH_TOKEN=
 TWILIO_FROM_NUMBER=+995300000000
-
-# Until Twilio is paid + verified, OTPs are NOT sent — pilot test
-# phones receive `000000` as a hard-coded code (see
-# config/pilot.php).
 
 # ─── Pilot config (Phase 2.2) ──────────────────────────────────────────
 PILOT_ENABLED=true

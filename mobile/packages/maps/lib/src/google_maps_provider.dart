@@ -15,6 +15,7 @@ class GoogleMapsProvider implements MapProvider {
     required LatLng initialCenter,
     double initialZoom = 14,
     List<MapMarker> markers = const [],
+    bool myLocationEnabled = false,
     void Function(LatLng)? onTap,
   }) {
     return gm.GoogleMap(
@@ -22,7 +23,7 @@ class GoogleMapsProvider implements MapProvider {
         target: gm.LatLng(initialCenter.lat, initialCenter.lng),
         zoom: initialZoom,
       ),
-      myLocationEnabled: true,
+      myLocationEnabled: myLocationEnabled,
       myLocationButtonEnabled: false,
       mapToolbarEnabled: false,
       zoomControlsEnabled: false,
@@ -32,10 +33,13 @@ class GoogleMapsProvider implements MapProvider {
           gm.Marker(
             markerId: gm.MarkerId(m.id),
             position: gm.LatLng(m.position.lat, m.position.lng),
-            infoWindow: m.title != null ? gm.InfoWindow(title: m.title) : gm.InfoWindow.noText,
+            infoWindow: m.title != null
+                ? gm.InfoWindow(title: m.title)
+                : gm.InfoWindow.noText,
           ),
       },
-      onTap: onTap == null ? null : (p) => onTap(LatLng(p.latitude, p.longitude)),
+      onTap:
+          onTap == null ? null : (p) => onTap(LatLng(p.latitude, p.longitude)),
     );
   }
 
@@ -45,11 +49,14 @@ class GoogleMapsProvider implements MapProvider {
   }
 
   @override
-  Future<Duration> eta(LatLng from, LatLng to) async => const Duration(minutes: 5);
+  Future<Duration> eta(LatLng from, LatLng to) async =>
+      const Duration(minutes: 5);
 
   @override
   Future<String?> reverseGeocode(LatLng point) async => null;
 
   @override
-  Future<List<PlaceSuggestion>> placeAutocomplete(String query, {LatLng? near}) async => const [];
+  Future<List<PlaceSuggestion>> placeAutocomplete(String query,
+          {LatLng? near}) async =>
+      const [];
 }

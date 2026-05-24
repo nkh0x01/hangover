@@ -18,6 +18,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_riverpod: ^2.5.1
+  geolocator: ^14.0.2
   go_router: ^14.6.1
   localization:
     path: ../../packages/localization

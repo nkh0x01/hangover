@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../features/auth/presentation/otp_page.dart';
 import '../features/auth/presentation/phone_page.dart';
+import '../features/diagnostics/presentation/diagnostics_page.dart';
 import '../features/home/presentation/home_page.dart';
 import '../features/ride/presentation/destination_page.dart';
 import '../features/ride/presentation/destination_search_page.dart';
@@ -18,16 +19,25 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/', builder: (_, __) => const SplashPage()),
       GoRoute(path: '/auth/phone', builder: (_, __) => const PhonePage()),
       GoRoute(
+          path: '/diagnostics', builder: (_, __) => const DiagnosticsPage()),
+      GoRoute(
         path: '/auth/otp',
-        builder: (_, state) => OtpPage(phone: state.uri.queryParameters['phone'] ?? ''),
+        builder: (_, state) =>
+            OtpPage(phone: state.uri.queryParameters['phone'] ?? ''),
       ),
       GoRoute(path: '/home', builder: (_, __) => const HomePage()),
-      GoRoute(path: '/ride/destination', builder: (_, __) => const DestinationPage()),
-      GoRoute(path: '/ride/search', builder: (_, __) => const DestinationSearchPage()),
-      GoRoute(path: '/ride/estimate', builder: (_, __) => const FareEstimatePage()),
+      GoRoute(
+          path: '/ride/destination',
+          builder: (_, __) => const DestinationPage()),
+      GoRoute(
+          path: '/ride/search',
+          builder: (_, __) => const DestinationSearchPage()),
+      GoRoute(
+          path: '/ride/estimate', builder: (_, __) => const FareEstimatePage()),
       GoRoute(
         path: '/ride/:id',
-        builder: (_, state) => RideTrackingPage(rideId: state.pathParameters['id']!),
+        builder: (_, state) =>
+            RideTrackingPage(rideId: state.pathParameters['id']!),
       ),
     ],
     errorBuilder: (_, __) => const Scaffold(
