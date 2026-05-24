@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Modules\Identity\Models;
 
 use App\Modules\Driver\Models\Driver;
+use App\Modules\Support\Models\FraudFlag;
 use App\Support\Ulid;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasName;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -22,7 +24,7 @@ use Spatie\Permission\Traits\HasRoles;
  * Canonical User model. Lives in the Identity module so all auth +
  * profile logic stays inside one bounded context.
  */
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, HasName
 {
     use HasApiTokens;
     use HasFactory;
@@ -91,7 +93,8 @@ class User extends Authenticatable implements FilamentUser
 
     public function getFilamentName(): string
     {
-        return trim(($this->first_name ?? '').' '.($this->last_name ?? '')) ?: ($this->email ?? $this->phone_e164 ?? 'User');
+        return trim(($this->first_name ?? '').' '.($this->last_name ?? ''))
+            ?: ($this->email ?: ($this->phone_e164 ?: 'Admin'));
     }
 
     public function devices(): HasMany
@@ -116,7 +119,7 @@ class User extends Authenticatable implements FilamentUser
 
     public function fraudFlags(): HasMany
     {
-        return $this->hasMany(\App\Modules\Support\Models\FraudFlag::class);
+        return $this->hasMany(FraudFlag::class);
     }
 
     public function isBlocked(): bool

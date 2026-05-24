@@ -172,6 +172,10 @@ php artisan route:cache
 php artisan view:cache
 php artisan event:cache
 
+# 5b. Publish Filament panel assets into the active public directory.
+# This prevents blank/hanging admin pages after fresh atomic releases.
+php artisan filament:assets --no-interaction
+
 # 6. Drain queues gracefully (Horizon will respawn under the new
 # release once Supervisor restarts it).
 php artisan horizon:terminate || true
@@ -180,8 +184,8 @@ php artisan horizon:terminate || true
 ln -sfn "$release" "$root/current.new"
 mv -Tf "$root/current.new" "$root/current"
 
-# 8. Reload PHP-FPM (picks up new opcache).
-sudo systemctl reload php8.3-fpm
+# 8. Reload PHP-FPM (picks up new opcache). Production runs PHP 8.4.
+sudo systemctl reload php8.4-fpm
 
 # 9. Restart Reverb + Horizon onto the new release.
 sudo supervisorctl restart hangover-horizon hangover-reverb

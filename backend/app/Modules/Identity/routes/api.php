@@ -25,6 +25,9 @@ Route::prefix('v1')->group(function (): void {
 
     // -- Authenticated session / profile -------------------------------
     Route::middleware(['auth:sanctum'])->group(function (): void {
+        Route::get('/auth/me', [MeController::class, 'show'])
+            ->name('auth.me.show');
+
         Route::post('/auth/refresh', [SessionController::class, 'refresh'])
             ->middleware('throttle:auth.refresh')
             ->name('auth.refresh');

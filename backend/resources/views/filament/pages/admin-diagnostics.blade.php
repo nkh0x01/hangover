@@ -22,7 +22,9 @@
                 ბოლო sender.ge/OTP მცდელობები. კოდები და API keys აქ არ ინახება და არ ჩანს.
             </x-slot>
 
-            @php($counts = $this->smsCounts())
+            @php
+                $counts = $this->smsCounts();
+            @endphp
 
             <div class="grid gap-3 md:grid-cols-3">
                 <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">

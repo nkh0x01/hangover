@@ -234,6 +234,16 @@ final class PilotDashboardPage extends Page
         ];
     }
 
+    public function toneClass(string $tone): string
+    {
+        return match ($tone) {
+            'success' => 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200',
+            'warning' => 'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200',
+            'info' => 'border-sky-200 bg-sky-50 text-sky-800 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-200',
+            default => 'border-gray-200 bg-gray-50 text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200',
+        };
+    }
+
     private function safeCount(string $model, callable $scope): int
     {
         /** @var class-string<Model> $model */

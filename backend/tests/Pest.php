@@ -13,6 +13,7 @@ uses(TestCase::class)->in(__DIR__.'/Feature');
 uses(RefreshDatabase::class)->in(
     __DIR__.'/Feature/Riding',
     __DIR__.'/Feature/Pricing',
+    __DIR__.'/Feature/Admin',
     __DIR__.'/Feature/Driver',
     __DIR__.'/Feature/Identity',
     __DIR__.'/Feature/Geo',

@@ -18,7 +18,9 @@
             </div>
         </section>
 
-        @php($warnings = $this->readinessWarnings())
+        @php
+            $warnings = $this->readinessWarnings();
+        @endphp
         @if ($warnings !== [])
             <x-filament::section>
                 <x-slot name="heading">ყურადღება სჭირდება</x-slot>
@@ -36,15 +38,7 @@
 
         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             @foreach ($this->healthCards() as $card)
-                @php
-                    $tone = [
-                        'success' => 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200',
-                        'warning' => 'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200',
-                        'info' => 'border-sky-200 bg-sky-50 text-sky-800 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-200',
-                    ][$card['tone']] ?? 'border-gray-200 bg-gray-50 text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200';
-                @endphp
-
-                <div class="rounded-xl border p-5 {{ $tone }}">
+                <div class="rounded-xl border p-5 {{ $this->toneClass($card['tone']) }}">
                     <div class="text-sm font-medium">{{ $card['label'] }}</div>
                     <div class="mt-3 text-3xl font-semibold">{{ $card['value'] }}</div>
                     <div class="mt-2 text-sm opacity-80">{{ $card['description'] }}</div>
@@ -83,7 +77,9 @@
                 <x-slot name="heading">ბოლო მძღოლის განაცხადები</x-slot>
                 <x-slot name="description">ახალი რეგისტრაციები Driver აპიდან.</x-slot>
 
-                @php($applications = $this->recentApplications())
+                @php
+                    $applications = $this->recentApplications();
+                @endphp
                 @if ($applications === [])
                     <div class="rounded-lg border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
                         განაცხადები ჯერ არ არის.
@@ -127,7 +123,9 @@
                 <x-slot name="heading">ბოლო მგზავრობები</x-slot>
                 <x-slot name="description">პილოტის ბოლო მოთხოვნები და მგზავრობის სტატუსები.</x-slot>
 
-                @php($rides = $this->recentRides())
+                @php
+                    $rides = $this->recentRides();
+                @endphp
                 @if ($rides === [])
                     <div class="rounded-lg border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
                         მგზავრობები ჯერ არ არის.
