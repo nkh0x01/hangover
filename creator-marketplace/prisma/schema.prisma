@@ -1,0 +1,280 @@
+// Prisma schema for the Georgian creator marketplace.
+// Generate the client with `prisma generate`, push with `prisma db push`.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CREATOR
+  CLIENT
+  ADMIN
+}
+
+enum CreatorStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum OrderStatus {
+  NEW
+  AWAITING_CREATOR
+  IN_PROGRESS
+  SUBMITTED
+  REVISION_REQUESTED
+  COMPLETED
+  CANCELLED
+}
+
+enum AgreementType {
+  CREATOR
+  CLIENT
+}
+
+model User {
+  id              String        @id @default(cuid())
+  email           String        @unique
+  passwordHash    String
+  name            String
+  phone           String?
+  role            Role
+  createdAt       DateTime      @default(now())
+  // Profiles
+  creatorProfile  Creator?
+  clientProfile   Client?
+  agreements      Agreement[]
+  sentMessages    Message[]     @relation("MessageAuthor")
+  notifications   Notification[]
+}
+
+model Creator {
+  id                  String        @id @default(cuid())
+  userId              String        @unique
+  user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  slug                String        @unique
+  name                String
+  nameKa              String
+  bio                 String
+  bioKa               String
+  city                String
+  cityKa              String
+  avatar              String?
+  cover               String?
+  category            String
+  niches              String        // JSON array
+  platforms           String        // JSON array
+  socialLinks         String        // JSON object
+  followers           String        // JSON object {platform: count}
+  totalFollowers      Int           @default(0)
+  startingPrice       Int           @default(0)
+  responseTimeHours   Int           @default(24)
+  avgDeliveryDays     Int           @default(7)
+  languages           String        // JSON array
+  status              CreatorStatus @default(PENDING)
+  verified            Boolean       @default(false)
+  featured            Boolean       @default(false)
+  rating              Float         @default(0)
+  reviewCount         Int           @default(0)
+  createdAt           DateTime      @default(now())
+
+  services            Service[]
+  portfolioItems      PortfolioItem[]
+  orders              Order[]
+  reviews             Review[]
+  conversations       Conversation[]
+}
+
+model Client {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  companyName String?
+  industry    String?
+  phone       String?
+  createdAt   DateTime @default(now())
+
+  orders        Order[]
+  conversations Conversation[]
+  reviews       Review[]
+  savedCreators SavedCreator[]
+}
+
+model SavedCreator {
+  id        String   @id @default(cuid())
+  clientId  String
+  creatorId String
+  createdAt DateTime @default(now())
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  @@unique([clientId, creatorId])
+}
+
+model Service {
+  id              String   @id @default(cuid())
+  creatorId       String
+  creator         Creator  @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  title           String
+  titleKa         String
+  description     String
+  descriptionKa   String
+  category        String
+  price           Int
+  deliveryDays    Int
+  revisions       Int      @default(1)
+  includes        String   // JSON array
+  includesKa      String   // JSON array
+  requirements    String   // JSON array
+  requirementsKa  String   // JSON array
+  addons          String   // JSON array
+  thumbnail       String?
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+
+  orders          Order[]
+}
+
+model PortfolioItem {
+  id        String   @id @default(cuid())
+  creatorId String
+  creator   Creator  @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  type      String   // 'image' | 'video'
+  url       String
+  thumbnail String
+  title     String
+  titleKa   String
+  createdAt DateTime @default(now())
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  serviceId     String
+  service       Service     @relation(fields: [serviceId], references: [id])
+  creatorId     String
+  creator       Creator     @relation(fields: [creatorId], references: [id])
+  clientId      String
+  client        Client      @relation(fields: [clientId], references: [id])
+  campaignBrief String
+  deadline      DateTime?
+  price         Int
+  commission    Int
+  payout        Int
+  addons        String      // JSON array of selected addons
+  status        OrderStatus @default(NEW)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  payment       Payment?
+  conversation  Conversation?
+  review        Review?
+  deliverables  Deliverable[]
+}
+
+model Deliverable {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  url       String
+  type      String
+  createdAt DateTime @default(now())
+}
+
+model Payment {
+  id          String   @id @default(cuid())
+  orderId     String   @unique
+  order       Order    @relation(fields: [orderId], references: [id])
+  provider    String   // 'bog' | 'tbc' | 'stripe'
+  status      String   // 'pending' | 'held' | 'released' | 'refunded'
+  amount      Int
+  currency    String   @default("GEL")
+  providerRef String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Conversation {
+  id            String    @id @default(cuid())
+  creatorId     String
+  creator       Creator   @relation(fields: [creatorId], references: [id])
+  clientId      String
+  client        Client    @relation(fields: [clientId], references: [id])
+  orderId       String?   @unique
+  order         Order?    @relation(fields: [orderId], references: [id])
+  lastMessageAt DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  messages      Message[]
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  authorId       String
+  author         User         @relation("MessageAuthor", fields: [authorId], references: [id])
+  text           String
+  attachments    String?      // JSON array of URLs
+  createdAt      DateTime     @default(now())
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  orderId   String   @unique
+  order     Order    @relation(fields: [orderId], references: [id])
+  creatorId String
+  creator   Creator  @relation(fields: [creatorId], references: [id])
+  clientId  String
+  client    Client   @relation(fields: [clientId], references: [id])
+  rating    Int
+  comment   String
+  createdAt DateTime @default(now())
+}
+
+model Category {
+  id          String  @id
+  ka          String
+  en          String
+  emoji       String
+  descriptionKa String
+  descriptionEn String
+}
+
+// Platform Agreement / contract — legally binds both parties to:
+//   - keep all transactions on-platform
+//   - allow the platform to collect commission
+//   - dispute resolution via the platform
+//   - not circumvent the marketplace (off-platform contact)
+//
+// Signed at registration and saved with IP + user-agent for audit trail.
+model Agreement {
+  id            String        @id @default(cuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type          AgreementType
+  version       String        // e.g. "v1.0-2026-05"
+  fullName      String        // typed signature
+  acceptedAt    DateTime      @default(now())
+  ipAddress     String?
+  userAgent     String?
+  acceptedTerms Boolean       @default(true)
+  acceptedAntiCircumvention Boolean @default(true)
+  acceptedCommission        Boolean @default(true)
+
+  @@index([userId, type])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String?
+  url       String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}

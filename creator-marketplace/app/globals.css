@@ -1,0 +1,101 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Georgian web font fallbacks via Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --background: 255 255 255;
+  --foreground: 15 23 42;
+  --muted: 241 245 249;
+  --muted-foreground: 100 116 139;
+  --accent: 124 58 237;
+  --border: 226 232 240;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background-color: #ffffff;
+  color: #0f172a;
+  font-family: 'Noto Sans Georgian', 'Inter', system-ui, sans-serif;
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .btn-primary {
+    @apply btn bg-brand-600 text-white hover:bg-brand-700 focus:ring-brand-500 shadow-soft;
+  }
+  .btn-secondary {
+    @apply btn bg-white text-ink-900 border border-ink-200 hover:bg-ink-50 focus:ring-ink-300;
+  }
+  .btn-ghost {
+    @apply btn text-ink-700 hover:bg-ink-100 focus:ring-ink-300;
+  }
+  .btn-dark {
+    @apply btn bg-ink-900 text-white hover:bg-ink-800 focus:ring-ink-700;
+  }
+  .input {
+    @apply w-full rounded-xl border border-ink-200 bg-white px-4 py-2.5 text-sm text-ink-900 placeholder-ink-400 transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100;
+  }
+  .label {
+    @apply text-sm font-medium text-ink-700 mb-1.5 block;
+  }
+  .card {
+    @apply bg-white rounded-2xl border border-ink-200 shadow-card;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full bg-ink-100 px-2.5 py-1 text-xs font-medium text-ink-700;
+  }
+  .chip-brand {
+    @apply inline-flex items-center gap-1 rounded-full bg-brand-100 px-2.5 py-1 text-xs font-medium text-brand-700;
+  }
+  .chip-green {
+    @apply inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700;
+  }
+  .chip-amber {
+    @apply inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-700;
+  }
+  .container-page {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+  .section {
+    @apply py-14 sm:py-20;
+  }
+  .h-display {
+    @apply text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-ink-900;
+  }
+  .h-section {
+    @apply text-2xl sm:text-3xl font-bold tracking-tight text-ink-900;
+  }
+  .muted {
+    @apply text-ink-500;
+  }
+  .link {
+    @apply text-brand-700 font-medium hover:text-brand-800 underline-offset-4 hover:underline;
+  }
+}
+
+/* hide scrollbar but keep functionality */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* hero gradient */
+.hero-gradient {
+  background:
+    radial-gradient(60% 60% at 80% 10%, rgba(124, 58, 237, 0.12) 0%, transparent 60%),
+    radial-gradient(50% 50% at 10% 80%, rgba(236, 72, 153, 0.10) 0%, transparent 60%),
+    linear-gradient(180deg, #ffffff 0%, #faf5ff 60%, #ffffff 100%);
+}
