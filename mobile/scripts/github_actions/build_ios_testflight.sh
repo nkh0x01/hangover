@@ -142,6 +142,9 @@ print_xcode_debug() {
   log "Select Xcode for Flutter iOS build"
   ok "using the default Xcode selected by the GitHub macOS runner"
 
+  log "sw_vers"
+  sw_vers || true
+
   log "xcode-select -p"
   xcode-select -p || true
 
@@ -149,7 +152,37 @@ print_xcode_debug() {
   ls /Applications | grep Xcode || true
 
   log "xcodebuild -version"
-  xcodebuild -version || true
+  XCODE_VERSION_OUTPUT="$(xcodebuild -version 2>&1 || true)"
+  printf '%s\n' "$XCODE_VERSION_OUTPUT"
+
+  log "iPhoneOS SDK version"
+  IPHONEOS_SDK_VERSION="$(xcrun --sdk iphoneos --show-sdk-version 2>&1 || true)"
+  printf '%s\n' "$IPHONEOS_SDK_VERSION"
+
+  local xcode_version_line
+  local xcode_version
+  local xcode_major
+  local sdk_major
+  xcode_version_line="$(printf '%s\n' "$XCODE_VERSION_OUTPUT" | awk '/^Xcode / { print; exit }')"
+  xcode_version="${xcode_version_line#Xcode }"
+  xcode_major="${xcode_version%%.*}"
+  sdk_major="${IPHONEOS_SDK_VERSION%%.*}"
+
+  case "$xcode_major" in
+    ''|*[!0-9]*) fail "Could not determine Xcode major version from: $XCODE_VERSION_OUTPUT" ;;
+  esac
+  case "$sdk_major" in
+    ''|*[!0-9]*) fail "Could not determine iPhoneOS SDK major version from: $IPHONEOS_SDK_VERSION" ;;
+  esac
+
+  if [[ "$xcode_major" -lt 26 ]]; then
+    fail "Xcode 26 or later is required for App Store upload; runner selected Xcode $xcode_version"
+  fi
+  if [[ "$sdk_major" -lt 26 ]]; then
+    fail "iPhoneOS SDK 26 or later is required for App Store upload; runner selected SDK $IPHONEOS_SDK_VERSION"
+  fi
+
+  ok "Xcode/iPhoneOS SDK preflight passed"
 }
 
 remove_pubspec_dependency() {
