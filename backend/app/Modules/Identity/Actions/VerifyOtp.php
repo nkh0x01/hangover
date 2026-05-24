@@ -31,7 +31,7 @@ final readonly class VerifyOtp
         $this->otp->verify($phoneE164, $code, $purpose);
 
         return DB::transaction(function () use ($phoneE164, $purpose, $deviceMeta): array {
-            $type = $purpose === 'driver_signup' ? 'driver' : 'customer';
+            $type = $this->userTypeForPurpose($purpose);
 
             $user = User::query()
                 ->where('phone_e164', $phoneE164)
@@ -59,6 +59,7 @@ final readonly class VerifyOtp
                 }
                 if ($updates !== []) {
                     $user->update($updates);
+                    $user = $user->fresh() ?? $user;
                 }
             }
 
@@ -78,9 +79,14 @@ final readonly class VerifyOtp
                 ],
             );
 
-            $token = $this->issuer->issue($user, $device);
+            $token = $this->issuer->issue($user, $device, $purpose);
 
             return array_merge(['user' => $user, 'is_new' => $isNew], $token);
         });
+    }
+
+    private function userTypeForPurpose(string $purpose): string
+    {
+        return $purpose === 'driver_signup' ? 'driver' : 'customer';
     }
 }

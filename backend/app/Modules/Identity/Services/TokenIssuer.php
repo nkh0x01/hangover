@@ -16,7 +16,7 @@ final class TokenIssuer
 {
     public function issue(User $user, UserDevice $device, string $purpose = 'login'): array
     {
-        $abilities = $this->abilitiesFor($user);
+        $abilities = $this->abilitiesFor($user, $purpose);
 
         // Revoke any earlier token for the same device.
         $user->tokens()
@@ -48,8 +48,12 @@ final class TokenIssuer
     /**
      * @return array<int, string>
      */
-    public function abilitiesFor(User $user): array
+    public function abilitiesFor(User $user, ?string $purpose = null): array
     {
+        if ($this->isDriverPurpose($purpose)) {
+            return $this->driverAbilitiesFor($user);
+        }
+
         return match ($user->type) {
             'customer' => ['customer'],
             'driver' => $this->driverAbilitiesFor($user),
@@ -70,5 +74,10 @@ final class TokenIssuer
         return $driver?->status === 'approved'
             ? ['driver']
             : ['driver:onboarding'];
+    }
+
+    private function isDriverPurpose(?string $purpose): bool
+    {
+        return in_array($purpose, ['driver_signup'], true);
     }
 }

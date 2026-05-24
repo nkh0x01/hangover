@@ -198,12 +198,21 @@ it('verifies OTP through the API and returns a customer token', function (): voi
         'app_version' => '0.1.0',
     ])->assertCreated()
         ->assertJsonPath('data.user.type', 'customer')
+        ->assertJsonPath('data.abilities.0', 'customer')
         ->assertJsonStructure(['data' => ['token']]);
 
     $token = (string) $response->json('data.token');
     $this->withToken($token)->getJson('/api/v1/customer/me')
         ->assertOk()
         ->assertJsonPath('data.phone', '+995555000010');
+
+    $this->withToken($token)->getJson('/api/v1/driver/application')
+        ->assertForbidden();
+
+    $this->withToken($token)->postJson('/api/v1/driver/status/online', [
+        'lat' => 41.7151,
+        'lng' => 44.8271,
+    ])->assertForbidden();
 });
 
 it('returns driver context after driver OTP login', function (): void {
@@ -231,13 +240,31 @@ it('returns driver context after driver OTP login', function (): void {
         'platform' => 'ios',
         'app_version' => '0.1.0',
     ])->assertOk()
+        ->assertJsonPath('data.abilities.0', 'driver:onboarding')
         ->assertJsonPath('data.user.type', 'driver')
         ->assertJsonPath('data.user.driver_context.has_driver_profile', false)
         ->assertJsonPath('data.user.driver_context.needs_application', true)
         ->assertJsonPath('data.user.driver_context.can_submit_application', true)
         ->assertJsonPath('data.user.driver_context.can_go_online', false);
 
-    $this->withToken((string) $response->json('data.token'))->getJson('/api/v1/driver/me')
+    $token = (string) $response->json('data.token');
+
+    $this->withToken($token)->getJson('/api/v1/auth/me')
+        ->assertOk()
+        ->assertJsonPath('data.type', 'driver')
+        ->assertJsonPath('data.driver_context.needs_application', true);
+
+    $this->withToken($token)->getJson('/api/v1/driver/me')
         ->assertOk()
         ->assertJsonPath('data.driver_context.needs_application', true);
+
+    $this->withToken($token)->getJson('/api/v1/driver/application')
+        ->assertOk()
+        ->assertJsonPath('data', null)
+        ->assertJsonPath('driver_context.needs_application', true);
+
+    $this->withToken($token)->postJson('/api/v1/driver/status/online', [
+        'lat' => 41.7151,
+        'lng' => 44.8271,
+    ])->assertForbidden();
 });

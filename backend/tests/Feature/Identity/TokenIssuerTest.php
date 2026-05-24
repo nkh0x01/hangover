@@ -42,3 +42,17 @@ it('keeps onboarding ability for drivers that are not approved', function (): vo
 
     expect($token['abilities'])->toBe(['driver:onboarding']);
 });
+
+it('uses onboarding ability for driver OTP purpose before approval', function (): void {
+    $user = User::factory()->driver()->create();
+    $device = UserDevice::create([
+        'user_id' => $user->id,
+        'device_uuid' => 'driver-ios-3',
+        'platform' => 'ios',
+        'app_version' => '0.1.0',
+    ]);
+
+    $token = app(TokenIssuer::class)->issue($user, $device, purpose: 'driver_signup');
+
+    expect($token['abilities'])->toBe(['driver:onboarding']);
+});
