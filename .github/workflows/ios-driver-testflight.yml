@@ -29,6 +29,45 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Verify manual signing secrets
+        env:
+          IOS_DISTRIBUTION_CERTIFICATE_BASE64: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
+          IOS_DISTRIBUTION_CERTIFICATE_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}
+          IOS_DRIVER_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_DRIVER_PROVISIONING_PROFILE_BASE64 }}
+          IOS_KEYCHAIN_PASSWORD: ${{ secrets.IOS_KEYCHAIN_PASSWORD }}
+        run: |
+          missing=0
+
+          if [ -n "${IOS_DISTRIBUTION_CERTIFICATE_BASE64:-}" ]; then
+            echo "manual certificate secret present: yes"
+          else
+            echo "manual certificate secret present: no"
+            missing=1
+          fi
+
+          if [ -n "${IOS_DRIVER_PROVISIONING_PROFILE_BASE64:-}" ]; then
+            echo "driver provisioning profile secret present: yes"
+          else
+            echo "driver provisioning profile secret present: no"
+            missing=1
+          fi
+
+          if [ -n "${IOS_DISTRIBUTION_CERTIFICATE_PASSWORD:-}" ]; then
+            echo "certificate password secret present: yes"
+          else
+            echo "certificate password secret present: no"
+            missing=1
+          fi
+
+          if [ -n "${IOS_KEYCHAIN_PASSWORD:-}" ]; then
+            echo "keychain password secret present: yes"
+          else
+            echo "keychain password secret present: no"
+            missing=1
+          fi
+
+          exit "$missing"
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -51,7 +90,7 @@ jobs:
           DEV_BYPASS_ENABLED: "false"
           IOS_VERSION_NAME: ${{ inputs.version_name }}
           IOS_BUILD_NUMBER: ${{ inputs.build_number }}
-        run: bash mobile/scripts/github_actions/build_ios_testflight.sh driver
+        run: bash mobile/scripts/github_actions/build_ios_driver_testflight.sh
 
       - name: Upload Driver IPA artifact
         if: always()
