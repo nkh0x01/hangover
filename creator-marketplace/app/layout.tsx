@@ -2,6 +2,7 @@ import './globals.css';
 import type { Metadata, Viewport } from 'next';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { Providers } from '@/components/Providers';
 
 export const metadata: Metadata = {
   title: 'კრეატორები.ge — ქართული კონტენტ კრეატორების მარკეტფლეისი',
@@ -18,9 +19,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ka">
       <body className="min-h-screen flex flex-col bg-white text-ink-900">
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
+        <Providers>
+          <Header />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </Providers>
       </body>
     </html>
   );

@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { AGREEMENT_VERSION } from '@/lib/data/agreements';
+import { prisma } from '@/lib/prisma';
 
 // POST /api/agreements — persist a signed platform agreement.
 // Stores user-typed signature, IP, user-agent, and version for audit trail.
-// Schema lives in prisma/schema.prisma (`Agreement` model).
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const { userId, type, fullName } = body ?? {};
@@ -21,20 +21,19 @@ export async function POST(req: Request) {
   const ipAddress = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null;
   const userAgent = req.headers.get('user-agent') ?? null;
 
-  // TODO: prisma.agreement.create({...})
-  const record = {
-    id: `agr-${Date.now()}`,
-    userId,
-    type,
-    version: AGREEMENT_VERSION,
-    fullName: String(fullName).trim(),
-    acceptedAt: new Date().toISOString(),
-    ipAddress,
-    userAgent,
-    acceptedTerms: true,
-    acceptedAntiCircumvention: true,
-    acceptedCommission: true,
-  };
+  const agreement = await prisma.agreement.create({
+    data: {
+      userId,
+      type: type === 'creator' ? 'CREATOR' : 'CLIENT',
+      version: AGREEMENT_VERSION,
+      fullName: String(fullName).trim(),
+      ipAddress,
+      userAgent,
+      acceptedTerms: true,
+      acceptedAntiCircumvention: true,
+      acceptedCommission: true,
+    },
+  });
 
-  return NextResponse.json({ ok: true, agreement: record });
+  return NextResponse.json({ ok: true, agreement });
 }

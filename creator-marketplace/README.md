@@ -49,16 +49,88 @@ creator-marketplace/
 cd creator-marketplace
 cp .env.example .env
 npm install
+npm run db:push   # create the SQLite DB at prisma/dev.db
+npm run db:seed   # seed all categories, creators, services, orders, users
 npm run dev
 # open http://localhost:3000
 ```
 
-Optional (if you want a real database):
+The seed creates these demo logins:
 
-```bash
-npm run db:push    # create the SQLite DB at prisma/dev.db
-npm run db:seed    # (skeleton — extend prisma/seed.ts to ingest lib/data/*)
-```
+| Email                          | Password   | Role    |
+|--------------------------------|------------|---------|
+| `admin@kreatorebi.ge`          | `admin1234`  | ADMIN   |
+| `nino-beridze@kreatorebi.ge`   | `creator123` | CREATOR |
+| `salome-gabunia@kreatorebi.ge` | `creator123` | CREATOR |
+| `tata@mera.ge`                 | `client123`  | CLIENT  |
+| `partnerships@wolt.ge`         | `client123`  | CLIENT  |
+
+The login page has one-click buttons that pre-fill each role.
+
+## Authentication
+
+NextAuth.js v4 with the Credentials provider, JWT sessions (30-day rolling),
+and bcrypt password hashing.
+
+- `lib/auth.ts` — NextAuth options, password hashing helper
+- `lib/session.ts` — `getCurrentUser()`, `requireUser()`, `requireRole()`
+- `middleware.ts` — route protection:
+  - `/dashboard/*`, `/messages/*`, `/checkout/*`, `/orders/*` → must be authed
+  - `/admin/*` → must be ADMIN
+  - role mismatch redirects between creator/client dashboards
+- `app/api/auth/[...nextauth]/route.ts` — NextAuth handler
+- `app/api/register/{creator,client}/route.ts` — registration (bcrypt + Prisma)
+
+The `User` model in Prisma has `accounts` + `sessions` relations so an OAuth
+provider (Google, Apple) can be added later with no schema change — just
+plug in another Provider in `authOptions`.
+
+## Order flow (real DB-backed)
+
+End-to-end the journey is:
+
+1. Client visits `/checkout/[serviceId]`, fills the brief, clicks "გადახდა"
+2. `POST /api/payments/create` — creates an `Order` (status `NEW`) + `Payment`
+   row + provider intent, returns the BOG (or mock) redirect URL
+3. User pays on the hosted page → `POST /api/payments/webhook/bog` flips
+   the payment to `held` AND the order to `AWAITING_CREATOR`
+4. Creator opens `/orders/[id]` → accepts (→ `IN_PROGRESS`) → submits a
+   deliverable URL via the Submit button (→ `SUBMITTED`)
+5. Client opens the same order → "მიღება + შეფასება" opens the review
+   modal; on submit the order goes to `COMPLETED`, the review is saved,
+   creator's `rating` + `reviewCount` are recomputed, and
+   `POST /api/payments/release` is called to release escrow
+
+All transitions validated by `lib/enums.ts → ORDER_TRANSITIONS` so bad
+moves return 422. Per-role allowlists in
+`/api/orders/[id]/transition` so a client can't accept their own order
+or a creator can't approve their own work.
+
+The order detail page (`/orders/[id]`) shows the status timeline,
+brief, deliverables, review, payment breakdown, deadline, and the
+participants — with role-specific action buttons.
+
+## File uploads + watermarking
+
+`POST /api/uploads` accepts multipart/form-data with `file` + `purpose`
+(`portfolio` | `demo` | `deliverable` | `brief`).
+
+- Images (JPG/PNG/WEBP) are passed through **sharp** with a composed SVG
+  overlay (`lib/storage.ts → watermarkImage`): brand-violet
+  `კრეატორები.ge` badge top-left, diagonal repeating watermark tiles,
+  `© 2026 · PREVIEW` bottom-right.
+- Videos (MP4/MOV) are stored as-is; the `<WatermarkedMedia>` component
+  overlays the watermark in the browser. Replace with a real ffmpeg
+  pipeline (`drawtext` + scaled logo) in production.
+- Originals land in `public/uploads/originals/` (private — never linked
+  publicly). Previews land in `public/uploads/preview/` (the URL surface
+  served to the world).
+- For creator demo / portfolio uploads, a `PortfolioItem` row is created
+  automatically so the public profile updates immediately.
+- For deliverables, only the `previewUrl` is returned by the API —
+  the original is released to the client only after escrow release.
+
+Caps: 50 MB per file. Accepted MIMEs: jpeg, png, webp, mp4, quicktime, pdf.
 
 ## Design system
 

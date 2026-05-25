@@ -24,6 +24,7 @@ function ContractInner() {
   const params = useSearchParams();
   const type: AgreementType =
     (params.get('type') as AgreementType) === 'client' ? 'client' : 'creator';
+  const uidFromUrl = params.get('uid');
   const clauses = getAgreementClauses(type);
 
   const [fullName, setFullName] = useState('');
@@ -32,6 +33,7 @@ function ContractInner() {
   const [accept3, setAccept3] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const canSign =
     fullName.trim().length >= 3 && accept1 && accept2 && accept3 && !submitting;
@@ -40,12 +42,34 @@ function ContractInner() {
     e.preventDefault();
     if (!canSign) return;
     setSubmitting(true);
-    // In production: POST /api/agreements with { type, fullName, version, ipAddress, userAgent }
-    await new Promise((r) => setTimeout(r, 500));
-    setSubmitting(false);
-    setDone(true);
-    const next = type === 'creator' ? '/dashboard/creator?welcome=1' : '/dashboard/client?welcome=1';
-    setTimeout(() => router.push(next), 1200);
+    setError(null);
+    const uid =
+      uidFromUrl ??
+      (typeof window !== 'undefined'
+        ? window.sessionStorage.getItem('pendingUserId')
+        : null);
+    if (!uid) {
+      setError('სესია დაკარგულია — გადადი თავიდან რეგისტრაციაზე.');
+      setSubmitting(false);
+      return;
+    }
+    try {
+      const res = await fetch('/api/agreements', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: uid, type, fullName: fullName.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error ?? 'ხელშეკრულება ვერ შეინახა');
+      setDone(true);
+      window.sessionStorage.removeItem('pendingUserId');
+      // Send them to login so they can authenticate with the password they
+      // just set. After login the middleware bounces them to their dashboard.
+      setTimeout(() => router.push('/auth/login?signed=1'), 900);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'უცნობი შეცდომა');
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -146,6 +170,11 @@ function ContractInner() {
             </p>
           </div>
 
+          {error && (
+            <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-900">
+              ❌ {error}
+            </div>
+          )}
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <button type="submit" disabled={!canSign} className="btn-primary flex-1 py-3 text-base">
               {submitting ? 'ხელმოწერა...' : done ? '✓ ხელშეკრულება ხელმოწერილია' : 'ხელის მოწერა და დასრულება'}

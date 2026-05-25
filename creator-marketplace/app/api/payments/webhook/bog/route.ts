@@ -84,10 +84,37 @@ export async function POST(req: Request) {
     capturedAt: incomingStatus === 'held' ? new Date().toISOString() : current.capturedAt,
   });
 
-  // TODO: when status === 'held', also:
-  //   prisma.order.update({ where: { id: current.orderId },
-  //                          data: { status: 'AWAITING_CREATOR' } });
-  //   notify creator (email + push).
+  // Sync the DB:
+  //   - update Payment.status
+  //   - on 'held' → push the order from NEW to AWAITING_CREATOR (+ event row)
+  if (current.orderId) {
+    try {
+      const { prisma } = await import('@/lib/prisma');
+      await prisma.payment.update({
+        where: { orderId: current.orderId },
+        data: { status: incomingStatus, providerRef: current.providerRef ?? undefined },
+      });
+      if (incomingStatus === 'held') {
+        await prisma.order.update({
+          where: { id: current.orderId },
+          data: {
+            status: 'AWAITING_CREATOR',
+            events: {
+              create: {
+                actor: 'system',
+                type: 'status_change',
+                fromStatus: 'NEW',
+                toStatus: 'AWAITING_CREATOR',
+                note: 'გადახდა მიღებულია, escrow-ში დაცულია',
+              },
+            },
+          },
+        });
+      }
+    } catch (e) {
+      console.warn('[webhook] failed to sync DB:', e);
+    }
+  }
 
   return NextResponse.json({ ok: true, paymentId: intentId, status: next?.status });
 }
