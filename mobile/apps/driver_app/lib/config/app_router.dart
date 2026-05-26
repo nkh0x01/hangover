@@ -10,6 +10,7 @@ import '../features/diagnostics/application/route_diagnostics_marker.dart';
 import '../features/diagnostics/presentation/diagnostics_page.dart';
 import '../features/home/presentation/home_page.dart';
 import '../features/splash/presentation/splash_page.dart';
+import '../features/splash/presentation/startup_error_page.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -53,6 +54,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ),
           );
         },
+      ),
+      GoRoute(
+        path: '/startup-error',
+        builder: (_, __) => const RouteDiagnosticsMarker(
+          route: '/startup-error',
+          child: StartupErrorPage(),
+        ),
       ),
       GoRoute(
         path: '/home',

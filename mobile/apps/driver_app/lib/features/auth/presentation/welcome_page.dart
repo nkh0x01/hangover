@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ui_kit/ui_kit.dart';
 
+import '../../diagnostics/presentation/driver_build_identity_label.dart';
+
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
 
@@ -22,6 +24,8 @@ class WelcomePage extends StatelessWidget {
                   StatusPill(label: 'Driver', tone: StatusTone.accent),
                 ],
               ),
+              const SizedBox(height: Insets.s),
+              const DriverBuildIdentityLabel(),
               const Spacer(),
               Text(
                 'Ride 360 Driver',

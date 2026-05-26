@@ -8,6 +8,7 @@ import 'package:ui_kit/ui_kit.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../di/locator.dart';
+import '../../diagnostics/presentation/driver_build_identity_label.dart';
 import '../application/driver_auth_flow.dart';
 import '../application/driver_post_login_router.dart';
 
@@ -99,6 +100,8 @@ class _OtpPageState extends ConsumerState<OtpPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            const SizedBox(height: Insets.l),
+            const DriverBuildIdentityLabel(),
             const SizedBox(height: Insets.xxl),
             Text('კოდი გაიგზავნა ნომერზე ${widget.phone}',
                 style: Theme.of(context).textTheme.titleMedium),
@@ -128,6 +131,12 @@ class _OtpPageState extends ConsumerState<OtpPage> {
               label: widget.flow.otpActionLabel,
               onPressed: _verify,
               busy: _busy,
+            ),
+            const SizedBox(height: Insets.s),
+            TextButton.icon(
+              onPressed: _busy ? null : () => context.push('/diagnostics'),
+              icon: const Icon(Icons.info_outline_rounded),
+              label: const Text('დიაგნოსტიკა'),
             ),
           ],
         ),

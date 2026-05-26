@@ -4,11 +4,14 @@ import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:rides/rides.dart';
 import 'package:ui_kit/ui_kit.dart';
 
 import '../../../di/locator.dart';
+import '../../diagnostics/presentation/auth_diagnostics_panel.dart';
+import '../../diagnostics/presentation/driver_build_identity_label.dart';
 import '../../profile/state/driver_profile_controller.dart';
 
 class DriverApplicationPage extends ConsumerStatefulWidget {
@@ -145,7 +148,9 @@ class _DriverApplicationPageState extends ConsumerState<DriverApplicationPage> {
     } on ApiError catch (e) {
       setState(() => _error = _kaApiError(e));
     } catch (_) {
-      setState(() => _error = 'სერვერთან კავშირი ვერ მოხერხდა.');
+      setState(
+        () => _error = 'სერვერთან კავშირი ვერ მოხერხდა. დეტალები ქვემოთ ჩანს.',
+      );
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -280,10 +285,26 @@ class _DriverApplicationPageState extends ConsumerState<DriverApplicationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('მძღოლის განაცხადი')),
+      appBar: AppBar(
+        title: const Text('მძღოლის განაცხადი'),
+        actions: [
+          IconButton(
+            tooltip: 'დიაგნოსტიკა',
+            onPressed: () => context.push('/diagnostics'),
+            icon: const Icon(Icons.info_outline_rounded),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Column(
           children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(Insets.l, Insets.s, Insets.l, 0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: DriverBuildIdentityLabel(),
+              ),
+            ),
             if (_error != null)
               Container(
                 width: double.infinity,
@@ -299,6 +320,11 @@ class _DriverApplicationPageState extends ConsumerState<DriverApplicationPage> {
                   borderRadius: BorderRadius.circular(Radii.m),
                 ),
                 child: Text(_error!),
+              ),
+            if (_error != null)
+              const Padding(
+                padding: EdgeInsets.fromLTRB(Insets.l, Insets.s, Insets.l, 0),
+                child: AuthDiagnosticsPanel(),
               ),
             Expanded(
               child: Stepper(

@@ -8,6 +8,8 @@ import 'package:ui_kit/ui_kit.dart';
 import '../../../di/locator.dart';
 import '../../auth/application/driver_post_login_router.dart';
 import '../../demo/presentation/demo_stepper.dart';
+import '../../diagnostics/presentation/auth_diagnostics_panel.dart';
+import '../../diagnostics/presentation/driver_build_identity_label.dart';
 import '../../profile/state/driver_profile_controller.dart';
 import '../../ride/presentation/active_ride_sheet.dart';
 import '../../ride/presentation/incoming_offer_sheet.dart';
@@ -55,6 +57,7 @@ class HomePage extends ConsumerWidget {
           },
           secondaryLabel: 'Diagnostics',
           onSecondary: () => context.push('/diagnostics'),
+          showDiagnosticsDetails: true,
         );
       },
       data: (profile) {
@@ -273,6 +276,7 @@ class _DriverStateScaffold extends StatelessWidget {
     required this.onPrimary,
     this.secondaryLabel,
     this.onSecondary,
+    this.showDiagnosticsDetails = false,
   });
 
   final String title;
@@ -281,6 +285,7 @@ class _DriverStateScaffold extends StatelessWidget {
   final VoidCallback onPrimary;
   final String? secondaryLabel;
   final VoidCallback? onSecondary;
+  final bool showDiagnosticsDetails;
 
   @override
   Widget build(BuildContext context) {
@@ -288,8 +293,7 @@ class _DriverStateScaffold extends StatelessWidget {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(Insets.xl),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          child: ListView(
             children: [
               const Row(
                 children: [
@@ -298,11 +302,17 @@ class _DriverStateScaffold extends StatelessWidget {
                   StatusPill(label: 'Driver', tone: StatusTone.accent),
                 ],
               ),
+              const SizedBox(height: Insets.s),
+              const DriverBuildIdentityLabel(),
               const SizedBox(height: Insets.xxl),
               Text(title, style: Theme.of(context).textTheme.headlineMedium),
               const SizedBox(height: Insets.s),
               Text(body, style: Theme.of(context).textTheme.bodyLarge),
-              const Spacer(),
+              if (showDiagnosticsDetails) ...[
+                const SizedBox(height: Insets.l),
+                const AuthDiagnosticsPanel(),
+              ],
+              const SizedBox(height: Insets.xl),
               PrimaryButton(label: primaryLabel, onPressed: onPrimary),
               if (secondaryLabel != null && onSecondary != null) ...[
                 const SizedBox(height: Insets.s),

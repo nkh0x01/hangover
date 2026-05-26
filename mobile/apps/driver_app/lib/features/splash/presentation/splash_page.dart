@@ -7,6 +7,7 @@ import 'package:ui_kit/ui_kit.dart';
 
 import '../../../di/locator.dart';
 import '../../auth/application/driver_post_login_router.dart';
+import '../../diagnostics/presentation/driver_build_identity_label.dart';
 
 class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
@@ -35,18 +36,33 @@ class _SplashPageState extends ConsumerState<SplashPage> {
         context.go(routeForDriverContext(me.context));
       } on ApiError catch (error) {
         if (!mounted) return;
-        if (error.httpStatus == 401 || error.httpStatus == 403) {
-          await store.clear();
-          if (mounted) context.go('/welcome');
-          return;
-        }
-        context.go('/home');
+        final diagnostics = ref.read(networkDiagnosticsProvider);
+        diagnostics.value = diagnostics.value.copyWith(
+          lastResponseStatus: error.httpStatus,
+          lastResponseBodyExcerpt: '${error.code}: ${error.message}',
+          lastNetworkException: 'ApiError: ${error.code}',
+          tokenPresent: true,
+        );
+        context.go('/startup-error');
       } catch (_) {
-        if (mounted) context.go('/home');
+        if (mounted) context.go('/startup-error');
       }
     }
   }
 
   @override
-  Widget build(BuildContext context) => const Scaffold(body: LoadingState());
+  Widget build(BuildContext context) => const Scaffold(
+        body: SafeArea(
+          child: Padding(
+            padding: EdgeInsets.all(Insets.xl),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                DriverBuildIdentityLabel(),
+                Expanded(child: LoadingState()),
+              ],
+            ),
+          ),
+        ),
+      );
 }

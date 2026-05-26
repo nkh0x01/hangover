@@ -6,6 +6,7 @@ import 'package:ui_kit/ui_kit.dart';
 
 import '../../../di/locator.dart';
 import '../../demo/state/demo_mode_controller.dart';
+import '../../diagnostics/presentation/driver_build_identity_label.dart';
 import '../application/driver_auth_flow.dart';
 
 class PhonePage extends ConsumerStatefulWidget {
@@ -73,6 +74,8 @@ class _PhonePageState extends ConsumerState<PhonePage> {
                   StatusPill(label: 'Driver', tone: StatusTone.accent),
                 ],
               ),
+              const SizedBox(height: Insets.s),
+              const DriverBuildIdentityLabel(),
               const SizedBox(height: Insets.xl),
               Text(widget.flow.phoneTitle,
                   style: Theme.of(context).textTheme.headlineLarge),
@@ -113,6 +116,12 @@ class _PhonePageState extends ConsumerState<PhonePage> {
                       ? 'მძღოლად რეგისტრაცია'
                       : 'უკვე გაქვთ ანგარიში? შესვლა',
                 ),
+              ),
+              const SizedBox(height: Insets.s),
+              TextButton.icon(
+                onPressed: _busy ? null : () => context.push('/diagnostics'),
+                icon: const Icon(Icons.info_outline_rounded),
+                label: const Text('დიაგნოსტიკა'),
               ),
               // Preview entry. Available in dev AND staging so QA can
               // demo from an installed staging APK without backend
