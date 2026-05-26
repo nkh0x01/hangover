@@ -6,9 +6,12 @@ import 'package:ui_kit/ui_kit.dart';
 
 import '../../../di/locator.dart';
 import '../../demo/state/demo_mode_controller.dart';
+import '../application/driver_auth_flow.dart';
 
 class PhonePage extends ConsumerStatefulWidget {
-  const PhonePage({super.key});
+  const PhonePage({super.key, required this.flow});
+
+  final DriverAuthFlow flow;
 
   @override
   ConsumerState<PhonePage> createState() => _PhonePageState();
@@ -25,12 +28,14 @@ class _PhonePageState extends ConsumerState<PhonePage> {
       _error = null;
     });
     try {
-      await ref
-          .read(authRepositoryProvider)
-          .requestOtp(phone: _controller.text.trim(), purpose: 'driver_signup');
+      await ref.read(authRepositoryProvider).requestOtp(
+            phone: _controller.text.trim(),
+            purpose: widget.flow.otpPurpose,
+          );
       if (!mounted) return;
       context.go(
-          '/auth/otp?phone=${Uri.encodeComponent(_controller.text.trim())}');
+        '/auth/otp?mode=${widget.flow.queryValue}&phone=${Uri.encodeComponent(_controller.text.trim())}',
+      );
     } on ApiError catch (e) {
       setState(() => _error = e.message);
     } finally {
@@ -47,6 +52,13 @@ class _PhonePageState extends ConsumerState<PhonePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.flow.phoneTitle),
+        leading: IconButton(
+          onPressed: () => context.go('/welcome'),
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
+      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(Insets.xl),
@@ -61,12 +73,12 @@ class _PhonePageState extends ConsumerState<PhonePage> {
                   StatusPill(label: 'Driver', tone: StatusTone.accent),
                 ],
               ),
-              const SizedBox(height: Insets.xxl),
-              Text('Drive Tbilisi with us',
+              const SizedBox(height: Insets.xl),
+              Text(widget.flow.phoneTitle,
                   style: Theme.of(context).textTheme.headlineLarge),
               const SizedBox(height: Insets.xs),
               Text(
-                'მართე Tbilisi-ში და მიიღე გადახდა ყოველდღე.\nDaily payouts. Flexible hours.',
+                widget.flow.phoneSubtitle,
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
               const SizedBox(height: Insets.xxl),
@@ -83,14 +95,24 @@ class _PhonePageState extends ConsumerState<PhonePage> {
               ],
               const Spacer(),
               PrimaryButton(
-                label: 'მძღოლად შესვლა / რეგისტრაცია',
+                label: widget.flow.phoneTitle,
                 onPressed: _send,
                 busy: _busy,
               ),
               const SizedBox(height: Insets.s),
               OutlinedButton(
-                onPressed: _busy ? null : _send,
-                child: const Text('მძღოლად რეგისტრაცია'),
+                onPressed: _busy
+                    ? null
+                    : () => context.go(
+                          widget.flow == DriverAuthFlow.login
+                              ? '/auth/phone?mode=registration'
+                              : '/auth/phone?mode=login',
+                        ),
+                child: Text(
+                  widget.flow == DriverAuthFlow.login
+                      ? 'მძღოლად რეგისტრაცია'
+                      : 'უკვე გაქვთ ანგარიში? შესვლა',
+                ),
               ),
               // Preview entry. Available in dev AND staging so QA can
               // demo from an installed staging APK without backend

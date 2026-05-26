@@ -27,7 +27,7 @@ class _SplashPageState extends ConsumerState<SplashPage> {
     final token = await store.read();
     if (!mounted) return;
     if (token == null) {
-      context.go('/auth/phone');
+      context.go('/welcome');
     } else {
       try {
         final me = await ref.read(driverProfileRepositoryProvider).me();
@@ -37,7 +37,7 @@ class _SplashPageState extends ConsumerState<SplashPage> {
         if (!mounted) return;
         if (error.httpStatus == 401 || error.httpStatus == 403) {
           await store.clear();
-          if (mounted) context.go('/auth/phone');
+          if (mounted) context.go('/welcome');
           return;
         }
         context.go('/home');

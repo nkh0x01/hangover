@@ -36,11 +36,19 @@ class HomePage extends ConsumerWidget {
         return _DriverStateScaffold(
           title: copy.title,
           body: copy.body,
-          primaryLabel: copy.requiresLogin ? 'ხელახლა შესვლა' : 'თავიდან ცდა',
+          primaryLabel: copy.primaryLabel ??
+              (copy.requiresLogin ? 'ხელახლა შესვლა' : 'თავიდან ცდა'),
           onPrimary: () async {
+            if (copy.primaryRoute != null) {
+              if (copy.clearTokenBeforeRoute) {
+                await ref.read(tokenStoreProvider).clear();
+              }
+              if (context.mounted) context.go(copy.primaryRoute!);
+              return;
+            }
             if (copy.requiresLogin) {
               await ref.read(tokenStoreProvider).clear();
-              if (context.mounted) context.go('/auth/phone');
+              if (context.mounted) context.go('/welcome');
               return;
             }
             ref.invalidate(driverMeProvider);
@@ -69,11 +77,17 @@ class _HomeErrorCopy {
     required this.title,
     required this.body,
     this.requiresLogin = false,
+    this.primaryLabel,
+    this.primaryRoute,
+    this.clearTokenBeforeRoute = false,
   });
 
   final String title;
   final String body;
   final bool requiresLogin;
+  final String? primaryLabel;
+  final String? primaryRoute;
+  final bool clearTokenBeforeRoute;
 }
 
 _HomeErrorCopy _homeErrorCopy(Object error) {
@@ -89,7 +103,7 @@ _HomeErrorCopy _homeErrorCopy(Object error) {
       );
     }
     return _HomeErrorCopy(
-      title: 'სერვერთან კავშირი ვერ მოხერხდა',
+      title: 'მძღოლის მდგომარეობა ვერ დამუშავდა',
       body: 'დეტალები Diagnostics-ში ჩანს.\n$text',
     );
   }
@@ -98,15 +112,23 @@ _HomeErrorCopy _homeErrorCopy(Object error) {
       'HTTP ${apiError.httpStatus ?? 'unknown'} · ${apiError.code}\n${apiError.message}';
   return switch (apiError.httpStatus) {
     401 => _HomeErrorCopy(
-        title: 'ავტორიზაცია ვერ დადასტურდა',
+        title: 'სესიის ვადა ამოიწურა',
         body: detail,
         requiresLogin: true,
       ),
     403 => _HomeErrorCopy(
-        title: 'არასწორი ავტორიზაციის როლი',
-        body:
-            '$detail\nDriver აპისთვის საჭიროა driver ან driver:onboarding token.',
+        title: 'წვდომა შეზღუდულია',
+        body: apiError.code == 'auth.wrong_app_context'
+            ? 'ეს ნომერი მძღოლის ანგარიშად არ არის რეგისტრირებული. გსურთ მძღოლად რეგისტრაცია?'
+            : '$detail\nამ მოქმედებისთვის არ გაქვთ შესაბამისი წვდომა.',
         requiresLogin: true,
+        primaryLabel: apiError.code == 'auth.wrong_app_context'
+            ? 'მძღოლად რეგისტრაცია'
+            : null,
+        primaryRoute: apiError.code == 'auth.wrong_app_context'
+            ? '/auth/phone?mode=registration'
+            : null,
+        clearTokenBeforeRoute: apiError.code == 'auth.wrong_app_context',
       ),
     404 => _HomeErrorCopy(
         title: 'სერვერის endpoint ვერ მოიძებნა',
@@ -226,7 +248,8 @@ class _DriverOnboardingScaffold extends ConsumerWidget {
         'ონლაინ გასვლამდე საჭიროა აქტიური ტრანსპორტის დამატება ან დამტკიცება.',
       DriverRuntimeState.suspended =>
         'დამატებითი ინფორმაციისთვის დაუკავშირდით მხარდაჭერას.',
-      _ => 'მძღოლად მუშაობისთვის შეავსეთ განაცხადი და დაელოდეთ დამტკიცებას.',
+      _ =>
+        'მძღოლის პროფილი ჯერ არ არის დამტკიცებული. გთხოვთ შეავსოთ განაცხადი.',
     };
 
     return _DriverStateScaffold(

@@ -26,11 +26,13 @@ class DriverDemoStepper extends ConsumerWidget {
           elevation: 8,
           borderRadius: BorderRadius.circular(Radii.pill),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: Insets.l, vertical: 8),
+            padding:
+                const EdgeInsets.symmetric(horizontal: Insets.l, vertical: 8),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.visibility_rounded, size: 16, color: Colors.white),
+                const Icon(Icons.visibility_rounded,
+                    size: 16, color: Colors.white),
                 const SizedBox(width: 8),
                 Flexible(
                   child: Text(
@@ -60,7 +62,7 @@ class DriverDemoStepper extends ConsumerWidget {
                   outlined: true,
                   onTap: () {
                     controller.exit();
-                    context.go('/auth/phone');
+                    context.go('/welcome');
                   },
                 ),
               ],
@@ -73,7 +75,8 @@ class DriverDemoStepper extends ConsumerWidget {
 }
 
 class _StepperButton extends StatelessWidget {
-  const _StepperButton({required this.label, required this.onTap, this.outlined = false});
+  const _StepperButton(
+      {required this.label, required this.onTap, this.outlined = false});
 
   final String label;
   final VoidCallback onTap;

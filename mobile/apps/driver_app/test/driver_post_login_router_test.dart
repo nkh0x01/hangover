@@ -1,5 +1,6 @@
 import 'package:auth/auth.dart';
 import 'package:core/core.dart';
+import 'package:driver_app/features/auth/application/driver_auth_flow.dart';
 import 'package:driver_app/features/auth/application/driver_post_login_router.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:network/network.dart';
@@ -10,6 +11,15 @@ void main() {
     expect(isDriverLoginAbility(const ['driver:onboarding']), isTrue);
     expect(isDriverLoginAbility(const ['driver']), isTrue);
     expect(isDriverLoginAbility(const ['customer']), isFalse);
+  });
+
+  test('registration flow sends driver_signup OTP purpose', () {
+    expect(DriverAuthFlow.registration.otpPurpose, 'driver_signup');
+  });
+
+  test('login flow uses driver-capable purpose and never customer signup', () {
+    expect(DriverAuthFlow.login.otpPurpose, 'driver_signup');
+    expect(DriverAuthFlow.login.otpPurpose, isNot('signup'));
   });
 
   test('driver onboarding context routes to application form', () {
@@ -34,6 +44,14 @@ void main() {
     );
 
     expect(routeForDriverContext(context), '/application');
+    expect(
+      routeForDriverContextAfterOtp(context, DriverAuthFlow.registration),
+      '/application',
+    );
+    expect(
+      routeForDriverContextAfterOtp(context, DriverAuthFlow.login),
+      '/home',
+    );
   });
 
   test('pending review context routes to home state screen', () {
@@ -68,7 +86,7 @@ void main() {
       ),
     );
 
-    expect(message, contains('ავტორიზაცია'));
+    expect(message, contains('სესიის ვადა'));
     expect(message, isNot(contains('სერვერთან კავშირი ვერ მოხერხდა')));
   });
 
@@ -81,7 +99,19 @@ void main() {
       ),
     );
 
-    expect(message, contains('Driver აპისთვის საჭიროა'));
+    expect(message, contains('შესაბამისი წვდომა'));
+  });
+
+  test('customer token in Driver app maps to role mismatch message', () {
+    final message = driverLoginErrorMessage(
+      ApiError(
+        code: 'auth.wrong_app_context',
+        message: 'Driver app received a customer token.',
+        httpStatus: 403,
+      ),
+    );
+
+    expect(message, contains('მძღოლის ანგარიშად არ არის რეგისტრირებული'));
   });
 
   test('404 maps to missing endpoint diagnostic', () {
@@ -168,5 +198,28 @@ void main() {
       diagnostics.value.lastDriverCannotGoOnlineReason,
       'driver.no_profile',
     );
+  });
+
+  test('diagnostics records route and infers onboarding ability from auth/me',
+      () {
+    final diagnostics = NetworkDiagnosticsRecorder();
+
+    diagnostics.recordCurrentRoute('/application');
+    diagnostics.recordAuthPayload({
+      'data': {
+        'user': {'type': 'driver'},
+        'driver_context': {
+          'has_driver_profile': false,
+          'needs_application': true,
+          'can_submit_application': true,
+          'can_go_online': false,
+          'reason_if_cannot_go_online': 'driver.no_profile',
+        },
+      },
+    });
+
+    expect(diagnostics.value.currentRoute, '/application');
+    expect(diagnostics.value.lastAuthAbilities, ['driver:onboarding']);
+    expect(diagnostics.value.lastDriverNeedsApplication, isTrue);
   });
 }

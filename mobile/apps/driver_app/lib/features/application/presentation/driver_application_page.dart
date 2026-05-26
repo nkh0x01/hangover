@@ -71,6 +71,12 @@ class _DriverApplicationPageState extends ConsumerState<DriverApplicationPage> {
             return MapEntry(document.docType, document);
           }));
       });
+    } on ApiError catch (error) {
+      if (error.httpStatus == 404) return;
+      if (!mounted) return;
+      setState(() {
+        _error = _kaApiError(error);
+      });
     } catch (_) {
       // Opening the form must never dead-end because draft loading failed.
     }
@@ -238,6 +244,9 @@ class _DriverApplicationPageState extends ConsumerState<DriverApplicationPage> {
   String _kaApiError(ApiError e) {
     return switch (e.code) {
       'validation.failed' => 'გთხოვთ შეამოწმოთ შევსებული მონაცემები.',
+      'auth.invalid_token' => 'სესიის ვადა ამოიწურა, გთხოვთ თავიდან შეხვიდეთ.',
+      'auth.wrong_app_context' =>
+        'ამ მოქმედებისთვის არ გაქვთ შესაბამისი წვდომა.',
       'driver.application_locked' => 'განაცხადი უკვე განხილვაშია.',
       'driver.application_incomplete' => 'განაცხადი სრულად არ არის შევსებული.',
       _ => e.message.isEmpty ? 'განაცხადის შენახვა ვერ მოხერხდა.' : e.message,

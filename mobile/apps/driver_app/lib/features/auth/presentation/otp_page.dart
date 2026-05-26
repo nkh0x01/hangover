@@ -8,12 +8,18 @@ import 'package:ui_kit/ui_kit.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../di/locator.dart';
+import '../application/driver_auth_flow.dart';
 import '../application/driver_post_login_router.dart';
 
 class OtpPage extends ConsumerStatefulWidget {
-  const OtpPage({super.key, required this.phone});
+  const OtpPage({
+    super.key,
+    required this.phone,
+    required this.flow,
+  });
 
   final String phone;
+  final DriverAuthFlow flow;
 
   @override
   ConsumerState<OtpPage> createState() => _OtpPageState();
@@ -23,11 +29,13 @@ class _OtpPageState extends ConsumerState<OtpPage> {
   final _controller = TextEditingController();
   bool _busy = false;
   String? _error;
+  bool _showRegistrationCta = false;
 
   Future<void> _verify() async {
     setState(() {
       _busy = true;
       _error = null;
+      _showRegistrationCta = false;
     });
     try {
       final platform =
@@ -42,7 +50,7 @@ class _OtpPageState extends ConsumerState<OtpPage> {
       final auth = await ref.read(authRepositoryProvider).verifyOtp(
             phone: widget.phone,
             code: _controller.text.trim(),
-            purpose: 'driver_signup',
+            purpose: widget.flow.otpPurpose,
             deviceUuid: deviceUuid,
             platform: platform,
             appVersion: '0.1.0',
@@ -51,15 +59,15 @@ class _OtpPageState extends ConsumerState<OtpPage> {
         await store.clear();
         if (!mounted) return;
         setState(() {
-          _error =
-              'Driver აპმა მიიღო არასწორი token (${auth.abilities.join(', ')}). სცადეთ თავიდან.';
+          _error = widget.flow.roleMismatchMessage;
+          _showRegistrationCta = widget.flow == DriverAuthFlow.login;
         });
         return;
       }
 
       final me = await ref.read(driverProfileRepositoryProvider).me();
       if (!mounted) return;
-      context.go(routeForDriverContext(me.context));
+      context.go(routeForDriverContextAfterOtp(me.context, widget.flow));
     } on ApiError catch (e) {
       setState(() => _error = driverLoginErrorMessage(e));
     } catch (e) {
@@ -78,19 +86,26 @@ class _OtpPageState extends ConsumerState<OtpPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Verify code')),
+      appBar: AppBar(
+        title: Text(widget.flow.otpTitle),
+        leading: IconButton(
+          onPressed: () =>
+              context.go('/auth/phone?mode=${widget.flow.queryValue}'),
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(Insets.xl),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: Insets.xxl),
-            Text('Code sent to ${widget.phone}',
+            Text('კოდი გაიგზავნა ნომერზე ${widget.phone}',
                 style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: Insets.l),
             AppTextField(
               controller: _controller,
-              label: '6-digit code',
+              label: '6-ნიშნა კოდი',
               keyboardType: TextInputType.number,
               autofocus: true,
               maxLength: 6,
@@ -100,9 +115,20 @@ class _OtpPageState extends ConsumerState<OtpPage> {
               const SizedBox(height: Insets.s),
               Text(_error!,
                   style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              if (_showRegistrationCta) ...[
+                const SizedBox(height: Insets.s),
+                OutlinedButton(
+                  onPressed: () => context.go('/auth/phone?mode=registration'),
+                  child: const Text('მძღოლად რეგისტრაცია'),
+                ),
+              ],
             ],
             const Spacer(),
-            PrimaryButton(label: 'Verify', onPressed: _verify, busy: _busy),
+            PrimaryButton(
+              label: widget.flow.otpActionLabel,
+              onPressed: _verify,
+              busy: _busy,
+            ),
           ],
         ),
       ),

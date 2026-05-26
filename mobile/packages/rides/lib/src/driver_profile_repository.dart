@@ -27,11 +27,16 @@ class DriverProfileRepository {
   }
 
   Future<DriverApplication?> application() async {
-    final response =
-        await client.dio.get<Map<String, Object?>>('/driver/application');
-    final data = response.data!['data'];
-    if (data == null) return null;
-    return DriverApplication.fromJson(data as Map<String, Object?>);
+    try {
+      final response =
+          await client.dio.get<Map<String, Object?>>('/driver/application');
+      final data = response.data!['data'];
+      if (data == null) return null;
+      return DriverApplication.fromJson(data as Map<String, Object?>);
+    } on ApiError catch (error) {
+      if (error.httpStatus == 404) return null;
+      rethrow;
+    }
   }
 
   Future<DriverApplication> saveApplication(

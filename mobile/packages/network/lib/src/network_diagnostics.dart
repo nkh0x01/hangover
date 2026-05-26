@@ -21,6 +21,7 @@ class NetworkDiagnosticsState {
     this.lastDriverCanSubmitApplication,
     this.lastDriverCanGoOnline,
     this.lastDriverCannotGoOnlineReason,
+    this.currentRoute,
   });
 
   final String? lastRequestMethod;
@@ -37,6 +38,7 @@ class NetworkDiagnosticsState {
   final bool? lastDriverCanSubmitApplication;
   final bool? lastDriverCanGoOnline;
   final String? lastDriverCannotGoOnlineReason;
+  final String? currentRoute;
 
   NetworkDiagnosticsState copyWith({
     String? lastRequestMethod,
@@ -57,6 +59,7 @@ class NetworkDiagnosticsState {
     bool? lastDriverCanSubmitApplication,
     bool? lastDriverCanGoOnline,
     String? lastDriverCannotGoOnlineReason,
+    String? currentRoute,
   }) {
     return NetworkDiagnosticsState(
       lastRequestMethod: lastRequestMethod ?? this.lastRequestMethod,
@@ -86,6 +89,7 @@ class NetworkDiagnosticsState {
           lastDriverCanGoOnline ?? this.lastDriverCanGoOnline,
       lastDriverCannotGoOnlineReason:
           lastDriverCannotGoOnlineReason ?? this.lastDriverCannotGoOnlineReason,
+      currentRoute: currentRoute ?? this.currentRoute,
     );
   }
 }
@@ -170,6 +174,10 @@ class NetworkDiagnosticsRecorder
     );
   }
 
+  void recordCurrentRoute(String route) {
+    value = value.copyWith(currentRoute: route);
+  }
+
   static String _exceptionLabel(DioException error) {
     final status = error.response?.statusCode;
     final type = error.type.name;
@@ -222,10 +230,17 @@ class NetworkDiagnosticsRecorder
     final driverContext =
         _map(data['driver_context']) ?? _map(user['driver_context']);
 
-    final abilities = _stringList(data['abilities'] ?? token?['abilities']);
     final userType = _string(
       user['type'] ?? data['user_type'] ?? data['type'],
     );
+    var abilities = _stringList(data['abilities'] ?? token?['abilities']);
+    if (abilities.isEmpty && userType == 'driver' && driverContext != null) {
+      final hasProfile = _bool(driverContext['has_driver_profile']) == true;
+      final canGoOnline = _bool(driverContext['can_go_online']) == true;
+      abilities = hasProfile && canGoOnline
+          ? const ['driver']
+          : const ['driver:onboarding'];
+    }
     if (abilities.isEmpty && userType == null && driverContext == null) {
       return null;
     }

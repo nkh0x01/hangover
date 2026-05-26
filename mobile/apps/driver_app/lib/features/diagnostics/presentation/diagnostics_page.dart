@@ -92,6 +92,10 @@ class DiagnosticsPage extends ConsumerWidget {
                       value: _boolOrUnknown(tokenPresent),
                     ),
                     _Row(
+                      label: 'Current route/screen',
+                      value: network.currentRoute ?? 'unknown',
+                    ),
+                    _Row(
                       label: 'Last token abilities',
                       value: displayedAbilities.isEmpty
                           ? 'unknown'
