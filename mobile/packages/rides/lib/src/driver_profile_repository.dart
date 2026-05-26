@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:core/core.dart';
 import 'package:dio/dio.dart';
 import 'package:network/network.dart';
 
@@ -7,17 +8,28 @@ class DriverProfileRepository {
   DriverProfileRepository({required this.client});
 
   final ApiClient client;
+  static const mePath = '/auth/me';
 
   Future<DriverMe> me() async {
-    final response = await client.dio.get('/driver/me');
-    final data =
-        (response.data as Map<String, Object?>)['data'] as Map<String, Object?>;
-    return DriverMe.fromJson(data);
+    final response = await client.dio.get<Map<String, Object?>>(mePath);
+    final data = response.data!['data'] as Map<String, Object?>;
+    final me = DriverMe.fromJson(data);
+    if (me.userType != 'driver') {
+      throw ApiError(
+        code: 'auth.wrong_app_context',
+        message:
+            'Driver app received a ${me.userType} token. Please sign in as a driver.',
+        httpStatus: response.statusCode,
+        details: {'user_type': me.userType},
+      );
+    }
+    return me;
   }
 
   Future<DriverApplication?> application() async {
-    final response = await client.dio.get('/driver/application');
-    final data = (response.data as Map<String, Object?>)['data'];
+    final response =
+        await client.dio.get<Map<String, Object?>>('/driver/application');
+    final data = response.data!['data'];
     if (data == null) return null;
     return DriverApplication.fromJson(data as Map<String, Object?>);
   }
@@ -25,16 +37,18 @@ class DriverProfileRepository {
   Future<DriverApplication> saveApplication(
     Map<String, Object?> payload,
   ) async {
-    final response = await client.dio.put('/driver/application', data: payload);
-    final data =
-        (response.data as Map<String, Object?>)['data'] as Map<String, Object?>;
+    final response = await client.dio.put<Map<String, Object?>>(
+      '/driver/application',
+      data: payload,
+    );
+    final data = response.data!['data'] as Map<String, Object?>;
     return DriverApplication.fromJson(data);
   }
 
   Future<DriverApplication> submitApplication() async {
-    final response = await client.dio.post('/driver/application/submit');
-    final data =
-        (response.data as Map<String, Object?>)['data'] as Map<String, Object?>;
+    final response = await client.dio
+        .post<Map<String, Object?>>('/driver/application/submit');
+    final data = response.data!['data'] as Map<String, Object?>;
     return DriverApplication.fromJson(data);
   }
 
@@ -42,15 +56,14 @@ class DriverProfileRepository {
     required String docType,
     required File file,
   }) async {
-    final response = await client.dio.post(
+    final response = await client.dio.post<Map<String, Object?>>(
       '/driver/application/documents',
       data: FormData.fromMap({
         'doc_type': docType,
         'file': await MultipartFile.fromFile(file.path),
       }),
     );
-    final data = (response.data as Map<String, Object?>)['application']
-        as Map<String, Object?>;
+    final data = response.data!['application'] as Map<String, Object?>;
     return DriverApplication.fromJson(data);
   }
 }
@@ -58,17 +71,20 @@ class DriverProfileRepository {
 class DriverMe {
   const DriverMe({
     required this.userId,
+    required this.userType,
     required this.phone,
     required this.context,
   });
 
   final String userId;
+  final String userType;
   final String? phone;
   final DriverContext context;
 
   factory DriverMe.fromJson(Map<String, Object?> json) {
     return DriverMe(
       userId: json['id'] as String? ?? '',
+      userType: json['type'] as String? ?? 'unknown',
       phone: json['phone'] as String?,
       context: DriverContext.fromJson(
         (json['driver_context'] as Map?)?.cast<String, Object?>() ?? const {},
@@ -225,7 +241,7 @@ class DriverApplication {
       status: json['status'] as String? ?? 'draft',
       rejectionReason: json['rejection_reason'] as String?,
       documents: ((json['documents'] as List?) ?? const [])
-          .whereType<Map>()
+          .whereType<Map<Object?, Object?>>()
           .map((item) => DriverApplicationDocument.fromJson(
                 item.cast<String, Object?>(),
               ))

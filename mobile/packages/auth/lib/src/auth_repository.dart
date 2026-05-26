@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:network/network.dart';
 
 import 'models/auth_token.dart';
@@ -6,13 +5,19 @@ import 'models/auth_token.dart';
 /// Thin wrapper around the /auth/* endpoints. Feature layer (UI) calls
 /// these directly through Riverpod providers; no extra service layer.
 class AuthRepository {
-  AuthRepository({required this.client, required this.tokenStore});
+  AuthRepository({
+    required this.client,
+    required this.tokenStore,
+    this.diagnostics,
+  });
 
   final ApiClient client;
   final TokenStore tokenStore;
+  final NetworkDiagnosticsRecorder? diagnostics;
 
-  Future<void> requestOtp({required String phone, required String purpose}) async {
-    await client.dio.post('/auth/otp/request', data: {
+  Future<void> requestOtp(
+      {required String phone, required String purpose}) async {
+    await client.dio.post<Map<String, Object?>>('/auth/otp/request', data: {
       'phone': phone,
       'purpose': purpose,
     });
@@ -27,7 +32,8 @@ class AuthRepository {
     required String appVersion,
     String? fcmToken,
   }) async {
-    final response = await client.dio.post('/auth/otp/verify', data: {
+    final response =
+        await client.dio.post<Map<String, Object?>>('/auth/otp/verify', data: {
       'phone': phone,
       'code': code,
       'purpose': purpose,
@@ -36,18 +42,23 @@ class AuthRepository {
       'app_version': appVersion,
       if (fcmToken != null) 'fcm_token': fcmToken,
     });
-    final data = (response.data as Map<String, Object?>)['data'] as Map<String, Object?>;
+    final data = response.data!['data'] as Map<String, Object?>;
     final token = AuthToken.fromJson(data);
 
     await tokenStore.write(token: token.token, expiresAt: token.expiresAt);
     await tokenStore.writeDeviceUuid(deviceUuid);
+    diagnostics?.recordAuthResult(
+      abilities: token.abilities,
+      userType: token.userType,
+    );
 
     return token;
   }
 
   Future<AuthToken> refresh() async {
-    final response = await client.dio.post('/auth/refresh');
-    final data = (response.data as Map<String, Object?>)['data'] as Map<String, Object?>;
+    final response =
+        await client.dio.post<Map<String, Object?>>('/auth/refresh');
+    final data = response.data!['data'] as Map<String, Object?>;
     final token = AuthToken.fromJson(data);
     await tokenStore.write(token: token.token, expiresAt: token.expiresAt);
     return token;
@@ -55,8 +66,8 @@ class AuthRepository {
 
   Future<void> logout() async {
     try {
-      await client.dio.post('/auth/logout');
-    } on DioException {
+      await client.dio.post<void>('/auth/logout');
+    } catch (_) {
       // ignore — we still want to wipe local state.
     } finally {
       await tokenStore.clear();

@@ -5,7 +5,8 @@ import 'package:dio/dio.dart';
 /// repositories can branch on `code` without parsing JSON themselves.
 class ErrorInterceptor extends Interceptor {
   @override
-  void onResponse(Response response, ResponseInterceptorHandler handler) {
+  void onResponse(
+      Response<dynamic> response, ResponseInterceptorHandler handler) {
     final status = response.statusCode ?? 0;
     if (status >= 400) {
       final body = response.data;

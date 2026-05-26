@@ -5,6 +5,7 @@ import 'interceptors/auth_interceptor.dart';
 import 'interceptors/error_interceptor.dart';
 import 'interceptors/headers_interceptor.dart';
 import 'interceptors/idempotency_interceptor.dart';
+import 'network_diagnostics.dart';
 import 'token_store.dart';
 
 /// Centralised Dio configuration shared by both apps. Interceptors are
@@ -16,6 +17,7 @@ class ApiClient {
     required String appPlatform,
     required String appVersion,
     required Future<String> Function() deviceUuidProvider,
+    NetworkDiagnosticsRecorder? diagnostics,
   }) {
     dio = Dio(
       BaseOptions(
@@ -37,6 +39,11 @@ class ApiClient {
       ),
       AuthInterceptor(tokenStore: tokenStore),
       IdempotencyInterceptor(),
+      if (diagnostics != null)
+        DiagnosticsInterceptor(
+          tokenStore: tokenStore,
+          recorder: diagnostics,
+        ),
       ErrorInterceptor(),
     ]);
   }

@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:network/network.dart';
 import 'package:rides/rides.dart';
 import 'package:ui_kit/ui_kit.dart';
 
@@ -27,89 +29,142 @@ class DiagnosticsPage extends ConsumerWidget {
     final env = ref.watch(envProvider);
     final shift = ref.watch(shiftProvider);
     final me = ref.watch(driverMeProvider);
+    final diagnostics = ref.watch(networkDiagnosticsProvider);
     final tokenFuture = ref.watch(tokenStoreProvider).read();
+    final deviceFuture = ref.watch(tokenStoreProvider).readDeviceUuid();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Diagnostics')),
       body: SafeArea(
-        child: FutureBuilder<String?>(
-          future: tokenFuture,
-          builder: (context, snapshot) {
-            final tokenPresent =
-                snapshot.connectionState == ConnectionState.done
-                    ? snapshot.data != null && snapshot.data!.trim().isNotEmpty
-                    : shift.authTokenPresent;
+        child: ValueListenableBuilder<NetworkDiagnosticsState>(
+          valueListenable: diagnostics,
+          builder: (context, network, _) {
+            return FutureBuilder<(String?, String?)>(
+              future: Future.wait<String?>([tokenFuture, deviceFuture]).then(
+                (values) => (values[0], values[1]),
+              ),
+              builder: (context, snapshot) {
+                final token = snapshot.data?.$1;
+                final tokenPresent =
+                    snapshot.connectionState == ConnectionState.done
+                        ? token != null && token.trim().isNotEmpty
+                        : network.tokenPresent ?? shift.authTokenPresent;
+                final deviceUuid = snapshot.data?.$2;
 
-            return ListView(
-              padding: const EdgeInsets.all(Insets.l),
-              children: [
-                _Row(label: 'API_BASE_URL', value: env.apiBaseUrl),
-                _Row(
-                  label: 'Build app',
-                  value: _buildAppName.ifEmpty('Ride 360 Driver'),
-                ),
-                _Row(
-                  label: 'Build number',
-                  value: [
-                    _buildVersionName.ifEmpty('0.1.0'),
-                    _buildVersionCode.ifEmpty('unknown'),
-                  ].join(' + '),
-                ),
-                _Row(
-                  label: 'Build timestamp',
-                  value: _buildTimestamp.ifEmpty('unknown'),
-                ),
-                _Row(
-                  label: 'Package id',
-                  value: _buildPackageId.ifEmpty('unknown'),
-                ),
-                _Row(
-                  label: 'Git commit',
-                  value: _buildCommit.ifEmpty('unknown'),
-                ),
-                _Row(
-                  label: 'Maps key present',
-                  value: env.googleMapsKey.trim().isEmpty ? 'no' : 'yes',
-                ),
-                _Row(
-                  label: 'Auth token present',
-                  value: _boolOrUnknown(tokenPresent),
-                ),
-                _Row(label: 'Last driver action', value: shift.lastAction),
-                _Row(
-                  label: 'Last driver API endpoint',
-                  value: shift.lastApiEndpoint ?? 'none',
-                ),
-                _Row(
-                  label: 'Last driver API status',
-                  value: shift.lastApiStatus?.toString() ?? 'none',
-                ),
-                _Row(
-                  label: 'Last driver API error',
-                  value: shift.lastApiError ?? shift.error ?? 'none',
-                ),
-                _Row(
-                  label: 'Location status',
-                  value: shift.locationStatus,
-                ),
-                _Row(
-                  label: 'Lat/lng available',
-                  value: shift.locationAvailable ? 'yes' : 'no',
-                ),
-                _Row(
-                  label: 'Driver online state',
-                  value: shift.online ? 'online' : 'offline',
-                ),
-                _Row(
-                  label: 'Driver profile present',
-                  value: _boolOrUnknown(shift.driverProfilePresent),
-                ),
-                _Row(
-                  label: 'Driver profile/approval state',
-                  value: shift.driverProfileState,
-                ),
-                ..._driverContextRows(me),
-              ],
+                return ListView(
+                  padding: const EdgeInsets.all(Insets.l),
+                  children: [
+                    _Row(label: 'API_BASE_URL', value: env.apiBaseUrl),
+                    _Row(
+                      label: 'Last request method',
+                      value: network.lastRequestMethod ?? 'none',
+                    ),
+                    _Row(
+                      label: 'Last request URL',
+                      value: network.lastRequestUrl ?? 'none',
+                    ),
+                    _Row(
+                      label: 'Last response status',
+                      value: network.lastResponseStatus?.toString() ?? 'none',
+                    ),
+                    _Row(
+                      label: 'Last response body excerpt',
+                      value: network.lastResponseBodyExcerpt ?? 'none',
+                    ),
+                    _Row(
+                      label: 'Last network exception',
+                      value: network.lastNetworkException ?? 'none',
+                    ),
+                    _Row(
+                      label: 'Auth token present',
+                      value: _boolOrUnknown(tokenPresent),
+                    ),
+                    _Row(
+                      label: 'Last token abilities',
+                      value: network.lastAuthAbilities.isEmpty
+                          ? 'unknown'
+                          : network.lastAuthAbilities.join(', '),
+                    ),
+                    _Row(
+                      label: 'Last auth user type',
+                      value: network.lastAuthUserType ?? 'unknown',
+                    ),
+                    _Row(
+                      label: 'Device UUID',
+                      value: deviceUuid ?? 'unknown',
+                    ),
+                    _Row(
+                      label: 'Platform',
+                      value: defaultTargetPlatform.name,
+                    ),
+                    _Row(
+                      label: 'App version',
+                      value: _buildVersionName.ifEmpty('0.1.0'),
+                    ),
+                    _Row(
+                      label: 'Build app',
+                      value: _buildAppName.ifEmpty('Ride 360 Driver'),
+                    ),
+                    _Row(
+                      label: 'Build number',
+                      value: [
+                        _buildVersionName.ifEmpty('0.1.0'),
+                        _buildVersionCode.ifEmpty('unknown'),
+                      ].join(' + '),
+                    ),
+                    _Row(
+                      label: 'Build timestamp',
+                      value: _buildTimestamp.ifEmpty('unknown'),
+                    ),
+                    _Row(
+                      label: 'Package id',
+                      value: _buildPackageId.ifEmpty('unknown'),
+                    ),
+                    _Row(
+                      label: 'Git commit',
+                      value: _buildCommit.ifEmpty('unknown'),
+                    ),
+                    _Row(
+                      label: 'Maps key present',
+                      value: env.googleMapsKey.trim().isEmpty ? 'no' : 'yes',
+                    ),
+                    _Row(label: 'Last driver action', value: shift.lastAction),
+                    _Row(
+                      label: 'Last driver API endpoint',
+                      value: shift.lastApiEndpoint ?? 'none',
+                    ),
+                    _Row(
+                      label: 'Last driver API status',
+                      value: shift.lastApiStatus?.toString() ?? 'none',
+                    ),
+                    _Row(
+                      label: 'Last driver API error',
+                      value: shift.lastApiError ?? shift.error ?? 'none',
+                    ),
+                    _Row(
+                      label: 'Location status',
+                      value: shift.locationStatus,
+                    ),
+                    _Row(
+                      label: 'Lat/lng available',
+                      value: shift.locationAvailable ? 'yes' : 'no',
+                    ),
+                    _Row(
+                      label: 'Driver online state',
+                      value: shift.online ? 'online' : 'offline',
+                    ),
+                    _Row(
+                      label: 'Driver profile present',
+                      value: _boolOrUnknown(shift.driverProfilePresent),
+                    ),
+                    _Row(
+                      label: 'Driver profile/approval state',
+                      value: shift.driverProfileState,
+                    ),
+                    ..._driverContextRows(me),
+                  ],
+                );
+              },
             );
           },
         ),

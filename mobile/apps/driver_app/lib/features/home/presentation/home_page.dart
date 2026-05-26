@@ -6,6 +6,7 @@ import 'package:rides/rides.dart';
 import 'package:ui_kit/ui_kit.dart';
 
 import '../../../di/locator.dart';
+import '../../auth/application/driver_post_login_router.dart';
 import '../../demo/presentation/demo_stepper.dart';
 import '../../profile/state/driver_profile_controller.dart';
 import '../../ride/presentation/active_ride_sheet.dart';
@@ -30,12 +31,24 @@ class HomePage extends ConsumerWidget {
 
     return me.when(
       loading: () => const Scaffold(body: LoadingState()),
-      error: (error, _) => _DriverStateScaffold(
-        title: 'სერვერთან კავშირი ვერ მოხერხდა',
-        body: error.toString(),
-        primaryLabel: 'თავიდან ცდა',
-        onPrimary: () => ref.invalidate(driverMeProvider),
-      ),
+      error: (error, _) {
+        final copy = _homeErrorCopy(error);
+        return _DriverStateScaffold(
+          title: copy.title,
+          body: copy.body,
+          primaryLabel: copy.requiresLogin ? 'ხელახლა შესვლა' : 'თავიდან ცდა',
+          onPrimary: () async {
+            if (copy.requiresLogin) {
+              await ref.read(tokenStoreProvider).clear();
+              if (context.mounted) context.go('/auth/phone');
+              return;
+            }
+            ref.invalidate(driverMeProvider);
+          },
+          secondaryLabel: 'Diagnostics',
+          onSecondary: () => context.push('/diagnostics'),
+        );
+      },
       data: (profile) {
         final driverContext = profile.context;
         if (!driverContext.canShowDashboard) {
@@ -49,6 +62,65 @@ class HomePage extends ConsumerWidget {
       },
     );
   }
+}
+
+class _HomeErrorCopy {
+  const _HomeErrorCopy({
+    required this.title,
+    required this.body,
+    this.requiresLogin = false,
+  });
+
+  final String title;
+  final String body;
+  final bool requiresLogin;
+}
+
+_HomeErrorCopy _homeErrorCopy(Object error) {
+  final apiError = apiErrorFrom(error);
+  if (apiError == null) {
+    final text = error.toString();
+    final lower = text.toLowerCase();
+    if (lower.contains('timeout') || lower.contains('timed out')) {
+      return const _HomeErrorCopy(
+        title: 'ქსელის დრო ამოიწურა',
+        body:
+            'გადაამოწმეთ ინტერნეტი და სცადეთ თავიდან. დეტალები Diagnostics-ში ჩანს.',
+      );
+    }
+    return _HomeErrorCopy(
+      title: 'სერვერთან კავშირი ვერ მოხერხდა',
+      body: 'დეტალები Diagnostics-ში ჩანს.\n$text',
+    );
+  }
+
+  final detail =
+      'HTTP ${apiError.httpStatus ?? 'unknown'} · ${apiError.code}\n${apiError.message}';
+  return switch (apiError.httpStatus) {
+    401 => _HomeErrorCopy(
+        title: 'ავტორიზაცია ვერ დადასტურდა',
+        body: detail,
+        requiresLogin: true,
+      ),
+    403 => _HomeErrorCopy(
+        title: 'არასწორი ავტორიზაციის როლი',
+        body:
+            '$detail\nDriver აპისთვის საჭიროა driver ან driver:onboarding token.',
+        requiresLogin: true,
+      ),
+    404 => _HomeErrorCopy(
+        title: 'სერვერის endpoint ვერ მოიძებნა',
+        body: '$detail\nგადაამოწმეთ Diagnostics-ში ბოლო request URL.',
+      ),
+    500 || 502 || 503 => _HomeErrorCopy(
+        title: 'სერვერის დროებითი შეცდომა',
+        body: detail,
+      ),
+    _ => _HomeErrorCopy(
+        title: 'მძღოლის პროფილის ჩატვირთვა ვერ მოხერხდა',
+        body: detail,
+      ),
+  };
 }
 
 class _DriverDashboard extends ConsumerWidget {

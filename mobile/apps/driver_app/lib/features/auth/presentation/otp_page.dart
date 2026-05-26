@@ -8,6 +8,7 @@ import 'package:ui_kit/ui_kit.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../di/locator.dart';
+import '../application/driver_post_login_router.dart';
 
 class OtpPage extends ConsumerStatefulWidget {
   const OtpPage({super.key, required this.phone});
@@ -29,6 +30,8 @@ class _OtpPageState extends ConsumerState<OtpPage> {
       _error = null;
     });
     try {
+      final platform =
+          Theme.of(context).platform == TargetPlatform.iOS ? 'ios' : 'android';
       final TokenStore store = ref.read(tokenStoreProvider);
       var deviceUuid = await store.readDeviceUuid();
       if (deviceUuid == null) {
@@ -36,18 +39,31 @@ class _OtpPageState extends ConsumerState<OtpPage> {
         await store.writeDeviceUuid(deviceUuid);
       }
 
-      await ref.read(authRepositoryProvider).verifyOtp(
+      final auth = await ref.read(authRepositoryProvider).verifyOtp(
             phone: widget.phone,
             code: _controller.text.trim(),
             purpose: 'driver_signup',
             deviceUuid: deviceUuid,
-            platform: Theme.of(context).platform == TargetPlatform.iOS ? 'ios' : 'android',
+            platform: platform,
             appVersion: '0.1.0',
           );
+      if (!isDriverLoginAbility(auth.abilities)) {
+        await store.clear();
+        if (!mounted) return;
+        setState(() {
+          _error =
+              'Driver აპმა მიიღო არასწორი token (${auth.abilities.join(', ')}). სცადეთ თავიდან.';
+        });
+        return;
+      }
+
+      final me = await ref.read(driverProfileRepositoryProvider).me();
       if (!mounted) return;
-      context.go('/home');
+      context.go(routeForDriverContext(me.context));
     } on ApiError catch (e) {
-      setState(() => _error = e.message);
+      setState(() => _error = driverLoginErrorMessage(e));
+    } catch (e) {
+      setState(() => _error = driverLoginErrorMessage(e));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -69,7 +85,8 @@ class _OtpPageState extends ConsumerState<OtpPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: Insets.xxl),
-            Text('Code sent to ${widget.phone}', style: Theme.of(context).textTheme.titleMedium),
+            Text('Code sent to ${widget.phone}',
+                style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: Insets.l),
             AppTextField(
               controller: _controller,
@@ -81,7 +98,8 @@ class _OtpPageState extends ConsumerState<OtpPage> {
             ),
             if (_error != null) ...[
               const SizedBox(height: Insets.s),
-              Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              Text(_error!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error)),
             ],
             const Spacer(),
             PrimaryButton(label: 'Verify', onPressed: _verify, busy: _busy),

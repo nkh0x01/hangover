@@ -14,15 +14,21 @@ final tokenStoreProvider = Provider<TokenStore>((ref) {
   return TokenStore(namespace: 'driver');
 });
 
+final networkDiagnosticsProvider = Provider<NetworkDiagnosticsRecorder>((ref) {
+  return NetworkDiagnosticsRecorder();
+});
+
 final apiClientProvider = Provider<ApiClient>((ref) {
   final env = ref.watch(envProvider);
   final tokens = ref.watch(tokenStoreProvider);
+  final diagnostics = ref.watch(networkDiagnosticsProvider);
 
   return ApiClient(
     env: env,
     tokenStore: tokens,
     appPlatform: 'mobile',
     appVersion: '0.1.0',
+    diagnostics: diagnostics,
     deviceUuidProvider: () async {
       final existing = await tokens.readDeviceUuid();
       if (existing != null) return existing;
@@ -37,6 +43,7 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository(
     client: ref.watch(apiClientProvider),
     tokenStore: ref.watch(tokenStoreProvider),
+    diagnostics: ref.watch(networkDiagnosticsProvider),
   );
 });
 
