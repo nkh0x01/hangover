@@ -43,30 +43,34 @@ final class DriverApplicationApprovalService
                 'verification_notes' => null,
             ]);
 
-            $vehicle = $application->vehicle_id !== null
-                ? Vehicle::query()->where('driver_id', $driver->id)->find($application->vehicle_id)
-                : null;
+            $vehicle = null;
+            if ($this->hasVehicleData($application)) {
+                $vehicle = $this->findVehicleForApplication($application, $driver);
 
-            $vehiclePayload = [
-                'driver_id' => $driver->id,
-                'type' => $this->supportedVehicleType($application->vehicle_type),
-                'brand' => (string) $application->vehicle_brand,
-                'model' => (string) $application->vehicle_model,
-                'plate' => (string) $application->vehicle_plate,
-                'color' => $application->vehicle_color,
-                'year' => $application->vehicle_year,
-                'is_active' => true,
-                'verified_at' => now(),
-                'verified_by_user_id' => $reviewerUserId,
-            ];
+                $vehiclePayload = [
+                    'driver_id' => $driver->id,
+                    'type' => $this->supportedVehicleType($application->vehicle_type),
+                    'brand' => (string) $application->vehicle_brand,
+                    'model' => (string) $application->vehicle_model,
+                    'plate' => (string) $application->vehicle_plate,
+                    'color' => $application->vehicle_color,
+                    'year' => $application->vehicle_year,
+                    'is_active' => true,
+                    'verified_at' => now(),
+                    'verified_by_user_id' => $reviewerUserId,
+                ];
 
-            if ($vehicle instanceof Vehicle) {
-                $vehicle->update($vehiclePayload);
-            } else {
-                $vehicle = Vehicle::query()->create($vehiclePayload);
+                if ($vehicle instanceof Vehicle) {
+                    if ($vehicle->trashed()) {
+                        $vehicle->restore();
+                    }
+                    $vehicle->update($vehiclePayload);
+                } else {
+                    $vehicle = Vehicle::query()->create($vehiclePayload);
+                }
+
+                $driver->update(['current_vehicle_id' => $vehicle->id]);
             }
-
-            $driver->update(['current_vehicle_id' => $vehicle->id]);
 
             foreach ($application->documents as $document) {
                 $mappedType = $this->driverDocumentType($document->doc_type);
@@ -92,7 +96,7 @@ final class DriverApplicationApprovalService
             $application->update([
                 'status' => 'approved',
                 'driver_id' => $driver->id,
-                'vehicle_id' => $vehicle->id,
+                'vehicle_id' => $vehicle?->id ?? $application->vehicle_id,
                 'reviewed_at' => now(),
                 'reviewed_by_user_id' => $reviewerUserId,
                 'rejection_reason' => null,
@@ -101,6 +105,39 @@ final class DriverApplicationApprovalService
 
             return $application->refresh();
         });
+    }
+
+    private function findVehicleForApplication(DriverApplication $application, Driver $driver): ?Vehicle
+    {
+        if ($application->vehicle_id !== null) {
+            $vehicle = Vehicle::withTrashed()
+                ->where('driver_id', $driver->id)
+                ->find($application->vehicle_id);
+
+            if ($vehicle instanceof Vehicle) {
+                return $vehicle;
+            }
+        }
+
+        $plate = trim((string) $application->vehicle_plate);
+        if ($plate === '') {
+            return null;
+        }
+
+        return Vehicle::withTrashed()
+            ->where('driver_id', $driver->id)
+            ->where('plate', $plate)
+            ->first();
+    }
+
+    private function hasVehicleData(DriverApplication $application): bool
+    {
+        return filled($application->vehicle_type)
+            && filled($application->vehicle_brand)
+            && filled($application->vehicle_model)
+            && filled($application->vehicle_year)
+            && filled($application->vehicle_color)
+            && filled($application->vehicle_plate);
     }
 
     private function driverDocumentType(string $applicationType): ?string

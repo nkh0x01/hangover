@@ -5,12 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Driver\Filament\Resources;
 
 use App\Modules\Driver\Filament\Resources\DriverApplicationResource\Pages;
-use App\Modules\Driver\Models\Driver;
 use App\Modules\Driver\Models\DriverApplication;
 use App\Modules\Driver\Models\DriverApplicationDocument;
-use App\Modules\Driver\Models\DriverDocument;
-use App\Modules\Driver\Models\Vehicle;
-use App\Modules\Geo\Models\City;
+use App\Modules\Driver\Services\DriverApplicationApprovalService;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Infolists;
@@ -19,7 +16,6 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\HtmlString;
 
@@ -127,6 +123,12 @@ final class DriverApplicationResource extends Resource
                         ->label('ადმინისტრატორის მიზეზი/შენიშვნა')
                         ->placeholder('შენიშვნა არ არის')
                         ->columnSpanFull(),
+                    Infolists\Components\TextEntry::make('link_warnings')
+                        ->label('ბმების გაფრთხილება')
+                        ->state(fn (DriverApplication $record): string => self::linkWarningText($record))
+                        ->badge()
+                        ->color(fn (DriverApplication $record): string => self::linkWarnings($record) === [] ? 'success' : 'warning')
+                        ->columnSpanFull(),
                 ]),
             Infolists\Components\Section::make('პირადი ინფორმაცია')
                 ->columns(3)
@@ -215,6 +217,11 @@ final class DriverApplicationResource extends Resource
                     ->badge()
                     ->color(fn (string $state): string => self::statusColor($state))
                     ->formatStateUsing(fn (?string $state): string => self::statusOptions()[$state] ?? (string) $state),
+                Tables\Columns\TextColumn::make('link_warnings')
+                    ->label('ბმები')
+                    ->state(fn (DriverApplication $record): string => self::linkWarningText($record))
+                    ->badge()
+                    ->color(fn (DriverApplication $record): string => self::linkWarnings($record) === [] ? 'success' : 'warning'),
                 Tables\Columns\TextColumn::make('documents_count')
                     ->label('დოკ.')
                     ->counts('documents')
@@ -444,90 +451,7 @@ final class DriverApplicationResource extends Resource
 
     private static function approve(DriverApplication $application): DriverApplication
     {
-        return DB::transaction(function () use ($application): DriverApplication {
-            $cityId = $application->city_id
-                ?? City::query()->where('is_active', true)->orderBy('id')->value('id');
-
-            $driver = Driver::query()->firstOrCreate(
-                ['user_id' => $application->user_id],
-                [
-                    'city_id' => $cityId,
-                    'status' => 'approved',
-                    'approved_at' => now(),
-                    'approved_by_user_id' => auth()->id(),
-                    'verification_status' => 'verified',
-                    'verified_at' => now(),
-                ],
-            );
-
-            $driver->update([
-                'city_id' => $application->city_id ?? $driver->city_id,
-                'status' => 'approved',
-                'approved_at' => $driver->approved_at ?? now(),
-                'approved_by_user_id' => auth()->id(),
-                'verification_status' => 'verified',
-                'verified_at' => $driver->verified_at ?? now(),
-                'verification_notes' => null,
-            ]);
-
-            $vehicle = $application->vehicle_id !== null
-                ? Vehicle::query()->where('driver_id', $driver->id)->find($application->vehicle_id)
-                : null;
-
-            $vehiclePayload = [
-                'driver_id' => $driver->id,
-                'type' => self::supportedVehicleType($application->vehicle_type),
-                'brand' => (string) $application->vehicle_brand,
-                'model' => (string) $application->vehicle_model,
-                'plate' => (string) $application->vehicle_plate,
-                'color' => $application->vehicle_color,
-                'year' => $application->vehicle_year,
-                'is_active' => true,
-                'verified_at' => now(),
-                'verified_by_user_id' => auth()->id(),
-            ];
-
-            if ($vehicle instanceof Vehicle) {
-                $vehicle->update($vehiclePayload);
-            } else {
-                $vehicle = Vehicle::query()->create($vehiclePayload);
-            }
-
-            $driver->update(['current_vehicle_id' => $vehicle->id]);
-
-            foreach ($application->documents as $document) {
-                $mappedType = self::driverDocumentType($document->doc_type);
-                if ($mappedType === null) {
-                    continue;
-                }
-
-                DriverDocument::query()->updateOrCreate(
-                    [
-                        'driver_id' => $driver->id,
-                        'doc_type' => $mappedType,
-                    ],
-                    [
-                        'file_path' => $document->file_path,
-                        'file_sha256' => $document->file_sha256,
-                        'status' => 'approved',
-                        'reviewed_at' => now(),
-                        'reviewed_by_user_id' => auth()->id(),
-                    ],
-                );
-            }
-
-            $application->update([
-                'status' => 'approved',
-                'driver_id' => $driver->id,
-                'vehicle_id' => $vehicle->id,
-                'reviewed_at' => now(),
-                'reviewed_by_user_id' => auth()->id(),
-                'rejection_reason' => null,
-                'admin_note' => null,
-            ]);
-
-            return $application->refresh();
-        });
+        return app(DriverApplicationApprovalService::class)->approve($application, auth()->id());
     }
 
     /**
@@ -582,25 +506,52 @@ final class DriverApplicationResource extends Resource
         };
     }
 
-    private static function driverDocumentType(string $applicationType): ?string
+    /**
+     * @return list<string>
+     */
+    private static function linkWarnings(DriverApplication $application): array
     {
-        return match ($applicationType) {
-            'id_front',
-            'id_back',
-            'license_front',
-            'license_back',
-            'vehicle_registration',
-            'insurance' => $applicationType,
-            'selfie' => 'selfie_with_id',
-            default => null,
-        };
+        if ($application->status !== 'approved') {
+            return [];
+        }
+
+        $warnings = [];
+        $application->loadMissing(['driver', 'vehicle']);
+
+        if ($application->driver === null) {
+            $warnings[] = 'მძღოლის პროფილი არ არის მიბმული';
+        }
+
+        if ($application->vehicle === null) {
+            $warnings[] = self::hasVehicleData($application)
+                ? 'ტრანსპორტი არ არის მიბმული'
+                : 'ტრანსპორტის მონაცემები არასრულია';
+        }
+
+        if ($application->driver !== null
+            && $application->vehicle_id !== null
+            && $application->driver->current_vehicle_id !== $application->vehicle_id) {
+            $warnings[] = 'current_vehicle_id არ ემთხვევა განაცხადის ტრანსპორტს';
+        }
+
+        return $warnings;
     }
 
-    private static function supportedVehicleType(?string $vehicleType): string
+    private static function linkWarningText(DriverApplication $application): string
     {
-        return array_key_exists((string) $vehicleType, self::vehicleTypeOptions())
-            ? (string) $vehicleType
-            : 'moped';
+        $warnings = self::linkWarnings($application);
+
+        return $warnings === [] ? 'OK' : implode(', ', $warnings);
+    }
+
+    private static function hasVehicleData(DriverApplication $application): bool
+    {
+        return filled($application->vehicle_type)
+            && filled($application->vehicle_brand)
+            && filled($application->vehicle_model)
+            && filled($application->vehicle_year)
+            && filled($application->vehicle_color)
+            && filled($application->vehicle_plate);
     }
 
     private static function documentSummary(?DriverApplication $application): HtmlString

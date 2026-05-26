@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Driver\Models\Driver;
 use App\Modules\Driver\Models\DriverApplication;
 use App\Modules\Driver\Models\Vehicle;
+use App\Modules\Driver\Services\DriverApplicationApprovalService;
 use App\Modules\Geo\Models\City;
 use App\Modules\Identity\Models\User;
 use Illuminate\Http\UploadedFile;
@@ -62,6 +63,156 @@ it('lets an approved driver with an active vehicle go online', function (): void
     ])
         ->assertOk()
         ->assertJsonPath('data.online', true);
+});
+
+it('creates and links a driver and vehicle when approving an application', function (): void {
+    $user = User::factory()->driver()->create();
+    $application = DriverApplication::factory()->pending()->create([
+        'user_id' => $user->id,
+        'vehicle_type' => 'scooter_petrol',
+        'vehicle_brand' => 'Honda',
+        'vehicle_model' => 'PCX',
+        'vehicle_year' => 2024,
+        'vehicle_color' => 'Yellow',
+        'vehicle_plate' => 'APP-001',
+    ]);
+
+    $approved = app(DriverApplicationApprovalService::class)->approve($application);
+    $driver = Driver::query()->where('user_id', $user->id)->firstOrFail();
+    $vehicle = Vehicle::query()->where('driver_id', $driver->id)->firstOrFail();
+
+    expect($approved->status)->toBe('approved')
+        ->and($approved->driver_id)->toBe($driver->id)
+        ->and($approved->vehicle_id)->toBe($vehicle->id)
+        ->and($driver->fresh()->current_vehicle_id)->toBe($vehicle->id)
+        ->and($vehicle->type)->toBe('scooter_petrol')
+        ->and($vehicle->brand)->toBe('Honda')
+        ->and($vehicle->model)->toBe('PCX')
+        ->and($vehicle->year)->toBe(2024)
+        ->and($vehicle->color)->toBe('Yellow')
+        ->and($vehicle->plate)->toBe('APP-001')
+        ->and($vehicle->is_active)->toBeTrue()
+        ->and($vehicle->verified_at)->not->toBeNull();
+});
+
+it('reuses the linked driver vehicle when approval is repeated', function (): void {
+    $user = User::factory()->driver()->create();
+    $application = DriverApplication::factory()->pending()->create([
+        'user_id' => $user->id,
+        'vehicle_type' => 'scooter_petrol',
+        'vehicle_brand' => 'Honda',
+        'vehicle_model' => 'PCX',
+        'vehicle_year' => 2024,
+        'vehicle_color' => 'Yellow',
+        'vehicle_plate' => 'APP-002',
+    ]);
+    $approval = app(DriverApplicationApprovalService::class);
+
+    $firstApproval = $approval->approve($application);
+    $secondApproval = $approval->approve($firstApproval->fresh());
+    $driver = Driver::query()->where('user_id', $user->id)->firstOrFail();
+
+    expect(Vehicle::query()->where('driver_id', $driver->id)->where('plate', 'APP-002')->count())->toBe(1)
+        ->and($secondApproval->vehicle_id)->toBe($firstApproval->vehicle_id)
+        ->and($driver->fresh()->current_vehicle_id)->toBe($firstApproval->vehicle_id);
+});
+
+it('reuses an existing same-driver vehicle with the same plate during approval', function (): void {
+    $user = User::factory()->driver()->create();
+    $driver = Driver::factory()->create([
+        'user_id' => $user->id,
+        'status' => 'approved',
+        'verification_status' => 'verified',
+        'current_vehicle_id' => null,
+    ]);
+    $vehicle = Vehicle::factory()->create([
+        'driver_id' => $driver->id,
+        'brand' => 'Old',
+        'model' => 'Vehicle',
+        'plate' => 'APP-005',
+    ]);
+    $application = DriverApplication::factory()->pending()->create([
+        'user_id' => $user->id,
+        'driver_id' => $driver->id,
+        'vehicle_id' => null,
+        'vehicle_type' => 'scooter_petrol',
+        'vehicle_brand' => 'Honda',
+        'vehicle_model' => 'PCX',
+        'vehicle_year' => 2024,
+        'vehicle_color' => 'Yellow',
+        'vehicle_plate' => 'APP-005',
+    ]);
+
+    $approved = app(DriverApplicationApprovalService::class)->approve($application);
+
+    expect(Vehicle::query()->where('driver_id', $driver->id)->where('plate', 'APP-005')->count())->toBe(1)
+        ->and($approved->vehicle_id)->toBe($vehicle->id)
+        ->and($vehicle->fresh()->brand)->toBe('Honda')
+        ->and($driver->fresh()->current_vehicle_id)->toBe($vehicle->id);
+});
+
+it('repair command fixes approved applications missing driver and vehicle links', function (): void {
+    $user = User::factory()->driver()->create();
+    $application = DriverApplication::factory()->create([
+        'user_id' => $user->id,
+        'status' => 'approved',
+        'driver_id' => null,
+        'vehicle_id' => null,
+        'vehicle_type' => 'scooter_petrol',
+        'vehicle_brand' => 'Honda',
+        'vehicle_model' => 'PCX',
+        'vehicle_year' => 2024,
+        'vehicle_color' => 'Yellow',
+        'vehicle_plate' => 'APP-003',
+        'reviewed_at' => now(),
+    ]);
+
+    $this->artisan('drivers:repair-approved-applications')
+        ->assertExitCode(0);
+
+    $application->refresh();
+    $driver = Driver::query()->where('user_id', $user->id)->firstOrFail();
+    $vehicle = Vehicle::query()->where('driver_id', $driver->id)->where('plate', 'APP-003')->firstOrFail();
+
+    expect($application->driver_id)->toBe($driver->id)
+        ->and($application->vehicle_id)->toBe($vehicle->id)
+        ->and($driver->fresh()->current_vehicle_id)->toBe($vehicle->id);
+});
+
+it('returns an approved driver context after application approval', function (): void {
+    $user = User::factory()->driver()->create();
+    $application = DriverApplication::factory()->pending()->create([
+        'user_id' => $user->id,
+        'vehicle_plate' => 'APP-004',
+    ]);
+    app(DriverApplicationApprovalService::class)->approve($application);
+
+    Sanctum::actingAs($user, ['driver']);
+
+    $this->getJson('/api/v1/driver/me')
+        ->assertOk()
+        ->assertJsonPath('data.driver_context.has_driver_profile', true)
+        ->assertJsonPath('data.driver_context.can_go_online', true)
+        ->assertJsonPath('data.driver_context.reason_if_cannot_go_online', null);
+});
+
+it('returns a vehicle-specific reason for approved drivers without a vehicle', function (): void {
+    $user = User::factory()->driver()->create();
+    Driver::factory()->create([
+        'user_id' => $user->id,
+        'status' => 'approved',
+        'verification_status' => 'verified',
+        'current_vehicle_id' => null,
+    ]);
+
+    Sanctum::actingAs($user, ['driver']);
+
+    $this->getJson('/api/v1/driver/me')
+        ->assertOk()
+        ->assertJsonPath('data.driver_context.has_driver_profile', true)
+        ->assertJsonPath('data.driver_context.vehicle_status', 'missing')
+        ->assertJsonPath('data.driver_context.can_go_online', false)
+        ->assertJsonPath('data.driver_context.reason_if_cannot_go_online', 'driver.missing_vehicle');
 });
 
 it('submitting a registration creates a pending application', function (): void {

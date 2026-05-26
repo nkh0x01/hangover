@@ -7,6 +7,7 @@ namespace App\Modules\Driver\Providers;
 use App\Modules\Driver\Actions\ReviewDriverDocument;
 use App\Modules\Driver\Actions\SubmitDriverDocument;
 use App\Modules\Driver\Actions\VerifyVehicle;
+use App\Modules\Driver\Console\RepairApprovedApplicationsCommand;
 use App\Modules\Driver\Services\DriverProfileSummary;
 use App\Modules\Driver\Services\DriverVerificationPresenter;
 use Illuminate\Support\Facades\Route;
@@ -25,6 +26,12 @@ final class DriverServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                RepairApprovedApplicationsCommand::class,
+            ]);
+        }
+
         if (file_exists($routes = __DIR__.'/../routes/api.php')) {
             $this->loadRoutesFromRoot($routes);
         }
