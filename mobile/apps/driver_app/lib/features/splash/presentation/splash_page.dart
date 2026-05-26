@@ -33,7 +33,7 @@ class _SplashPageState extends ConsumerState<SplashPage> {
       try {
         final me = await ref.read(driverProfileRepositoryProvider).me();
         if (!mounted) return;
-        context.go(routeForDriverContext(me.context));
+        context.go(routeForDriverContextOnStartup(me.context));
       } on ApiError catch (error) {
         if (!mounted) return;
         final diagnostics = ref.read(networkDiagnosticsProvider);

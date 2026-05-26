@@ -22,7 +22,8 @@ void main() {
     expect(DriverAuthFlow.login.otpPurpose, isNot('signup'));
   });
 
-  test('driver onboarding context routes to application form', () {
+  test('driver onboarding context routes to onboarding status on cold start',
+      () {
     const context = DriverContext(
       hasDriverProfile: false,
       canGoOnline: false,
@@ -30,10 +31,13 @@ void main() {
       reasonIfCannotGoOnline: 'driver.no_profile',
     );
 
-    expect(routeForDriverContext(context), '/application');
+    expect(routeForDriverContext(context), '/onboarding');
+    expect(routeForDriverContextOnStartup(context), '/onboarding');
   });
 
-  test('needs_application context routes directly to application form', () {
+  test(
+      'needs_application context starts on status, registration continues form',
+      () {
     const context = DriverContext(
       hasDriverProfile: false,
       canGoOnline: false,
@@ -43,18 +47,19 @@ void main() {
       reasonIfCannotGoOnline: 'driver.no_profile',
     );
 
-    expect(routeForDriverContext(context), '/application');
+    expect(routeForDriverContext(context), '/onboarding');
+    expect(routeForDriverContextOnStartup(context), '/onboarding');
     expect(
       routeForDriverContextAfterOtp(context, DriverAuthFlow.registration),
       '/application',
     );
     expect(
       routeForDriverContextAfterOtp(context, DriverAuthFlow.login),
-      '/home',
+      '/onboarding',
     );
   });
 
-  test('pending review context routes to home state screen', () {
+  test('pending review context routes to onboarding status screen', () {
     const context = DriverContext(
       hasDriverProfile: false,
       canGoOnline: false,
@@ -63,7 +68,7 @@ void main() {
       reasonIfCannotGoOnline: 'application.pending_review',
     );
 
-    expect(routeForDriverContext(context), '/home');
+    expect(routeForDriverContext(context), '/onboarding');
   });
 
   test('approved driver context routes to home dashboard', () {
@@ -153,7 +158,14 @@ void main() {
     expect(me.context.needsApplication, isTrue);
     expect(me.context.canSubmitApplication, isTrue);
     expect(me.context.reasonIfCannotGoOnline, 'driver.no_profile');
-    expect(routeForDriverContext(me.context), '/application');
+    expect(routeForDriverContext(me.context), '/onboarding');
+    expect(
+      routeForDriverContextAfterOtp(
+        me.context,
+        DriverAuthFlow.registration,
+      ),
+      '/application',
+    );
   });
 
   test('OTP verify token stores driver onboarding ability and user type model',

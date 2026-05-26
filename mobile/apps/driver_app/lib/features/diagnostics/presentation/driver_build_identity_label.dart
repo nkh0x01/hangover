@@ -12,7 +12,7 @@ class DriverBuildIdentityLabel extends StatelessWidget {
 
   static String get label {
     final version = _versionName.ifEmpty('0.1.0');
-    final build = _versionCode.ifEmpty('9');
+    final build = _versionCode.ifEmpty('10');
     return 'Driver $version ($build) · commit ${_shortCommit(_commit)}';
   }
 

@@ -258,6 +258,12 @@ class _DriverApplicationPageState extends ConsumerState<DriverApplicationPage> {
     };
   }
 
+  Future<void> _clearSessionAndReturn() async {
+    await ref.read(tokenStoreProvider).clear();
+    ref.invalidate(driverMeProvider);
+    if (mounted) context.go('/welcome');
+  }
+
   @override
   void dispose() {
     for (final controller in [
@@ -303,6 +309,26 @@ class _DriverApplicationPageState extends ConsumerState<DriverApplicationPage> {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: DriverBuildIdentityLabel(),
+              ),
+            ),
+            Padding(
+              padding:
+                  const EdgeInsets.fromLTRB(Insets.l, Insets.s, Insets.l, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () => context.go('/welcome'),
+                    icon: const Icon(Icons.home_outlined),
+                    label: const Text('მთავარ არჩევანზე დაბრუნება'),
+                  ),
+                  const SizedBox(height: Insets.xs),
+                  OutlinedButton.icon(
+                    onPressed: _clearSessionAndReturn,
+                    icon: const Icon(Icons.logout_rounded),
+                    label: const Text('სესიის გასუფთავება'),
+                  ),
+                ],
               ),
             ),
             if (_error != null)

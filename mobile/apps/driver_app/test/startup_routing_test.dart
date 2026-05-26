@@ -1,9 +1,11 @@
 import 'package:core/core.dart';
 import 'package:driver_app/di/locator.dart';
+import 'package:driver_app/features/application/presentation/driver_application_page.dart';
 import 'package:driver_app/features/auth/application/driver_auth_flow.dart';
 import 'package:driver_app/features/auth/presentation/phone_page.dart';
 import 'package:driver_app/features/auth/presentation/welcome_page.dart';
 import 'package:driver_app/features/diagnostics/application/route_diagnostics_marker.dart';
+import 'package:driver_app/features/onboarding/presentation/driver_onboarding_status_page.dart';
 import 'package:driver_app/features/splash/presentation/splash_page.dart';
 import 'package:driver_app/features/splash/presentation/startup_error_page.dart';
 import 'package:flutter/material.dart';
@@ -62,6 +64,83 @@ void main() {
     expect(find.text('yes'), findsOneWidget);
   });
 
+  testWidgets(
+      'existing onboarding token shows status screen instead of application',
+      (tester) async {
+    await tester.pumpWidget(_testApp(
+      overrides: [
+        tokenStoreProvider.overrideWithValue(_FakeTokenStore(
+          token: 'onboarding-token',
+          abilities: const ['driver:onboarding'],
+          userType: 'driver',
+        )),
+        driverProfileRepositoryProvider.overrideWithValue(
+          _FakeDriverProfileRepository(),
+        ),
+      ],
+    ));
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('მძღოლის განაცხადი'), findsOneWidget);
+    expect(find.text('განაცხადი ჯერ არ არის შევსებული'), findsOneWidget);
+    expect(find.text('განაცხადის შევსება'), findsOneWidget);
+    expect(find.text('შესვლა სხვა ნომრით'), findsOneWidget);
+    expect(find.text('სესიის გასუფთავება'), findsOneWidget);
+    expect(find.text('Application route'), findsNothing);
+    expect(find.textContaining('სერვერთან კავშირი ვერ'), findsNothing);
+  });
+
+  testWidgets('tapping continue opens application', (tester) async {
+    await tester.pumpWidget(_testApp(
+      initialLocation: '/onboarding',
+      overrides: [
+        tokenStoreProvider.overrideWithValue(_FakeTokenStore(
+          token: 'onboarding-token',
+          abilities: const ['driver:onboarding'],
+          userType: 'driver',
+        )),
+        driverProfileRepositoryProvider.overrideWithValue(
+          _FakeDriverProfileRepository(),
+        ),
+      ],
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('განაცხადის შევსება'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('პირადი ინფორმაცია'), findsOneWidget);
+    expect(find.text('მთავარ არჩევანზე დაბრუნება'), findsOneWidget);
+    expect(find.text('სესიის გასუფთავება'), findsOneWidget);
+  });
+
+  testWidgets('login another number clears session and opens login flow',
+      (tester) async {
+    final store = _FakeTokenStore(
+      token: 'onboarding-token',
+      abilities: const ['driver:onboarding'],
+      userType: 'driver',
+    );
+
+    await tester.pumpWidget(_testApp(
+      initialLocation: '/onboarding',
+      overrides: [
+        tokenStoreProvider.overrideWithValue(store),
+        driverProfileRepositoryProvider.overrideWithValue(
+          _FakeDriverProfileRepository(),
+        ),
+      ],
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('შესვლა სხვა ნომრით'));
+    await tester.pumpAndSettle();
+
+    expect(store.token, isNull);
+    expect(find.text('თუ უკვე დარეგისტრირებული ხართ მძღოლად'), findsOneWidget);
+  });
+
   testWidgets('diagnostics is accessible before login', (tester) async {
     await tester.pumpWidget(_testApp(initialLocation: '/welcome'));
     await tester.pumpAndSettle();
@@ -70,6 +149,44 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Diagnostics route'), findsOneWidget);
+  });
+
+  testWidgets('diagnostics is accessible from onboarding status',
+      (tester) async {
+    await tester.pumpWidget(_testApp(
+      initialLocation: '/onboarding',
+      overrides: [
+        tokenStoreProvider.overrideWithValue(
+          _FakeTokenStore(token: 'onboarding-token'),
+        ),
+        driverProfileRepositoryProvider.overrideWithValue(
+          _FakeDriverProfileRepository(),
+        ),
+      ],
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('დიაგნოსტიკა'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Diagnostics route'), findsOneWidget);
+  });
+
+  testWidgets('approved driver still routes to dashboard', (tester) async {
+    await tester.pumpWidget(_testApp(
+      overrides: [
+        tokenStoreProvider.overrideWithValue(
+          _FakeTokenStore(token: 'driver-token'),
+        ),
+        driverProfileRepositoryProvider.overrideWithValue(
+          _FakeDriverProfileRepository(driverMe: _approvedDriverMe),
+        ),
+      ],
+    ));
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('Dashboard route'), findsOneWidget);
   });
 
   testWidgets('invalid token can be cleared and returns to welcome',
@@ -153,6 +270,27 @@ Widget _testApp({
         ),
       ),
       GoRoute(
+        path: '/onboarding',
+        builder: (_, __) => const RouteDiagnosticsMarker(
+          route: '/onboarding',
+          child: DriverOnboardingStatusPage(),
+        ),
+      ),
+      GoRoute(
+        path: '/application',
+        builder: (_, __) => const RouteDiagnosticsMarker(
+          route: '/application',
+          child: DriverApplicationPage(),
+        ),
+      ),
+      GoRoute(
+        path: '/home',
+        builder: (_, __) => const RouteDiagnosticsMarker(
+          route: '/home',
+          child: Scaffold(body: Center(child: Text('Dashboard route'))),
+        ),
+      ),
+      GoRoute(
         path: '/diagnostics',
         builder: (_, __) => const RouteDiagnosticsMarker(
           route: '/diagnostics',
@@ -195,11 +333,15 @@ const _env = EnvConfig(
 );
 
 class _FakeTokenStore extends TokenStore {
-  _FakeTokenStore({this.token}) : super(namespace: 'driver_startup_test');
+  _FakeTokenStore({
+    this.token,
+    this.abilities = const [],
+    this.userType,
+  }) : super(namespace: 'driver_startup_test');
 
   String? token;
   String? deviceUuid;
-  List<String> abilities = const [];
+  List<String> abilities;
   String? userType;
 
   @override
@@ -243,29 +385,52 @@ class _FakeTokenStore extends TokenStore {
 }
 
 class _FakeDriverProfileRepository extends DriverProfileRepository {
-  _FakeDriverProfileRepository({this.error}) : super(client: _unusedClient());
+  _FakeDriverProfileRepository({
+    this.error,
+    this.driverMe = _onboardingDriverMe,
+  }) : super(client: _unusedClient());
 
   final Object? error;
+  final DriverMe driverMe;
 
   @override
   Future<DriverMe> me() async {
     final error = this.error;
     if (error != null) throw error;
-    return const DriverMe(
-      userId: 'driver-1',
-      userType: 'driver',
-      phone: '+995555123456',
-      context: DriverContext(
-        hasDriverProfile: false,
-        canGoOnline: false,
-        needsApplication: true,
-        canSubmitApplication: true,
-        state: DriverRuntimeState.noDriverProfile,
-        reasonIfCannotGoOnline: 'driver.no_profile',
-      ),
-    );
+    return driverMe;
+  }
+
+  @override
+  Future<DriverApplication?> application() async {
+    return null;
   }
 }
+
+const _onboardingDriverMe = DriverMe(
+  userId: 'driver-1',
+  userType: 'driver',
+  phone: '+995555123456',
+  context: DriverContext(
+    hasDriverProfile: false,
+    canGoOnline: false,
+    needsApplication: true,
+    canSubmitApplication: true,
+    state: DriverRuntimeState.noDriverProfile,
+    reasonIfCannotGoOnline: 'driver.no_profile',
+  ),
+);
+
+const _approvedDriverMe = DriverMe(
+  userId: 'driver-1',
+  userType: 'driver',
+  phone: '+995555123456',
+  context: DriverContext(
+    hasDriverProfile: true,
+    canGoOnline: true,
+    driverProfileStatus: 'approved',
+    state: DriverRuntimeState.offline,
+  ),
+);
 
 ApiClient _unusedClient() {
   return ApiClient(

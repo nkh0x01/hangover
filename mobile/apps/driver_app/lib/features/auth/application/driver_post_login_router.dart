@@ -9,17 +9,23 @@ bool isDriverLoginAbility(List<String> abilities) {
 }
 
 String routeForDriverContext(DriverContext context) {
-  if (!context.hasDriverProfile &&
-      (context.needsApplication || context.canSubmitApplication)) {
-    return '/application';
-  }
+  return context.canShowDashboard ? '/home' : '/onboarding';
+}
 
+String routeForDriverContextOnStartup(DriverContext context) {
+  return context.canShowDashboard ? '/home' : '/onboarding';
+}
+
+String routeForDriverContextAfterRegistrationChoice(DriverContext context) {
+  if (context.canShowDashboard) return '/home';
   return switch (context.state) {
     DriverRuntimeState.noDriverProfile ||
     DriverRuntimeState.applicationDraft ||
     DriverRuntimeState.applicationRejected =>
       '/application',
-    _ => '/home',
+    _ when context.needsApplication || context.canSubmitApplication =>
+      '/application',
+    _ => '/onboarding',
   };
 }
 
@@ -27,12 +33,8 @@ String routeForDriverContextAfterOtp(
   DriverContext context,
   DriverAuthFlow flow,
 ) {
-  if (flow == DriverAuthFlow.login &&
-      !context.hasDriverProfile &&
-      (context.needsApplication ||
-          context.canSubmitApplication ||
-          context.state == DriverRuntimeState.noDriverProfile)) {
-    return '/home';
+  if (flow == DriverAuthFlow.registration) {
+    return routeForDriverContextAfterRegistrationChoice(context);
   }
 
   return routeForDriverContext(context);

@@ -9,6 +9,7 @@ import '../features/auth/presentation/welcome_page.dart';
 import '../features/diagnostics/application/route_diagnostics_marker.dart';
 import '../features/diagnostics/presentation/diagnostics_page.dart';
 import '../features/home/presentation/home_page.dart';
+import '../features/onboarding/presentation/driver_onboarding_status_page.dart';
 import '../features/splash/presentation/splash_page.dart';
 import '../features/splash/presentation/startup_error_page.dart';
 
@@ -60,6 +61,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const RouteDiagnosticsMarker(
           route: '/startup-error',
           child: StartupErrorPage(),
+        ),
+      ),
+      GoRoute(
+        path: '/onboarding',
+        builder: (_, __) => const RouteDiagnosticsMarker(
+          route: '/onboarding',
+          child: DriverOnboardingStatusPage(),
         ),
       ),
       GoRoute(
