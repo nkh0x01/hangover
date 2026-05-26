@@ -46,6 +46,10 @@ class AuthRepository {
     final token = AuthToken.fromJson(data);
 
     await tokenStore.write(token: token.token, expiresAt: token.expiresAt);
+    await tokenStore.writeAuthContext(
+      abilities: token.abilities,
+      userType: token.userType,
+    );
     await tokenStore.writeDeviceUuid(deviceUuid);
     diagnostics?.recordAuthResult(
       abilities: token.abilities,
@@ -61,6 +65,10 @@ class AuthRepository {
     final data = response.data!['data'] as Map<String, Object?>;
     final token = AuthToken.fromJson(data);
     await tokenStore.write(token: token.token, expiresAt: token.expiresAt);
+    await tokenStore.writeAuthContext(
+      abilities: token.abilities,
+      userType: token.userType,
+    );
     return token;
   }
 

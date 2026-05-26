@@ -82,14 +82,25 @@ class DriverMe {
   final DriverContext context;
 
   factory DriverMe.fromJson(Map<String, Object?> json) {
+    final user = (json['user'] as Map?)?.cast<String, Object?>() ?? json;
+    final driverContext =
+        (json['driver_context'] as Map?)?.cast<String, Object?>() ??
+            (user['driver_context'] as Map?)?.cast<String, Object?>() ??
+            const <String, Object?>{};
+
     return DriverMe(
-      userId: json['id'] as String? ?? '',
-      userType: json['type'] as String? ?? 'unknown',
-      phone: json['phone'] as String?,
-      context: DriverContext.fromJson(
-        (json['driver_context'] as Map?)?.cast<String, Object?>() ?? const {},
-      ),
+      userId: _string(user['id']) ?? '',
+      userType: _string(user['type'] ?? json['user_type'] ?? json['type']) ??
+          'unknown',
+      phone: _string(user['phone'] ?? json['phone']),
+      context: DriverContext.fromJson(driverContext),
     );
+  }
+
+  static String? _string(Object? value) {
+    if (value == null) return null;
+    final text = value.toString().trim();
+    return text.isEmpty ? null : text;
   }
 }
 
@@ -98,6 +109,8 @@ class DriverContext {
     required this.hasDriverProfile,
     required this.canGoOnline,
     required this.state,
+    this.needsApplication = false,
+    this.canSubmitApplication = false,
     this.driverProfileStatus,
     this.applicationStatus,
     this.vehicleStatus,
@@ -112,6 +125,8 @@ class DriverContext {
   final bool hasDriverProfile;
   final bool canGoOnline;
   final DriverRuntimeState state;
+  final bool needsApplication;
+  final bool canSubmitApplication;
   final String? driverProfileStatus;
   final String? applicationStatus;
   final String? vehicleStatus;
@@ -141,6 +156,8 @@ class DriverContext {
     final vehicleStatus = json['vehicle_status'] as String?;
     final onlineStatus = json['online_status'] as bool?;
     final reason = json['reason_if_cannot_go_online'] as String?;
+    final needsApplication = json['needs_application'] == true;
+    final canSubmitApplication = json['can_submit_application'] == true;
 
     return DriverContext(
       hasDriverProfile: hasProfile,
@@ -148,12 +165,16 @@ class DriverContext {
       state: _runtimeState(
         hasProfile: hasProfile,
         canGoOnline: canGoOnline,
+        needsApplication: needsApplication,
+        canSubmitApplication: canSubmitApplication,
         driverStatus: driverStatus,
         applicationStatus: appStatus,
         vehicleStatus: vehicleStatus,
         onlineStatus: onlineStatus,
         reason: reason,
       ),
+      needsApplication: needsApplication,
+      canSubmitApplication: canSubmitApplication,
       driverProfileStatus: driverStatus,
       applicationStatus: appStatus,
       vehicleStatus: vehicleStatus,
@@ -169,12 +190,17 @@ class DriverContext {
   static DriverRuntimeState _runtimeState({
     required bool hasProfile,
     required bool canGoOnline,
+    required bool needsApplication,
+    required bool canSubmitApplication,
     required String? driverStatus,
     required String? applicationStatus,
     required String? vehicleStatus,
     required bool? onlineStatus,
     required String? reason,
   }) {
+    if (!hasProfile && (needsApplication || canSubmitApplication)) {
+      return DriverRuntimeState.noDriverProfile;
+    }
     if (!hasProfile) {
       return switch (applicationStatus) {
         'draft' => DriverRuntimeState.applicationDraft,

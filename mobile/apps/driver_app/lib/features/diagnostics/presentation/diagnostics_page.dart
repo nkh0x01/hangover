@@ -30,8 +30,8 @@ class DiagnosticsPage extends ConsumerWidget {
     final shift = ref.watch(shiftProvider);
     final me = ref.watch(driverMeProvider);
     final diagnostics = ref.watch(networkDiagnosticsProvider);
-    final tokenFuture = ref.watch(tokenStoreProvider).read();
-    final deviceFuture = ref.watch(tokenStoreProvider).readDeviceUuid();
+    final tokenStore = ref.watch(tokenStoreProvider);
+    final storageSnapshot = _loadStoredDiagnostics(tokenStore);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Diagnostics')),
@@ -39,17 +39,29 @@ class DiagnosticsPage extends ConsumerWidget {
         child: ValueListenableBuilder<NetworkDiagnosticsState>(
           valueListenable: diagnostics,
           builder: (context, network, _) {
-            return FutureBuilder<(String?, String?)>(
-              future: Future.wait<String?>([tokenFuture, deviceFuture]).then(
-                (values) => (values[0], values[1]),
-              ),
+            return FutureBuilder<
+                ({
+                  String? token,
+                  String? deviceUuid,
+                  List<String> abilities,
+                  String? userType,
+                })>(
+              future: storageSnapshot,
               builder: (context, snapshot) {
-                final token = snapshot.data?.$1;
+                final token = snapshot.data?.token;
+                final storedAbilities =
+                    snapshot.data?.abilities ?? const <String>[];
+                final storedUserType = snapshot.data?.userType;
                 final tokenPresent =
                     snapshot.connectionState == ConnectionState.done
                         ? token != null && token.trim().isNotEmpty
                         : network.tokenPresent ?? shift.authTokenPresent;
-                final deviceUuid = snapshot.data?.$2;
+                final deviceUuid = snapshot.data?.deviceUuid;
+                final displayedAbilities = network.lastAuthAbilities.isNotEmpty
+                    ? network.lastAuthAbilities
+                    : storedAbilities;
+                final displayedUserType =
+                    network.lastAuthUserType ?? storedUserType;
 
                 return ListView(
                   padding: const EdgeInsets.all(Insets.l),
@@ -81,13 +93,38 @@ class DiagnosticsPage extends ConsumerWidget {
                     ),
                     _Row(
                       label: 'Last token abilities',
-                      value: network.lastAuthAbilities.isEmpty
+                      value: displayedAbilities.isEmpty
                           ? 'unknown'
-                          : network.lastAuthAbilities.join(', '),
+                          : displayedAbilities.join(', '),
                     ),
                     _Row(
                       label: 'Last auth user type',
-                      value: network.lastAuthUserType ?? 'unknown',
+                      value: displayedUserType ?? 'unknown',
+                    ),
+                    _Row(
+                      label: 'auth/me has_driver_profile',
+                      value: _boolOrUnknown(network.lastDriverHasProfile),
+                    ),
+                    _Row(
+                      label: 'auth/me application_status',
+                      value: network.lastDriverApplicationStatus ?? 'none',
+                    ),
+                    _Row(
+                      label: 'auth/me needs_application',
+                      value: _boolOrUnknown(network.lastDriverNeedsApplication),
+                    ),
+                    _Row(
+                      label: 'auth/me can_submit_application',
+                      value: _boolOrUnknown(
+                          network.lastDriverCanSubmitApplication),
+                    ),
+                    _Row(
+                      label: 'auth/me can_go_online',
+                      value: _boolOrUnknown(network.lastDriverCanGoOnline),
+                    ),
+                    _Row(
+                      label: 'auth/me cannot_go_online reason',
+                      value: network.lastDriverCannotGoOnlineReason ?? 'none',
                     ),
                     _Row(
                       label: 'Device UUID',
@@ -177,6 +214,21 @@ class DiagnosticsPage extends ConsumerWidget {
     return value ? 'yes' : 'no';
   }
 
+  static Future<
+      ({
+        String? token,
+        String? deviceUuid,
+        List<String> abilities,
+        String? userType,
+      })> _loadStoredDiagnostics(TokenStore store) async {
+    return (
+      token: await store.read(),
+      deviceUuid: await store.readDeviceUuid(),
+      abilities: await store.readAuthAbilities(),
+      userType: await store.readAuthUserType(),
+    );
+  }
+
   static List<Widget> _driverContextRows(AsyncValue<DriverMe> value) {
     return value.when(
       loading: () => const [
@@ -189,6 +241,10 @@ class DiagnosticsPage extends ConsumerWidget {
         final context = me.context;
         return [
           _Row(label: 'Driver runtime state', value: context.state.name),
+          _Row(
+            label: 'Driver has profile',
+            value: _boolOrUnknown(context.hasDriverProfile),
+          ),
           _Row(
             label: 'Driver profile status',
             value: context.driverProfileStatus ?? 'none',
@@ -204,6 +260,14 @@ class DiagnosticsPage extends ConsumerWidget {
           _Row(
             label: 'Can go online',
             value: context.canGoOnline ? 'yes' : 'no',
+          ),
+          _Row(
+            label: 'Needs application',
+            value: _boolOrUnknown(context.needsApplication),
+          ),
+          _Row(
+            label: 'Can submit application',
+            value: _boolOrUnknown(context.canSubmitApplication),
           ),
           _Row(
             label: 'Cannot go online reason',

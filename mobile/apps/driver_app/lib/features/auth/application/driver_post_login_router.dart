@@ -7,6 +7,11 @@ bool isDriverLoginAbility(List<String> abilities) {
 }
 
 String routeForDriverContext(DriverContext context) {
+  if (!context.hasDriverProfile &&
+      (context.needsApplication || context.canSubmitApplication)) {
+    return '/application';
+  }
+
   return switch (context.state) {
     DriverRuntimeState.noDriverProfile ||
     DriverRuntimeState.applicationDraft ||

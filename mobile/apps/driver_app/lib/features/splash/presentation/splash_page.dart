@@ -1,3 +1,4 @@
+import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +6,7 @@ import 'package:network/network.dart';
 import 'package:ui_kit/ui_kit.dart';
 
 import '../../../di/locator.dart';
+import '../../auth/application/driver_post_login_router.dart';
 
 class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
@@ -27,7 +29,21 @@ class _SplashPageState extends ConsumerState<SplashPage> {
     if (token == null) {
       context.go('/auth/phone');
     } else {
-      context.go('/home');
+      try {
+        final me = await ref.read(driverProfileRepositoryProvider).me();
+        if (!mounted) return;
+        context.go(routeForDriverContext(me.context));
+      } on ApiError catch (error) {
+        if (!mounted) return;
+        if (error.httpStatus == 401 || error.httpStatus == 403) {
+          await store.clear();
+          if (mounted) context.go('/auth/phone');
+          return;
+        }
+        context.go('/home');
+      } catch (_) {
+        if (mounted) context.go('/home');
+      }
     }
   }
 

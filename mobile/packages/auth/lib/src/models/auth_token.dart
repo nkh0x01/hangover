@@ -17,8 +17,22 @@ class AuthToken {
     return AuthToken(
       token: json['token']! as String,
       expiresAt: DateTime.parse(json['expires_at']! as String),
-      abilities: (json['abilities'] as List).cast<String>(),
-      userType: user?['type'] as String?,
+      abilities: _stringList(json['abilities']),
+      userType: _string(user?['type'] ?? json['user_type'] ?? json['type']),
     );
+  }
+
+  static String? _string(Object? value) {
+    if (value == null) return null;
+    final text = value.toString().trim();
+    return text.isEmpty ? null : text;
+  }
+
+  static List<String> _stringList(Object? value) {
+    if (value is! List) return const [];
+    return value
+        .map((item) => item.toString().trim())
+        .where((item) => item.isNotEmpty)
+        .toList(growable: false);
   }
 }
