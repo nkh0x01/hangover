@@ -23,7 +23,10 @@ export class ParticleSystem {
     this.scene = scene;
     this.camera = camera;
     this.floatLayer = floatLayer;
-    this._buildMeshPool();
+    // The 3D khinkali burst needs a WebGL scene; the DOM "+N" floats do not.
+    // When no scene is available (WebGL unsupported) we run in floats-only mode.
+    this.has3D = !!scene;
+    if (this.has3D) this._buildMeshPool();
     this._buildFloatPool();
   }
 
@@ -81,6 +84,7 @@ export class ParticleSystem {
    * @param {boolean} golden
    */
   spawnTapBurst(point, golden = false) {
+    if (!this.has3D || !point) return; // floats-only mode has no 3D burst
     const count = golden ? 6 : 1 + Math.floor(Math.random() * 3); // 1–3 (6 if golden)
     for (let i = 0; i < count; i++) {
       const m = this._getMesh();
@@ -128,6 +132,7 @@ export class ParticleSystem {
 
   update(dt) {
     // ---- 3D khinkali bits ----
+    if (this.has3D)
     for (const m of this.pool) {
       if (!m.userData.active) continue;
       const u = m.userData;

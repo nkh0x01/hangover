@@ -153,6 +153,52 @@ body {
   background: rgba(60, 28, 34, 0.9);
 }
 
+/* ---------------- 2D fallback hero (no-WebGL mode) ------------- */
+.hero-fallback {
+  position: absolute;
+  top: 38%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  pointer-events: auto;
+  cursor: pointer;
+  background: radial-gradient(
+    circle at 50% 38%,
+    rgba(255, 243, 224, 0.18),
+    rgba(255, 210, 138, 0.06) 60%,
+    transparent 72%
+  );
+  animation: heroBob 2.4s ease-in-out infinite;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.hero-fallback.hidden {
+  display: none;
+}
+.hero-fallback-emoji {
+  font-size: 116px;
+  line-height: 1;
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.5));
+  transition: transform 0.08s ease;
+  pointer-events: none;
+}
+.hero-fallback.tapped .hero-fallback-emoji {
+  transform: scale(0.86) translateY(4px);
+}
+@keyframes heroBob {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) translateY(0);
+  }
+  50% {
+    transform: translate(-50%, -50%) translateY(-12px);
+  }
+}
+
 /* --------------------------- Tap hint -------------------------- */
 .tap-hint {
   position: absolute;
