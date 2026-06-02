@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ka">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Mobile-first viewport: lock zoom, cover notches, no user scaling. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no"
+    />
+    <meta name="theme-color" content="#2a0e12" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Khinkali Empire" />
+    <meta name="description" content="ხინკლის იმპერია — Khinkali Empire idle game" />
+    <!-- Emoji favicon (inline SVG) so no extra file/network request is needed. -->
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A5%9F%3C/text%3E%3C/svg%3E"
+    />
+
+    <!-- Georgian / Cyrillic / Latin friendly font. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@400;600;800&family=Noto+Sans:wght@400;600;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <title data-i18n="app_title">ხინკლის იმპერია</title>
+    <script type="module" crossorigin src="./assets/index-DDLpENpl.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-CywlVIBb.css">
+  </head>
+  <body>
+    <!-- 3D viewport (bottom layer). -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- DOM overlay (everything on top of the canvas). -->
+    <div id="ui-root">
+      <!-- HUD (top) -->
+      <header id="hud" class="hud">
+        <div class="hud-main">
+          <div class="gold-row">
+            <span class="gold-icon" aria-hidden="true">🪙</span>
+            <span id="gold-amount" class="gold-amount">0</span>
+          </div>
+          <div id="kps-readout" class="kps-readout">0 / წამში</div>
+        </div>
+        <button
+          id="settings-btn"
+          class="icon-btn"
+          data-i18n-attr="aria-label:settings"
+          aria-label="settings"
+        >
+          ⚙️
+        </button>
+      </header>
+
+      <!-- 2D fallback hero khinkali. Shown only when WebGL/3D is unavailable so
+           the game stays fully playable (tap target) without a 3D context. -->
+      <div id="hero-fallback" class="hero-fallback hidden" aria-label="khinkali">
+        <div class="hero-fallback-emoji">🥟</div>
+      </div>
+
+      <!-- Tap hint (fades after first tap) -->
+      <div id="tap-hint" class="tap-hint" data-i18n="tap_to_cook">
+        შეეხე ხინკალს მოსახარშად
+      </div>
+
+      <!-- Floating "+N" particle layer (DOM-pooled) -->
+      <div id="float-layer" class="float-layer" aria-hidden="true"></div>
+
+      <!-- Bottom sheet (upgrade shop) -->
+      <section id="bottom-sheet" class="bottom-sheet" aria-label="Shop">
+        <div id="sheet-handle" class="sheet-handle">
+          <div class="handle-grip"></div>
+          <span class="handle-label" data-i18n="shop_handle">მაღაზია</span>
+        </div>
+
+        <div class="sheet-tabs">
+          <button class="tab-btn active" data-tab="generators" data-i18n="generators">
+            მწარმოებლები
+          </button>
+          <button class="tab-btn" data-tab="tap" data-i18n="tap_power">
+            შეხების ძალა
+          </button>
+        </div>
+
+        <div class="buy-mode-row">
+          <button class="buymode-btn active" data-buymode="1" data-i18n="buy_x1">x1</button>
+          <button class="buymode-btn" data-buymode="10" data-i18n="buy_x10">x10</button>
+          <button class="buymode-btn" data-buymode="max" data-i18n="buy_max">მაქს.</button>
+        </div>
+
+        <div id="upgrade-list" class="upgrade-list"></div>
+
+        <div class="prestige-row">
+          <button id="prestige-btn" class="prestige-btn" disabled>
+            <span data-i18n="prestige">ხელახლა გამოცხობა</span>
+            <span id="prestige-points-label" class="prestige-points-label"></span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Settings modal -->
+      <div id="settings-modal" class="modal hidden" role="dialog" aria-modal="true">
+        <div class="modal-card">
+          <div class="modal-header">
+            <h2 data-i18n="settings">პარამეტრები</h2>
+            <button
+              id="settings-close"
+              class="icon-btn"
+              data-i18n-attr="aria-label:close"
+              aria-label="close"
+            >
+              ✕
+            </button>
+          </div>
+          <div class="modal-body">
+            <label class="field-label" data-i18n="language">ენა</label>
+            <div id="lang-buttons" class="lang-buttons"></div>
+
+            <div class="stat-line">
+              <span data-i18n="total_baked">სულ გამომცხვარი</span>:
+              <strong id="stat-total-baked">0</strong>
+            </div>
+            <div class="stat-line">
+              <span data-i18n="prestige_points">პრესტიჟის ქულები</span>:
+              <strong id="stat-prestige">0</strong>
+            </div>
+
+            <button id="reset-btn" class="danger-btn" data-i18n="reset_save">
+              მონაცემების წაშლა
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Generic confirm/info modal (prestige, offline earnings, reset confirm) -->
+      <div id="dialog-modal" class="modal hidden" role="dialog" aria-modal="true">
+        <div class="modal-card">
+          <div class="modal-body">
+            <h2 id="dialog-title"></h2>
+            <p id="dialog-message"></p>
+            <div class="dialog-actions">
+              <button id="dialog-cancel" class="ghost-btn"></button>
+              <button id="dialog-confirm" class="primary-btn"></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </body>
+</html>
