@@ -263,7 +263,7 @@ final class AdminDiagnosticsPage extends Page
         }
 
         $output = @shell_exec(
-            'pgrep -f "artisan queue:work database.*--queue=realtime,default" 2>/dev/null',
+            'for pid in $(pgrep -f "artisan queue:work database" 2>/dev/null); do args=$(ps -p "$pid" -o args= 2>/dev/null); case "$args" in "/opt/cpanel/ea-php84/root/usr/bin/php artisan queue:work database "*) case "$args" in *"--queue=realtime,default"*) echo "$pid";; esac;; esac; done',
         );
         if ($output === null) {
             return null;

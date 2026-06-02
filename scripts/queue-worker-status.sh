@@ -7,6 +7,14 @@ SHARED_DIR="${RIDE360_SHARED_DIR:-/home/gadgetge/hangover/shared}"
 LOG_FILE="$SHARED_DIR/storage/logs/queue-worker.log"
 PID_FILE="$SHARED_DIR/queue-worker.pid"
 MATCH_PATTERN="artisan queue:work database.*--queue=realtime,default"
+worker_pids() {
+  for pid in $(pgrep -f "artisan queue:work database" 2>/dev/null || true); do
+    args="$(ps -p "$pid" -o args= 2>/dev/null || true)"
+    if [[ "$args" == "$PHP_BIN artisan queue:work database "* && "$args" == *"--queue=realtime,default"* ]]; then
+      echo "$pid $args"
+    fi
+  done
+}
 
 echo "backend=$(readlink -f "$APP_DIR")"
 echo "php=$PHP_BIN"
@@ -26,7 +34,7 @@ else
 fi
 
 echo "processes:"
-pgrep -af "$MATCH_PATTERN" 2>/dev/null || true
+worker_pids || true
 
 cd "$APP_DIR"
 "$PHP_BIN" artisan tinker --execute='use Illuminate\Support\Facades\DB; echo json_encode([

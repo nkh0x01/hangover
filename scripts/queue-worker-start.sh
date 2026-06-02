@@ -24,7 +24,9 @@ current_backend="$(readlink -f "$APP_DIR")"
 
 is_worker_pid() {
   local pid="$1"
-  ps -p "$pid" -o args= 2>/dev/null | grep -Eq "$MATCH_PATTERN"
+  local args
+  args="$(ps -p "$pid" -o args= 2>/dev/null || true)"
+  [[ "$args" == "$PHP_BIN artisan queue:work database "* && "$args" == *"--queue=realtime,default"* ]]
 }
 
 pid_cwd() {
@@ -56,7 +58,8 @@ if [[ -f "$PID_FILE" ]]; then
   fi
 fi
 
-for pid in $(pgrep -f "$MATCH_PATTERN" 2>/dev/null || true); do
+for pid in $(pgrep -f "artisan queue:work database" 2>/dev/null || true); do
+  is_worker_pid "$pid" || continue
   worker_cwd="$(pid_cwd "$pid")"
   if [[ "$worker_cwd" == "$current_backend" ]]; then
     echo "$pid" > "$PID_FILE"
