@@ -157,12 +157,10 @@ jobs:
 
           credentials = {
               "ios": {
-                  os.environ["APP_BUNDLE_ID"]: {
-                      "provisioningProfilePath": str(profile_path.relative_to(root)),
-                      "distributionCertificate": {
-                          "path": str(cert_path.relative_to(root)),
-                          "password": os.environ["IOS_DISTRIBUTION_CERTIFICATE_PASSWORD"],
-                      },
+                  "provisioningProfilePath": str(profile_path.relative_to(root)),
+                  "distributionCertificate": {
+                      "path": str(cert_path.relative_to(root)),
+                      "password": os.environ["IOS_DISTRIBUTION_CERTIFICATE_PASSWORD"],
                   },
               },
           }
