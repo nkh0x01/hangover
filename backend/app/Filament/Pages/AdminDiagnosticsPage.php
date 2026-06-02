@@ -10,6 +10,7 @@ use App\Modules\Geo\Models\LiveLocation;
 use App\Modules\Riding\Models\Ride;
 use App\Modules\Riding\Models\RideOffer;
 use Filament\Pages\Page;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
@@ -47,6 +48,14 @@ final class AdminDiagnosticsPage extends Page
             'Driver application API route' => Route::has('driver.application.show') ? 'registered' : 'missing',
             'Broadcast connection' => (string) config('broadcasting.default'),
             'Queue connection' => (string) config('queue.default'),
+            'Queue names' => implode(',', array_filter((array) config('queue.queues', []))),
+            'Queue pending jobs' => (string) $this->pendingJobsCount(),
+            'Queue pending realtime jobs' => (string) $this->pendingJobsCount('realtime'),
+            'Queue failed jobs' => (string) $this->failedJobsCount(),
+            'Queue latest failed job' => $this->latestFailedJobSummary(),
+            'Queue latest realtime job' => $this->latestRealtimeJobTimestamp() ?? 'none',
+            'Queue worker processes' => $this->queueWorkerProcessCount(),
+            'Queue worker warning' => $this->queueWorkerWarning(),
             'Cache store' => (string) config('cache.default'),
             'Redis geo connection' => (string) config('geo.index.connection', 'geo'),
             'Redis status' => $redisReachable ? 'reachable' : 'unreachable',
@@ -170,5 +179,98 @@ final class AdminDiagnosticsPage extends Page
             ->where('status', 'no_drivers')
             ->where('updated_at', '>=', now()->subMinutes(30))
             ->count();
+    }
+
+    private function pendingJobsCount(?string $queue = null): int
+    {
+        if (! Schema::hasTable('jobs')) {
+            return 0;
+        }
+
+        $query = DB::table('jobs');
+        if ($queue !== null) {
+            $query->where('queue', $queue);
+        }
+
+        return (int) $query->count();
+    }
+
+    private function failedJobsCount(): int
+    {
+        if (! Schema::hasTable('failed_jobs')) {
+            return 0;
+        }
+
+        return (int) DB::table('failed_jobs')->count();
+    }
+
+    private function latestFailedJobSummary(): string
+    {
+        if (! Schema::hasTable('failed_jobs')) {
+            return 'table missing';
+        }
+
+        $row = DB::table('failed_jobs')->latest('id')->first(['queue', 'failed_at']);
+        if (! $row) {
+            return 'none';
+        }
+
+        return sprintf(
+            '%s on %s',
+            $row->failed_at ? \Carbon\CarbonImmutable::parse($row->failed_at)->timezone(config('app.timezone'))->format('Y-m-d H:i:s') : 'unknown time',
+            $row->queue ?: 'unknown queue',
+        );
+    }
+
+    private function latestRealtimeJobTimestamp(): ?string
+    {
+        if (! Schema::hasTable('jobs')) {
+            return null;
+        }
+
+        $timestamp = DB::table('jobs')->where('queue', 'realtime')->max('created_at');
+        if ($timestamp === null) {
+            return null;
+        }
+
+        return \Carbon\CarbonImmutable::createFromTimestamp((int) $timestamp)
+            ->timezone(config('app.timezone'))
+            ->format('Y-m-d H:i:s');
+    }
+
+    private function queueWorkerProcessCount(): string
+    {
+        $count = $this->queueWorkerProcesses();
+
+        return $count === null ? 'unknown' : (string) $count;
+    }
+
+    private function queueWorkerWarning(): string
+    {
+        $count = $this->queueWorkerProcesses();
+
+        if ($count === null) {
+            return 'process check unavailable';
+        }
+
+        return $count > 0 ? 'none' : 'worker missing';
+    }
+
+    private function queueWorkerProcesses(): ?int
+    {
+        if (! function_exists('shell_exec')) {
+            return null;
+        }
+
+        $output = @shell_exec(
+            'pgrep -f "artisan queue:work database.*--queue=realtime,default" 2>/dev/null',
+        );
+        if ($output === null) {
+            return null;
+        }
+
+        $pids = array_filter(array_map('trim', explode("\n", $output)));
+
+        return count($pids);
     }
 }
