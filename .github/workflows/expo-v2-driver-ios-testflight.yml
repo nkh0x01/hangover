@@ -249,8 +249,8 @@ jobs:
             --profile "$EAS_BUILD_PROFILE" \
             --path "$IPA_PATH" \
             --non-interactive \
-            --wait \
-            --json > eas-submit.json
+            --wait | tee eas-submit.log
+          printf '{"status":"submitted","ipaPath":"%s"}\n' "$IPA_PATH" > eas-submit.json
 
       - name: Write build report
         if: always()
@@ -274,4 +274,5 @@ jobs:
           path: |
             mobile-v2/artifacts/driver/*.ipa
             mobile-v2/eas-build.json
+            mobile-v2/eas-submit.log
             mobile-v2/eas-submit.json
