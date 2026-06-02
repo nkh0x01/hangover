@@ -39,7 +39,7 @@ final class RaiseSosEvent
 
             if (DB::getDriverName() === 'mysql' && $location !== null) {
                 DB::statement(
-                    'UPDATE sos_events SET location = ST_SRID(POINT(?, ?), 4326) WHERE id = ?',
+                    'UPDATE sos_events SET location = ST_GeomFromText(CONCAT(\'POINT(\', ?, \' \', ?, \')\'), 4326) WHERE id = ?',
                     [$location->lng, $location->lat, $event->id],
                 );
             }

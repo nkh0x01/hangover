@@ -5,14 +5,13 @@ declare(strict_types=1);
 namespace App\Modules\Driver\Actions;
 
 use App\Modules\Driver\Models\Driver;
-use App\Modules\Geo\Models\LiveLocation;
+use App\Modules\Geo\Services\LiveLocationRecorder;
 use App\Modules\Geo\Services\NearbyDriverIndex;
 use App\Modules\Riding\Events\DriverLocationUpdated;
 use App\Modules\Riding\Models\Ride;
 use App\Modules\Riding\StateMachine\RideStatus;
 use App\Support\Geo\Point;
 use Carbon\CarbonImmutable;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -25,7 +24,10 @@ use Illuminate\Support\Facades\Log;
  */
 final readonly class IngestLocationHeartbeat
 {
-    public function __construct(private NearbyDriverIndex $index) {}
+    public function __construct(
+        private NearbyDriverIndex $index,
+        private LiveLocationRecorder $locations,
+    ) {}
 
     public function execute(
         Driver $driver,
@@ -61,24 +63,16 @@ final readonly class IngestLocationHeartbeat
 
         $activeRide = $this->activeRideFor($driver);
 
-        // Persist canonical history (async-friendly insert; small payload).
-        $row = LiveLocation::create([
-            'driver_id' => $driver->id,
-            'ride_id' => $activeRide?->id,
-            'recorded_at' => $now,
-            'heading' => $heading,
-            'speed_kmh' => $speedKmh,
-            'accuracy_m' => $accuracyM,
-            'battery_pct' => $batteryPct,
-            'source' => 'mobile_gps',
-        ]);
-
-        if (DB::getDriverName() === 'mysql') {
-            DB::statement(
-                'UPDATE live_locations SET location = ST_SRID(POINT(?, ?), 4326) WHERE id = ?',
-                [$location->lng, $location->lat, $row->id],
-            );
-        }
+        $this->locations->record(
+            driver: $driver,
+            location: $location,
+            heading: $heading,
+            speedKmh: $speedKmh,
+            accuracyM: $accuracyM,
+            batteryPct: $batteryPct,
+            rideId: $activeRide?->id,
+            recordedAt: $now,
+        );
 
         if ($activeRide) {
             event(new DriverLocationUpdated(

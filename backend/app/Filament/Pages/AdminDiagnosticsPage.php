@@ -5,7 +5,12 @@ declare(strict_types=1);
 namespace App\Filament\Pages;
 
 use App\Modules\Communication\Models\SmsLog;
+use App\Modules\Driver\Models\Driver;
+use App\Modules\Geo\Models\LiveLocation;
+use App\Modules\Riding\Models\Ride;
+use App\Modules\Riding\Models\RideOffer;
 use Filament\Pages\Page;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 
@@ -30,6 +35,9 @@ final class AdminDiagnosticsPage extends Page
      */
     public function diagnostics(): array
     {
+        $redisReachable = $this->redisReachable();
+        $latestLocation = $this->latestLocationTimestamp();
+
         return [
             'Environment' => app()->environment(),
             'App URL' => (string) config('app.url'),
@@ -40,6 +48,14 @@ final class AdminDiagnosticsPage extends Page
             'Broadcast connection' => (string) config('broadcasting.default'),
             'Queue connection' => (string) config('queue.default'),
             'Cache store' => (string) config('cache.default'),
+            'Redis geo connection' => (string) config('geo.index.connection', 'geo'),
+            'Redis status' => $redisReachable ? 'reachable' : 'unreachable',
+            'Geo fallback active' => $redisReachable ? 'no' : 'yes',
+            'Geo fallback recent window' => (string) config('geo.index.fallback_recent_seconds', 300).'s',
+            'Online drivers' => (string) $this->onlineDriversCount(),
+            'Latest driver location' => $latestLocation ?? 'none',
+            'Recent dispatch offers' => (string) $this->recentOfferCount(),
+            'Recent no-driver rides' => (string) $this->recentNoDriverCount(),
             'SMS driver' => (string) config('sms.driver', 'unknown'),
             'Sender.ge sender configured' => filled(config('sms.drivers.sender_ge.sender')) ? 'yes' : 'no',
             'Sender.ge key configured' => filled(config('sms.drivers.sender_ge.api_key')) ? 'yes' : 'no',
@@ -91,5 +107,68 @@ final class AdminDiagnosticsPage extends Page
         return Schema::hasTable('sms_log')
             && Schema::hasColumn('sms_log', 'message_type')
             && Schema::hasColumn('sms_log', 'masked_phone');
+    }
+
+    private function redisReachable(): bool
+    {
+        if (! config('geo.index.enabled', true)) {
+            return false;
+        }
+
+        try {
+            Redis::connection((string) config('geo.index.connection', 'geo'))->ping();
+
+            return true;
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    private function onlineDriversCount(): int
+    {
+        if (! Schema::hasTable('drivers')) {
+            return 0;
+        }
+
+        return Driver::query()->where('online', true)->count();
+    }
+
+    private function latestLocationTimestamp(): ?string
+    {
+        if (! Schema::hasTable('live_locations')) {
+            return null;
+        }
+
+        $timestamp = LiveLocation::query()->max('recorded_at');
+        if ($timestamp === null) {
+            return null;
+        }
+
+        return \Carbon\CarbonImmutable::parse($timestamp)
+            ->timezone(config('app.timezone'))
+            ->format('Y-m-d H:i:s');
+    }
+
+    private function recentOfferCount(): int
+    {
+        if (! Schema::hasTable('ride_offers')) {
+            return 0;
+        }
+
+        return RideOffer::query()
+            ->where('offered_at', '>=', now()->subMinutes(30))
+            ->count();
+    }
+
+    private function recentNoDriverCount(): int
+    {
+        if (! Schema::hasTable('rides')) {
+            return 0;
+        }
+
+        return Ride::query()
+            ->where('status', 'no_drivers')
+            ->where('updated_at', '>=', now()->subMinutes(30))
+            ->count();
     }
 }

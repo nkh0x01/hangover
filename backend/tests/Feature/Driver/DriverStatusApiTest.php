@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Driver\Models\Driver;
 use App\Modules\Driver\Models\DriverShift;
 use App\Modules\Driver\Models\Vehicle;
+use App\Modules\Geo\Models\LiveLocation;
 use App\Modules\Identity\Models\User;
 use Laravel\Sanctum\Sanctum;
 
@@ -50,6 +51,9 @@ it('lets an approved driver with an active current vehicle go online', function 
         ->and(DriverShift::query()
             ->where('driver_id', $driver->id)
             ->whereNull('ended_at')
+            ->count())->toBe(1)
+        ->and(LiveLocation::query()
+            ->where('driver_id', $driver->id)
             ->count())->toBe(1);
 });
 

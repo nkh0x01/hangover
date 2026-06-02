@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Geo\Http\Controllers;
 
 use App\Modules\Geo\Models\City;
+use App\Modules\Geo\Services\DbNearbyDriverFinder;
 use App\Modules\Geo\Services\NearbyDriverIndex;
 use App\Support\Geo\Point;
 use Illuminate\Http\JsonResponse;
@@ -13,7 +14,7 @@ use Illuminate\Routing\Controller;
 
 final class NearbyDriversController extends Controller
 {
-    public function __invoke(Request $request, NearbyDriverIndex $index): JsonResponse
+    public function __invoke(Request $request, NearbyDriverIndex $index, DbNearbyDriverFinder $dbFallback): JsonResponse
     {
         $request->validate([
             'lat' => ['required', 'numeric', 'between:-90,90'],
@@ -23,12 +24,10 @@ final class NearbyDriversController extends Controller
 
         $city = City::query()->where('is_active', true)->orderBy('id')->firstOrFail();
 
-        $rows = $index->nearby(
-            cityId: $city->id,
-            center: new Point((float) $request->query('lat'), (float) $request->query('lng')),
-            radiusKm: (float) $request->query('radius_km', 3.0),
-            limit: 20,
-        );
+        $center = new Point((float) $request->query('lat'), (float) $request->query('lng'));
+        $radiusKm = (float) $request->query('radius_km', 3.0);
+        $rows = $index->nearby(cityId: $city->id, center: $center, radiusKm: $radiusKm, limit: 20);
+        $rows = $rows !== [] ? $rows : $dbFallback->nearby($city->id, $center, $radiusKm, 20);
 
         // Strip the PII — we expose only positions, not driver identities.
         return new JsonResponse([

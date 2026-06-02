@@ -7,6 +7,7 @@ namespace App\Modules\Driver\Actions;
 use App\Modules\Driver\Models\Driver;
 use App\Modules\Driver\Models\Vehicle;
 use App\Modules\Driver\Services\DriverVerificationPresenter;
+use App\Modules\Geo\Services\LiveLocationRecorder;
 use App\Modules\Geo\Services\NearbyDriverIndex;
 use App\Support\Exceptions\DomainException;
 use App\Support\Geo\Point;
@@ -16,6 +17,7 @@ final readonly class SetDriverOnline
 {
     public function __construct(
         private NearbyDriverIndex $index,
+        private LiveLocationRecorder $locations,
         private DriverVerificationPresenter $verification,
     ) {}
 
@@ -66,6 +68,14 @@ final readonly class SetDriverOnline
                     'started_lng' => $location->lng,
                 ]);
             }
+
+            $this->locations->record(
+                driver: $lockedDriver,
+                location: $location,
+                heading: 0,
+                speedKmh: 0.0,
+                recordedAt: $now,
+            );
         });
 
         $this->index->upsert(

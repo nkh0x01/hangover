@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace App\Modules\Riding\Services;
 
 use App\Modules\Driver\Models\Driver;
+use App\Modules\Geo\Services\DbNearbyDriverFinder;
 use App\Modules\Geo\Services\NearbyDriverIndex;
 use App\Modules\Riding\Models\Ride;
+use App\Modules\Riding\StateMachine\RideStatus;
 use App\Support\Geo\Point;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Returns dispatch candidates for a ride, sorted best-first.
@@ -23,13 +26,13 @@ use App\Support\Geo\Point;
  *   - driver.current_vehicle_id IS NULL
  *   - driver in the ride's reject set
  *   - driver has an active ride (active_driver_lock in rides)
- *   - driver heartbeat older than `geo.index.meta_ttl_seconds` (the
- *     Redis index expires; if no entry, candidate isn't returned at all)
+ *   - driver location older than the Redis TTL or DB fallback window
  */
 final readonly class DriverCandidateResolver
 {
     public function __construct(
         private NearbyDriverIndex $index,
+        private DbNearbyDriverFinder $dbFallback,
         private DriverOfferQueue $offerQueue,
     ) {}
 
@@ -39,6 +42,17 @@ final readonly class DriverCandidateResolver
     public function resolve(Ride $ride, Point $pickup, float $radiusKm, int $limit = 20): array
     {
         $candidates = $this->index->nearby($ride->city_id, $pickup, $radiusKm, $limit * 3);
+        if ($candidates === []) {
+            $candidates = $this->dbFallback->nearby($ride->city_id, $pickup, $radiusKm, $limit * 3);
+            if ($candidates !== []) {
+                Log::channel('dispatch')->info('Using DB driver-location fallback', [
+                    'ride_id' => $ride->id,
+                    'candidate_count' => count($candidates),
+                    'radius_km' => $radiusKm,
+                ]);
+            }
+        }
+
         if ($candidates === []) {
             return [];
         }
@@ -53,10 +67,11 @@ final readonly class DriverCandidateResolver
             ->where('status', 'approved')
             ->where('online', true)
             ->whereNotNull('current_vehicle_id')
+            ->whereHas('currentVehicle', function ($q): void {
+                $q->where('is_active', true)->whereNotNull('verified_at');
+            })
             ->whereDoesntHave('rides', function ($q): void {
-                $q->whereIn('status', [
-                    'offered', 'accepted', 'driver_arriving', 'driver_arrived', 'in_progress',
-                ]);
+                $q->whereIn('status', $this->activeRideStatuses());
             })
             ->get()
             ->keyBy('id');
@@ -78,5 +93,19 @@ final readonly class DriverCandidateResolver
         }
 
         return $out;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function activeRideStatuses(): array
+    {
+        return [
+            RideStatus::Offered->value,
+            RideStatus::Accepted->value,
+            RideStatus::DriverArriving->value,
+            RideStatus::DriverArrived->value,
+            RideStatus::InProgress->value,
+        ];
     }
 }

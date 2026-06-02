@@ -28,7 +28,7 @@ final class CitiesSeeder extends Seeder
 
         if (DB::getDriverName() === 'mysql') {
             DB::statement(
-                'UPDATE cities SET center = ST_SRID(POINT(?, ?), 4326) WHERE slug = ?',
+                'UPDATE cities SET center = ST_GeomFromText(CONCAT(\'POINT(\', ?, \' \', ?, \')\'), 4326) WHERE slug = ?',
                 [44.8271, 41.7151, 'tbilisi'],
             );
         }

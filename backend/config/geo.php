@@ -27,6 +27,7 @@ return [
         'set_prefix' => 'drivers:online',
         'driver_meta_prefix' => 'driver',
         'meta_ttl_seconds' => 60,
+        'fallback_recent_seconds' => env('GEO_INDEX_FALLBACK_RECENT_SECONDS', 300),
     ],
 
     /**

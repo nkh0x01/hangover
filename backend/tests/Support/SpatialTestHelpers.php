@@ -21,7 +21,10 @@ final class SpatialTestHelpers
             return;
         }
         DB::statement(
-            'UPDATE rides SET pickup_location = ST_SRID(POINT(?,?),4326), dropoff_location = ST_SRID(POINT(?,?),4326) WHERE id = ?',
+            'UPDATE rides
+                SET pickup_location = ST_GeomFromText(CONCAT(\'POINT(\', ?, \' \', ?, \')\'), 4326),
+                    dropoff_location = ST_GeomFromText(CONCAT(\'POINT(\', ?, \' \', ?, \')\'), 4326)
+              WHERE id = ?',
             [$pickupLng, $pickupLat, $dropoffLng, $dropoffLat, $rideId],
         );
     }
