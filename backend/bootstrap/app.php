@@ -59,6 +59,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Sanctum stateful domains for SPA / admin panel sessions.
         $middleware->statefulApi();
+
+        $middleware->redirectGuestsTo(
+            fn (Request $request): ?string => $request->is('api/*') ? null : '/admin/login',
+        );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (Throwable $e, Request $request) {
