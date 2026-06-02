@@ -237,9 +237,15 @@ jobs:
           path.write_text(key)
           path.chmod(0o600)
           PY
+          asc_app_id="$(node scripts/resolve-asc-app-id.mjs \
+            "$APP_BUNDLE_ID" \
+            "$asc_key_path" \
+            "$APP_STORE_CONNECT_KEY_ID" \
+            "$APP_STORE_CONNECT_ISSUER_ID")"
+          echo "Resolved App Store Connect app id for $APP_BUNDLE_ID."
           node scripts/configure-eas-submit.mjs \
             "$EAS_BUILD_PROFILE" \
-            "" \
+            "$asc_app_id" \
             "${APPLE_TEAM_ID:-}" \
             "$asc_key_path" \
             "$APP_STORE_CONNECT_KEY_ID" \
