@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "Ride 360 Driver V2",
+    "slug": "ride360-driver-v2",
+    "scheme": "ride360-driver-v2",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "ios": {
+      "bundleIdentifier": "app.ride360.driver",
+      "buildNumber": "200000",
+      "supportsTablet": false,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "extra": {
+      "appRole": "driver"
+    }
+  }
+}

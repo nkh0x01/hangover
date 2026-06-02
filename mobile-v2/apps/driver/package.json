@@ -1,0 +1,25 @@
+{
+  "name": "@ride360/driver",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "start": "EXPO_PUBLIC_APP_ROLE=driver EXPO_PUBLIC_APP_NAME='Ride 360 Driver V2' expo start --port 8082",
+    "web": "EXPO_PUBLIC_APP_ROLE=driver EXPO_PUBLIC_APP_NAME='Ride 360 Driver V2' expo start --web --port 8082"
+  },
+  "dependencies": {
+    "@expo/metro-runtime": "~55.0.11",
+    "@ride360/api": "0.1.0",
+    "@ride360/auth": "0.1.0",
+    "@ride360/config": "0.1.0",
+    "@ride360/diagnostics": "0.1.0",
+    "@ride360/i18n": "0.1.0",
+    "@ride360/types": "0.1.0",
+    "@ride360/ui": "0.1.0",
+    "expo": "^55.0.0",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "react-native": "0.83.6",
+    "react-native-web": "^0.21.0"
+  }
+}

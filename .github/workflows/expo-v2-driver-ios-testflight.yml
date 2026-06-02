@@ -1,0 +1,187 @@
+name: Expo V2 Driver iOS TestFlight
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: "Optional CFBundleShortVersionString override. Defaults to 2.0.0 for V2."
+        required: false
+        type: string
+      build_number:
+        description: "Optional CFBundleVersion override. Defaults to 200000 + GitHub run number."
+        required: false
+        type: string
+      submit_to_testflight:
+        description: "Upload the generated IPA to App Store Connect/TestFlight."
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: expo-v2-driver-ios-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Driver iOS EAS build
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    defaults:
+      run:
+        working-directory: mobile-v2
+
+    env:
+      APP_TARGET: driver
+      APP_LABEL: Driver
+      APP_BUNDLE_ID: app.ride360.driver
+      APP_NAME: Ride 360 Driver V2
+      APP_ROLE: driver
+      EAS_BUILD_PROFILE: driver-ios-testflight
+      EXPO_APP_TARGET: driver
+      EXPO_PUBLIC_APP_NAME: Ride 360 Driver V2
+      EXPO_PUBLIC_APP_ROLE: driver
+      EXPO_PUBLIC_APP_ENV: production
+      EXPO_PUBLIC_API_BASE_URL: https://ride.365sakartvelo.com
+      EXPO_EAS_PROJECT_ID: ${{ secrets.EXPO_DRIVER_EAS_PROJECT_ID }}
+      ASC_APP_ID: ${{ secrets.ASC_DRIVER_APP_ID }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile-v2/package-lock.json
+
+      - name: Setup Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Resolve V2 version and build number
+        env:
+          INPUT_VERSION_NAME: ${{ inputs.version_name }}
+          INPUT_BUILD_NUMBER: ${{ inputs.build_number }}
+        run: |
+          set -euo pipefail
+          version="${INPUT_VERSION_NAME:-}"
+          build_number="${INPUT_BUILD_NUMBER:-}"
+
+          if [ -z "$version" ]; then
+            version="2.0.0"
+          fi
+
+          if [ -z "$build_number" ]; then
+            build_number="$((200000 + GITHUB_RUN_NUMBER))"
+          fi
+
+          if ! [[ "$build_number" =~ ^[0-9]+$ ]]; then
+            echo "build_number must be an integer."
+            exit 1
+          fi
+
+          echo "EXPO_PUBLIC_APP_VERSION=$version" >> "$GITHUB_ENV"
+          echo "IOS_BUILD_NUMBER=$build_number" >> "$GITHUB_ENV"
+
+      - name: Verify required CI configuration
+        run: |
+          set -euo pipefail
+
+          if [ -z "${EXPO_EAS_PROJECT_ID:-}" ]; then
+            echo "Missing EXPO_DRIVER_EAS_PROJECT_ID secret."
+            exit 1
+          fi
+
+          if [ "${{ inputs.submit_to_testflight }}" = "true" ] && [ -z "${ASC_APP_ID:-}" ]; then
+            echo "Missing ASC_DRIVER_APP_ID secret required for TestFlight upload."
+            exit 1
+          fi
+
+      - name: Lint/analyze
+        run: npm run lint
+
+      - name: TypeScript
+        run: npm run typecheck
+
+      - name: Tests
+        run: npm test
+
+      - name: Production config and string scan
+        run: npm run check:production
+
+      - name: Build iOS on EAS
+        run: |
+          set -euo pipefail
+          eas build \
+            --platform ios \
+            --profile "$EAS_BUILD_PROFILE" \
+            --non-interactive \
+            --wait \
+            --json > eas-build.json
+
+      - name: Download IPA artifact from EAS
+        run: |
+          set -euo pipefail
+          build_id="$(node scripts/eas-build-id.mjs eas-build.json)"
+          echo "EAS_BUILD_ID=$build_id" >> "$GITHUB_ENV"
+
+          mkdir -p "artifacts/$APP_TARGET"
+          (
+            cd "artifacts/$APP_TARGET"
+            eas build:download --build-id "$build_id" --non-interactive --json > "../../eas-download.json"
+          )
+
+          ipa_path="$(find "artifacts/$APP_TARGET" -maxdepth 1 -type f -name "*.ipa" | head -n 1)"
+          if [ -z "$ipa_path" ]; then
+            echo "No IPA artifact was downloaded."
+            exit 1
+          fi
+
+          echo "IPA_PATH=$ipa_path" >> "$GITHUB_ENV"
+
+      - name: Submit IPA to TestFlight
+        if: ${{ inputs.submit_to_testflight }}
+        run: |
+          set -euo pipefail
+          node scripts/configure-eas-submit.mjs "$EAS_BUILD_PROFILE" "$ASC_APP_ID" "${APPLE_TEAM_ID:-}"
+          eas submit \
+            --platform ios \
+            --profile "$EAS_BUILD_PROFILE" \
+            --path "$IPA_PATH" \
+            --non-interactive \
+            --wait \
+            --json > eas-submit.json
+
+      - name: Write build report
+        if: always()
+        run: |
+          node scripts/write-ios-build-report.mjs \
+            --app "$APP_TARGET" \
+            --bundle-id "$APP_BUNDLE_ID" \
+            --version "${EXPO_PUBLIC_APP_VERSION:-unknown}" \
+            --build-number "${IOS_BUILD_NUMBER:-unknown}" \
+            --ipa-path "${IPA_PATH:-not downloaded}" \
+            --submit-enabled "${{ inputs.submit_to_testflight }}" \
+            --build-json eas-build.json \
+            --submit-json eas-submit.json
+
+      - name: Upload Driver IPA artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ride360-Driver-Expo-V2-iOS
+          if-no-files-found: ignore
+          path: |
+            mobile-v2/artifacts/driver/*.ipa
+            mobile-v2/eas-build.json
+            mobile-v2/eas-submit.json

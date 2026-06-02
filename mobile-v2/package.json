@@ -1,0 +1,31 @@
+{
+  "name": "ride360-mobile-v2",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.js",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "start:customer": "npm --workspace @ride360/customer start",
+    "start:customer:web": "npm --workspace @ride360/customer run web",
+    "start:customer:web:proxy": "node scripts/dev-api-proxy.mjs & EXPO_PUBLIC_API_BASE_URL=http://localhost:8083 npm --workspace @ride360/customer run web",
+    "start:driver": "npm --workspace @ride360/driver start",
+    "start:driver:web": "npm --workspace @ride360/driver run web",
+    "start:driver:web:proxy": "node scripts/dev-api-proxy.mjs & EXPO_PUBLIC_API_BASE_URL=http://localhost:8083 npm --workspace @ride360/driver run web",
+    "dev:api-proxy": "node scripts/dev-api-proxy.mjs",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "npm run typecheck",
+    "test": "vitest run",
+    "check:production": "node scripts/check-production-config.mjs",
+    "ci": "npm run lint && npm run typecheck && npm test && npm run check:production"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "react": "19.2.0",
+    "react-native": "0.83.6",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.8"
+  }
+}
