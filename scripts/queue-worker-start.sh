@@ -56,8 +56,7 @@ if [[ -f "$PID_FILE" ]]; then
   fi
 fi
 
-while IFS= read -r pid; do
-  [[ -z "$pid" ]] && continue
+for pid in $(pgrep -f "$MATCH_PATTERN" 2>/dev/null || true); do
   worker_cwd="$(pid_cwd "$pid")"
   if [[ "$worker_cwd" == "$current_backend" ]]; then
     echo "$pid" > "$PID_FILE"
@@ -68,7 +67,7 @@ while IFS= read -r pid; do
   if [[ -n "$worker_cwd" ]]; then
     stop_old_worker "$pid"
   fi
-done < <(pgrep -f "$MATCH_PATTERN" 2>/dev/null || true)
+done
 
 cd "$APP_DIR"
 nohup "$PHP_BIN" artisan "${QUEUE_ARGS[@]}" >> "$LOG_FILE" 2>&1 &

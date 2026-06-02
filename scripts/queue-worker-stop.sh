@@ -29,9 +29,8 @@ if [[ -f "$PID_FILE" ]]; then
   rm -f "$PID_FILE"
 fi
 
-while IFS= read -r pid; do
-  [[ -z "$pid" ]] && continue
+for pid in $(pgrep -f "$MATCH_PATTERN" 2>/dev/null || true); do
   stop_pid "$pid"
-done < <(pgrep -f "$MATCH_PATTERN" 2>/dev/null || true)
+done
 
 echo "$(date -Is) queue worker stopped"
