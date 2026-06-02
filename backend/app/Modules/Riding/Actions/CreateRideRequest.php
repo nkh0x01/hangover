@@ -47,45 +47,11 @@ final readonly class CreateRideRequest
         $cohort = $isTestRide ? (string) config('pilot.cohort') : null;
 
         try {
-            $ride = DB::transaction(function () use ($customer, $data, $estimate, $isTestRide, $cohort): Ride {
-                $ride = new Ride([
-                    'ulid' => Ulid::new(),
-                    'customer_id' => $customer->id,
-                    'city_id' => $estimate->city_id,
-                    'status' => RideStatus::Requested,
-                    'pickup_address' => $data->pickupAddress,
-                    'dropoff_address' => $data->dropoffAddress,
-                    'fare_estimate_id' => $estimate->id,
-                    'quoted_amount' => $estimate->total_amount,
-                    'surge_multiplier' => $estimate->surge_multiplier,
-                    'currency' => $estimate->currency,
-                    'payment_method' => $data->paymentMethod,
-                    'is_test_ride' => $isTestRide,
-                    'pilot_cohort' => $cohort !== '' ? $cohort : null,
-                    'requested_at' => now(),
-                ]);
-                $ride->save();
-
-                // POINT columns are not Eloquent-fillable; raw UPDATE so the
-                // generated active_*_lock columns recompute.
-                // MySQL-only — sqlite test runs use a sqlite-aware migration
-                // that omits the spatial columns.
-                if (DB::getDriverName() === 'mysql') {
-                    DB::statement(
-                        'UPDATE rides
-                            SET pickup_location  = ST_GeomFromText(CONCAT(\'POINT(\', ?, \' \', ?, \')\'), 4326),
-                                dropoff_location = ST_GeomFromText(CONCAT(\'POINT(\', ?, \' \', ?, \')\'), 4326)
-                          WHERE id = ?',
-                        [
-                            $data->pickup->lng, $data->pickup->lat,
-                            $data->dropoff->lng, $data->dropoff->lat,
-                            $ride->id,
-                        ],
-                    );
-                }
-
-                return $ride->refresh();
-            });
+            $ride = DB::transaction(
+                fn (): Ride => DB::getDriverName() === 'mysql'
+                    ? $this->createMysqlRide($customer, $data, $estimate, $isTestRide, $cohort)
+                    : $this->createPortableRide($customer, $data, $estimate, $isTestRide, $cohort),
+            );
         } catch (QueryException $e) {
             if ($this->isUniqueViolation($e, 'rides_active_customer_uq')) {
                 throw new DuplicateActiveRideException('Customer already has an active ride.');
@@ -99,6 +65,86 @@ final readonly class CreateRideRequest
         DispatchRide::dispatch($ride->id)->onQueue('realtime');
 
         return $ride;
+    }
+
+    private function createMysqlRide(
+        User $customer,
+        RideRequestData $data,
+        FareEstimate $estimate,
+        bool $isTestRide,
+        ?string $cohort,
+    ): Ride {
+        $ulid = Ulid::new();
+        $now = now();
+
+        DB::insert(
+            'INSERT INTO rides (
+                ulid, customer_id, city_id, status,
+                pickup_address, dropoff_address, pickup_location, dropoff_location,
+                fare_estimate_id, quoted_amount, surge_multiplier, currency,
+                payment_method, is_test_ride, pilot_cohort,
+                requested_at, created_at, updated_at
+            ) VALUES (
+                ?, ?, ?, ?,
+                ?, ?, ST_GeomFromText(CONCAT(\'POINT(\', ?, \' \', ?, \')\'), 4326),
+                      ST_GeomFromText(CONCAT(\'POINT(\', ?, \' \', ?, \')\'), 4326),
+                ?, ?, ?, ?,
+                ?, ?, ?,
+                ?, ?, ?
+            )',
+            [
+                $ulid,
+                $customer->id,
+                $estimate->city_id,
+                RideStatus::Requested->value,
+                $data->pickupAddress,
+                $data->dropoffAddress,
+                $data->pickup->lng,
+                $data->pickup->lat,
+                $data->dropoff->lng,
+                $data->dropoff->lat,
+                $estimate->id,
+                $estimate->total_amount,
+                $estimate->surge_multiplier,
+                $estimate->currency,
+                $data->paymentMethod,
+                $isTestRide ? 1 : 0,
+                $cohort !== '' ? $cohort : null,
+                $now,
+                $now,
+                $now,
+            ],
+        );
+
+        return Ride::query()->where('ulid', $ulid)->firstOrFail();
+    }
+
+    private function createPortableRide(
+        User $customer,
+        RideRequestData $data,
+        FareEstimate $estimate,
+        bool $isTestRide,
+        ?string $cohort,
+    ): Ride {
+        $ride = new Ride([
+            'ulid' => Ulid::new(),
+            'customer_id' => $customer->id,
+            'city_id' => $estimate->city_id,
+            'status' => RideStatus::Requested,
+            'pickup_address' => $data->pickupAddress,
+            'dropoff_address' => $data->dropoffAddress,
+            'fare_estimate_id' => $estimate->id,
+            'quoted_amount' => $estimate->total_amount,
+            'surge_multiplier' => $estimate->surge_multiplier,
+            'currency' => $estimate->currency,
+            'payment_method' => $data->paymentMethod,
+            'is_test_ride' => $isTestRide,
+            'pilot_cohort' => $cohort !== '' ? $cohort : null,
+            'requested_at' => now(),
+        ]);
+        $ride->save();
+
+        return $ride->refresh();
     }
 
     private function isUniqueViolation(QueryException $e, string $indexName): bool
