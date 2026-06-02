@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Driver\Actions;
 
 use App\Modules\Driver\Models\Driver;
+use App\Modules\Driver\Models\Vehicle;
 use App\Modules\Driver\Services\DriverVerificationPresenter;
 use App\Modules\Geo\Services\NearbyDriverIndex;
 use App\Support\Exceptions\DomainException;
@@ -35,31 +36,36 @@ final readonly class SetDriverOnline
             };
         }
 
-        $vehicleId ??= $driver->current_vehicle_id;
-        $vehicleId ??= $driver->vehicles()
-            ->where('is_active', true)
-            ->value('id');
-        if (! $vehicleId) {
-            throw new class('No active vehicle on file.') extends DomainException
-            {
-                public function code(): string
-                {
-                    return 'driver.no_active_vehicle';
-                }
+        $vehicle = $this->resolveVehicle($driver, $vehicleId);
+        $now = now();
 
-                public function status(): int
-                {
-                    return 409;
-                }
-            };
-        }
+        DB::transaction(function () use ($driver, $location, $now, $vehicle): void {
+            $lockedDriver = Driver::query()
+                ->whereKey($driver->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+            $onlineSince = $lockedDriver->online && $lockedDriver->online_since !== null
+                ? $lockedDriver->online_since
+                : $now;
 
-        DB::transaction(function () use ($driver, $vehicleId): void {
-            $driver->update([
+            $lockedDriver->update([
                 'online' => true,
-                'online_since' => now(),
-                'current_vehicle_id' => $vehicleId,
+                'online_since' => $onlineSince,
+                'current_vehicle_id' => $vehicle->id,
             ]);
+
+            $activeShift = $lockedDriver->shifts()
+                ->whereNull('ended_at')
+                ->lockForUpdate()
+                ->first();
+
+            if ($activeShift === null) {
+                $lockedDriver->shifts()->create([
+                    'started_at' => $onlineSince,
+                    'started_lat' => $location->lat,
+                    'started_lng' => $location->lng,
+                ]);
+            }
         });
 
         $this->index->upsert(
@@ -72,5 +78,39 @@ final readonly class SetDriverOnline
         );
 
         return $driver->refresh();
+    }
+
+    private function resolveVehicle(Driver $driver, ?int $vehicleId): Vehicle
+    {
+        $vehicleId ??= $driver->current_vehicle_id;
+
+        $vehicle = $vehicleId !== null
+            ? $driver->vehicles()
+                ->whereKey($vehicleId)
+                ->where('is_active', true)
+                ->first()
+            : null;
+
+        $vehicle ??= $driver->vehicles()
+            ->where('is_active', true)
+            ->latest('updated_at')
+            ->first();
+
+        if ($vehicle !== null) {
+            return $vehicle;
+        }
+
+        throw new class('No active vehicle on file.') extends DomainException
+        {
+            public function code(): string
+            {
+                return 'driver.no_active_vehicle';
+            }
+
+            public function status(): int
+            {
+                return 403;
+            }
+        };
     }
 }

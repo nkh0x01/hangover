@@ -6,7 +6,9 @@ namespace App\Modules\Geo\Services;
 
 use App\Support\Geo\Point;
 use Illuminate\Redis\Connections\Connection;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
+use Throwable;
 
 /**
  * Hot, Redis-backed index of online drivers per city. Phase 3's
@@ -46,17 +48,24 @@ final class NearbyDriverIndex
             return;
         }
 
-        $conn = $this->connection();
+        try {
+            $conn = $this->connection();
 
-        $conn->geoadd($this->key($cityId), $point->lng, $point->lat, "driver:{$driverId}");
+            $conn->geoadd($this->key($cityId), $point->lng, $point->lat, "driver:{$driverId}");
 
-        $conn->hmset($this->metaKey($driverId), [
-            'heading' => (string) $heading,
-            'speed' => (string) $speedKmh,
-            'recorded_at' => $recordedAt->format('c'),
-            'city_id' => (string) $cityId,
-        ]);
-        $conn->expire($this->metaKey($driverId), self::META_TTL);
+            $conn->hmset($this->metaKey($driverId), [
+                'heading' => (string) $heading,
+                'speed' => (string) $speedKmh,
+                'recorded_at' => $recordedAt->format('c'),
+                'city_id' => (string) $cityId,
+            ]);
+            $conn->expire($this->metaKey($driverId), self::META_TTL);
+        } catch (Throwable $e) {
+            $this->logUnavailable('upsert', $e, [
+                'city_id' => $cityId,
+                'driver_id' => $driverId,
+            ]);
+        }
     }
 
     public function remove(int $cityId, int $driverId): void
@@ -65,9 +74,16 @@ final class NearbyDriverIndex
             return;
         }
 
-        $conn = $this->connection();
-        $conn->zrem($this->key($cityId), "driver:{$driverId}");
-        $conn->del($this->metaKey($driverId));
+        try {
+            $conn = $this->connection();
+            $conn->zrem($this->key($cityId), "driver:{$driverId}");
+            $conn->del($this->metaKey($driverId));
+        } catch (Throwable $e) {
+            $this->logUnavailable('remove', $e, [
+                'city_id' => $cityId,
+                'driver_id' => $driverId,
+            ]);
+        }
     }
 
     /**
@@ -79,27 +95,36 @@ final class NearbyDriverIndex
             return [];
         }
 
-        // Predis's typed GEOSEARCH command applies positional argument
-        // validation that doesn't quite match the Redis 6.2+ surface
-        // we want. Bypass via the raw command path — works identically
-        // on both phpredis and predis client backends.
-        $conn = $this->connection();
-        /** @var array<int, array<int, mixed>> $rows */
-        $rows = $conn->client()->executeRaw([
-            'GEOSEARCH',
-            $this->key($cityId),
-            'FROMLONLAT',
-            (string) $center->lng,
-            (string) $center->lat,
-            'BYRADIUS',
-            (string) $radiusKm,
-            'km',
-            'ASC',
-            'COUNT',
-            (string) $limit,
-            'WITHCOORD',
-            'WITHDIST',
-        ]) ?: [];
+        try {
+            // Predis's typed GEOSEARCH command applies positional argument
+            // validation that doesn't quite match the Redis 6.2+ surface
+            // we want. Bypass via the raw command path — works identically
+            // on both phpredis and predis client backends.
+            $conn = $this->connection();
+            /** @var array<int, array<int, mixed>> $rows */
+            $rows = $conn->client()->executeRaw([
+                'GEOSEARCH',
+                $this->key($cityId),
+                'FROMLONLAT',
+                (string) $center->lng,
+                (string) $center->lat,
+                'BYRADIUS',
+                (string) $radiusKm,
+                'km',
+                'ASC',
+                'COUNT',
+                (string) $limit,
+                'WITHCOORD',
+                'WITHDIST',
+            ]) ?: [];
+        } catch (Throwable $e) {
+            $this->logUnavailable('nearby', $e, [
+                'city_id' => $cityId,
+                'radius_km' => $radiusKm,
+            ]);
+
+            return [];
+        }
 
         $out = [];
         foreach ($rows as $row) {
@@ -118,5 +143,17 @@ final class NearbyDriverIndex
         }
 
         return $out;
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     */
+    private function logUnavailable(string $operation, Throwable $e, array $context): void
+    {
+        Log::warning('geo.driver_index_unavailable', $context + [
+            'operation' => $operation,
+            'exception' => $e::class,
+            'message' => $e->getMessage(),
+        ]);
     }
 }
