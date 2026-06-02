@@ -47,8 +47,13 @@ jobs:
       EXPO_PUBLIC_APP_ENV: production
       EXPO_PUBLIC_API_BASE_URL: https://ride.365sakartvelo.com
       EXPO_EAS_PROJECT_ID: ${{ secrets.EXPO_DRIVER_EAS_PROJECT_ID }}
-      ASC_APP_ID: ${{ secrets.ASC_DRIVER_APP_ID }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+      APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+      IOS_DISTRIBUTION_CERTIFICATE_BASE64: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
+      IOS_DISTRIBUTION_CERTIFICATE_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}
+      IOS_DRIVER_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_DRIVER_PROVISIONING_PROFILE_BASE64 }}
 
     steps:
       - uses: actions/checkout@v4
@@ -102,10 +107,67 @@ jobs:
             exit 1
           fi
 
-          if [ "${{ inputs.submit_to_testflight }}" = "true" ] && [ -z "${ASC_APP_ID:-}" ]; then
-            echo "Missing ASC_DRIVER_APP_ID secret required for TestFlight upload."
+          if [ -z "${IOS_DISTRIBUTION_CERTIFICATE_BASE64:-}" ]; then
+            echo "Missing IOS_DISTRIBUTION_CERTIFICATE_BASE64 secret."
             exit 1
           fi
+
+          if [ -z "${IOS_DISTRIBUTION_CERTIFICATE_PASSWORD:-}" ]; then
+            echo "Missing IOS_DISTRIBUTION_CERTIFICATE_PASSWORD secret."
+            exit 1
+          fi
+
+          if [ -z "${IOS_DRIVER_PROVISIONING_PROFILE_BASE64:-}" ]; then
+            echo "Missing IOS_DRIVER_PROVISIONING_PROFILE_BASE64 secret."
+            exit 1
+          fi
+
+          if [ "${{ inputs.submit_to_testflight }}" = "true" ] && [ -z "${APP_STORE_CONNECT_ISSUER_ID:-}" ]; then
+            echo "Missing APP_STORE_CONNECT_ISSUER_ID secret required for TestFlight upload."
+            exit 1
+          fi
+
+          if [ "${{ inputs.submit_to_testflight }}" = "true" ] && [ -z "${APP_STORE_CONNECT_KEY_ID:-}" ]; then
+            echo "Missing APP_STORE_CONNECT_KEY_ID secret required for TestFlight upload."
+            exit 1
+          fi
+
+          if [ "${{ inputs.submit_to_testflight }}" = "true" ] && [ -z "${APP_STORE_CONNECT_PRIVATE_KEY:-}" ]; then
+            echo "Missing APP_STORE_CONNECT_PRIVATE_KEY secret required for TestFlight upload."
+            exit 1
+          fi
+
+      - name: Prepare EAS local iOS credentials
+        run: |
+          set -euo pipefail
+          mkdir -p .ci/driver
+
+          python3 - <<'PY'
+          import base64
+          import json
+          import os
+          from pathlib import Path
+
+          root = Path.cwd()
+          cert_path = root / ".ci" / "driver" / "distribution.p12"
+          profile_path = root / ".ci" / "driver" / "profile.mobileprovision"
+
+          cert_path.write_bytes(base64.b64decode("".join(os.environ["IOS_DISTRIBUTION_CERTIFICATE_BASE64"].split())))
+          profile_path.write_bytes(base64.b64decode("".join(os.environ["IOS_DRIVER_PROVISIONING_PROFILE_BASE64"].split())))
+
+          credentials = {
+              "ios": {
+                  os.environ["APP_BUNDLE_ID"]: {
+                      "provisioningProfilePath": str(profile_path.relative_to(root)),
+                      "distributionCertificate": {
+                          "path": str(cert_path.relative_to(root)),
+                          "password": os.environ["IOS_DISTRIBUTION_CERTIFICATE_PASSWORD"],
+                      },
+                  },
+              },
+          }
+          (root / "credentials.json").write_text(json.dumps(credentials, indent=2) + "\n")
+          PY
 
       - name: Lint/analyze
         run: npm run lint
@@ -153,7 +215,26 @@ jobs:
         if: ${{ inputs.submit_to_testflight }}
         run: |
           set -euo pipefail
-          node scripts/configure-eas-submit.mjs "$EAS_BUILD_PROFILE" "$ASC_APP_ID" "${APPLE_TEAM_ID:-}"
+          mkdir -p .ci/asc
+          asc_key_path=".ci/asc/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8"
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          key = os.environ["APP_STORE_CONNECT_PRIVATE_KEY"].strip().replace("\\n", "\n")
+          if not key.endswith("\n"):
+              key += "\n"
+          path = Path(".ci/asc") / f"AuthKey_{os.environ['APP_STORE_CONNECT_KEY_ID']}.p8"
+          path.write_text(key)
+          path.chmod(0o600)
+          PY
+          node scripts/configure-eas-submit.mjs \
+            "$EAS_BUILD_PROFILE" \
+            "" \
+            "${APPLE_TEAM_ID:-}" \
+            "$asc_key_path" \
+            "$APP_STORE_CONNECT_KEY_ID" \
+            "$APP_STORE_CONNECT_ISSUER_ID"
           eas submit \
             --platform ios \
             --profile "$EAS_BUILD_PROFILE" \

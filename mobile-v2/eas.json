@@ -23,6 +23,7 @@
     "driver-ios-testflight": {
       "distribution": "store",
       "channel": "driver-production",
+      "credentialsSource": "local",
       "autoIncrement": false,
       "ios": {
         "image": "latest"
