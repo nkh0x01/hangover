@@ -64,8 +64,7 @@ jobs:
     if: >-
       github.event_name == 'workflow_dispatch' ||
       github.ref == 'refs/heads/master' ||
-      github.ref == 'refs/heads/main' ||
-      github.ref == 'refs/heads/claude/khinkali-empire-game-89lF4'
+      github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
