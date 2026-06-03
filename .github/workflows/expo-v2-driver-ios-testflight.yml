@@ -98,6 +98,38 @@ jobs:
           echo "EXPO_PUBLIC_APP_VERSION=$version" >> "$GITHUB_ENV"
           echo "IOS_BUILD_NUMBER=$build_number" >> "$GITHUB_ENV"
 
+      - name: Inject version into EAS build profile
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const fs = require("node:fs");
+
+          const profile = process.env.EAS_BUILD_PROFILE;
+          const version = process.env.EXPO_PUBLIC_APP_VERSION;
+          const buildNumber = process.env.IOS_BUILD_NUMBER;
+
+          if (!profile || !version || !buildNumber) {
+            throw new Error("Missing EAS build profile, app version, or iOS build number.");
+          }
+
+          const path = "eas.json";
+          const eas = JSON.parse(fs.readFileSync(path, "utf8"));
+          const buildProfile = eas.build?.[profile];
+
+          if (!buildProfile) {
+            throw new Error(`Missing EAS build profile "${profile}".`);
+          }
+
+          buildProfile.env = {
+            ...(buildProfile.env ?? {}),
+            EXPO_PUBLIC_APP_VERSION: version,
+            IOS_BUILD_NUMBER: buildNumber,
+          };
+
+          fs.writeFileSync(path, `${JSON.stringify(eas, null, 2)}\n`);
+          console.log(`Prepared ${profile} for ${version} (${buildNumber}).`);
+          NODE
+
       - name: Verify required CI configuration
         run: |
           set -euo pipefail
