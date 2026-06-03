@@ -50,9 +50,12 @@ jobs:
 
   deploy:
     needs: build
-    # Only deploy from the default branches (after merge); skipped on feature
-    # branches / PRs so the build check stays green without Pages enabled.
-    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+    # Deploy from default branches (after merge); skipped on feature branches /
+    # PRs. A manual "Run workflow" (workflow_dispatch) deploys from any branch.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.ref == 'refs/heads/master' ||
+      github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
