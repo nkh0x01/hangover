@@ -57,6 +57,10 @@ jobs:
 
   deploy:
     needs: build
+    # Only deploy from the default branches (after merge). On feature branches
+    # and PRs this job is skipped, so the build check stays green without
+    # requiring Pages to be enabled for in-progress work.
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
