@@ -31,6 +31,11 @@ on:
         required: false
         default: false
         type: boolean
+      driver_primitive_boot:
+        description: "Build a staged primitive UI Driver V2 isolation app without shared/full app imports."
+        required: false
+        default: false
+        type: boolean
       driver_js_engine:
         description: "Driver V2 iOS JS engine for isolation builds."
         required: false
@@ -72,6 +77,7 @@ jobs:
       EXPO_DRIVER_BOOT_ONLY: ${{ inputs.driver_boot_only }}
       EXPO_DRIVER_DIAGNOSTIC_BOOT: ${{ inputs.driver_diagnostic_boot }}
       EXPO_DRIVER_NULL_BOOT: ${{ inputs.driver_null_boot }}
+      EXPO_DRIVER_PRIMITIVE_BOOT: ${{ inputs.driver_primitive_boot }}
       EXPO_DRIVER_JS_ENGINE: ${{ inputs.driver_js_engine }}
       EXPO_EAS_PROJECT_ID: ${{ secrets.EXPO_DRIVER_EAS_PROJECT_ID }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
@@ -137,6 +143,7 @@ jobs:
           const driverBootOnly = process.env.EXPO_DRIVER_BOOT_ONLY;
           const driverDiagnosticBoot = process.env.EXPO_DRIVER_DIAGNOSTIC_BOOT;
           const driverNullBoot = process.env.EXPO_DRIVER_NULL_BOOT;
+          const driverPrimitiveBoot = process.env.EXPO_DRIVER_PRIMITIVE_BOOT;
           const driverJsEngine = process.env.EXPO_DRIVER_JS_ENGINE;
 
           if (!profile || !version || !buildNumber) {
@@ -167,6 +174,10 @@ jobs:
 
           if (driverNullBoot) {
             buildProfile.env.EXPO_DRIVER_NULL_BOOT = driverNullBoot;
+          }
+
+          if (driverPrimitiveBoot) {
+            buildProfile.env.EXPO_DRIVER_PRIMITIVE_BOOT = driverPrimitiveBoot;
           }
 
           if (driverJsEngine) {

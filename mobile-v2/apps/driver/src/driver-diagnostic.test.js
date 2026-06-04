@@ -10,6 +10,10 @@ const nullRenderSource = readFileSync(
   new URL("../null-render-index.js", import.meta.url),
   "utf8",
 );
+const primitiveUiSource = readFileSync(
+  new URL("../primitive-ui-index.js", import.meta.url),
+  "utf8",
+);
 const minimalShellSource = readFileSync(
   new URL("./driver-minimal-shell.tsx", import.meta.url),
   "utf8",
@@ -27,6 +31,25 @@ describe("Driver diagnostic boot", () => {
     expect(nullRenderSource).not.toContain("import(");
     expect(nullRenderSource).not.toContain("@ride360/");
     expect(nullRenderSource).not.toContain("expo-");
+  });
+
+  it("keeps primitive UI isolation out of shared and full app imports", () => {
+    const topLevelImports = primitiveUiSource.slice(
+      0,
+      primitiveUiSource.indexOf("const stages"),
+    );
+
+    expect(topLevelImports).toContain('from "react"');
+    expect(topLevelImports).toContain("AppRegistry");
+    expect(topLevelImports).not.toContain("@ride360/");
+    expect(topLevelImports).not.toContain("./src/App");
+    expect(primitiveUiSource).not.toContain("import(");
+    expect(primitiveUiSource).not.toContain("@ride360/");
+    expect(primitiveUiSource).not.toContain("./src/App");
+    expect(primitiveUiSource).toContain('"view-only"');
+    expect(primitiveUiSource).toContain('"single-ascii-text"');
+    expect(primitiveUiSource).toContain('"georgian-text"');
+    expect(primitiveUiSource).toContain('"button-list"');
   });
 
   it("keeps suspected modules out of top-level imports", () => {
