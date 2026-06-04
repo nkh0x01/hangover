@@ -21,6 +21,11 @@ on:
         required: false
         default: false
         type: boolean
+      driver_diagnostic_boot:
+        description: "Build a lazy-import Driver V2 diagnostic app for device crash isolation."
+        required: false
+        default: false
+        type: boolean
       driver_js_engine:
         description: "Driver V2 iOS JS engine for isolation builds."
         required: false
@@ -60,6 +65,7 @@ jobs:
       EXPO_PUBLIC_APP_ENV: production
       EXPO_PUBLIC_API_BASE_URL: https://ride.365sakartvelo.com
       EXPO_DRIVER_BOOT_ONLY: ${{ inputs.driver_boot_only }}
+      EXPO_DRIVER_DIAGNOSTIC_BOOT: ${{ inputs.driver_diagnostic_boot }}
       EXPO_DRIVER_JS_ENGINE: ${{ inputs.driver_js_engine }}
       EXPO_EAS_PROJECT_ID: ${{ secrets.EXPO_DRIVER_EAS_PROJECT_ID }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
@@ -123,6 +129,7 @@ jobs:
           const version = process.env.EXPO_PUBLIC_APP_VERSION;
           const buildNumber = process.env.IOS_BUILD_NUMBER;
           const driverBootOnly = process.env.EXPO_DRIVER_BOOT_ONLY;
+          const driverDiagnosticBoot = process.env.EXPO_DRIVER_DIAGNOSTIC_BOOT;
           const driverJsEngine = process.env.EXPO_DRIVER_JS_ENGINE;
 
           if (!profile || !version || !buildNumber) {
@@ -145,6 +152,10 @@ jobs:
 
           if (driverBootOnly) {
             buildProfile.env.EXPO_DRIVER_BOOT_ONLY = driverBootOnly;
+          }
+
+          if (driverDiagnosticBoot) {
+            buildProfile.env.EXPO_DRIVER_DIAGNOSTIC_BOOT = driverDiagnosticBoot;
           }
 
           if (driverJsEngine) {

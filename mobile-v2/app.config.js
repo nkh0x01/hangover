@@ -39,10 +39,17 @@ const easProjectId =
   process.env.EXPO_EAS_PROJECT_ID ?? process.env[app.easProjectIdEnv];
 const driverBootOnly =
   target === "driver" && process.env.EXPO_DRIVER_BOOT_ONLY === "true";
+const driverDiagnosticBoot =
+  target === "driver" && process.env.EXPO_DRIVER_DIAGNOSTIC_BOOT === "true";
 const driverJsEngine =
   target === "driver" && process.env.EXPO_DRIVER_JS_ENGINE === "jsc"
     ? "jsc"
     : undefined;
+const entryPoint = driverDiagnosticBoot
+  ? "./apps/driver/diagnostic-index.js"
+  : driverBootOnly
+    ? "./apps/driver/boot-only-index.js"
+    : "./index.js";
 
 module.exports = {
   expo: {
@@ -55,7 +62,7 @@ module.exports = {
     newArchEnabled: false,
     ...(driverJsEngine ? { jsEngine: driverJsEngine } : {}),
     ...(app.icon ? { icon: app.icon } : {}),
-    entryPoint: driverBootOnly ? "./apps/driver/boot-only-index.js" : "./index.js",
+    entryPoint,
     runtimeVersion: {
       policy: "appVersion",
     },
@@ -75,6 +82,7 @@ module.exports = {
       apiBaseUrl,
       appEnv,
       driverBootOnly,
+      driverDiagnosticBoot,
       driverJsEngine,
       eas: easProjectId ? { projectId: easProjectId } : undefined,
     },
