@@ -1,3 +1,5 @@
+const { execSync } = require("node:child_process");
+
 const apps = {
   customer: {
     role: "customer",
@@ -37,27 +39,41 @@ const appVersion = process.env.EXPO_PUBLIC_APP_VERSION ?? "0.1.0";
 const iosBuildNumber = process.env.IOS_BUILD_NUMBER ?? "200000";
 const easProjectId =
   process.env.EXPO_EAS_PROJECT_ID ?? process.env[app.easProjectIdEnv];
-const driverBootOnly =
-  target === "driver" && process.env.EXPO_DRIVER_BOOT_ONLY === "true";
-const driverDiagnosticBoot =
-  target === "driver" && process.env.EXPO_DRIVER_DIAGNOSTIC_BOOT === "true";
-const driverNullBoot =
-  target === "driver" && process.env.EXPO_DRIVER_NULL_BOOT === "true";
-const driverPrimitiveBoot =
-  target === "driver" && process.env.EXPO_DRIVER_PRIMITIVE_BOOT === "true";
+const explicitDriverDiagnosticMode =
+  target === "driver" ? process.env.EXPO_DRIVER_DIAGNOSTIC_MODE : undefined;
+const legacyDriverDiagnosticMode =
+  target === "driver" && process.env.EXPO_DRIVER_PRIMITIVE_BOOT === "true"
+    ? "primitive"
+    : target === "driver" && process.env.EXPO_DRIVER_NULL_BOOT === "true"
+      ? "null"
+      : target === "driver" && process.env.EXPO_DRIVER_DIAGNOSTIC_BOOT === "true"
+        ? "staged"
+        : target === "driver" && process.env.EXPO_DRIVER_BOOT_ONLY === "true"
+          ? "cleanroom"
+          : undefined;
+const driverDiagnosticMode =
+  target === "driver"
+    ? explicitDriverDiagnosticMode || legacyDriverDiagnosticMode || "full"
+    : "full";
+const driverEntryPoints = {
+  full: "./index.js",
+  cleanroom: "./apps/driver/boot-only-index.js",
+  null: "./apps/driver/null-render-index.js",
+  primitive: "./apps/driver/primitive-ui-index.js",
+  staged: "./apps/driver/diagnostic-index.js",
+};
+if (!driverEntryPoints[driverDiagnosticMode]) {
+  throw new Error(
+    `Unsupported EXPO_DRIVER_DIAGNOSTIC_MODE "${driverDiagnosticMode}". Use full, cleanroom, null, primitive, or staged.`,
+  );
+}
 const driverJsEngine =
   target === "driver" && process.env.EXPO_DRIVER_JS_ENGINE === "jsc"
     ? "jsc"
     : undefined;
-const entryPoint = driverPrimitiveBoot
-  ? "./apps/driver/primitive-ui-index.js"
-  : driverNullBoot
-  ? "./apps/driver/null-render-index.js"
-  : driverDiagnosticBoot
-  ? "./apps/driver/diagnostic-index.js"
-  : driverBootOnly
-    ? "./apps/driver/boot-only-index.js"
-    : "./index.js";
+const gitCommit = process.env.GIT_COMMIT ?? readGitCommit();
+const entryPoint =
+  target === "driver" ? driverEntryPoints[driverDiagnosticMode] : "./index.js";
 
 module.exports = {
   expo: {
@@ -89,12 +105,22 @@ module.exports = {
       appRole: app.role,
       apiBaseUrl,
       appEnv,
-      driverBootOnly,
-      driverDiagnosticBoot,
-      driverNullBoot,
-      driverPrimitiveBoot,
+      gitCommit,
+      driverDiagnosticMode,
       driverJsEngine,
       eas: easProjectId ? { projectId: easProjectId } : undefined,
     },
   },
 };
+
+function readGitCommit() {
+  try {
+    return execSync("git rev-parse --short HEAD", {
+      cwd: __dirname,
+      stdio: ["ignore", "pipe", "ignore"],
+      encoding: "utf8",
+    }).trim();
+  } catch {
+    return "unknown";
+  }
+}
