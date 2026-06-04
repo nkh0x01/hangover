@@ -1,8 +1,8 @@
 import { registerRootComponent } from "expo";
 
-import CustomerApp from "./apps/customer/src/App";
-import DriverApp from "./apps/driver/src/App";
-
-const App = process.env.EXPO_APP_TARGET === "driver" ? DriverApp : CustomerApp;
+const App =
+  process.env.EXPO_PUBLIC_APP_ROLE === "driver"
+    ? require("./apps/driver/src/App").default
+    : require("./apps/customer/src/App").default;
 
 registerRootComponent(App);

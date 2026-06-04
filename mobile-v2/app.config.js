@@ -14,6 +14,10 @@ const apps = {
     scheme: "ride360-driver-v2",
     iosBundleIdentifier: "app.ride360.driver",
     easProjectIdEnv: "EXPO_DRIVER_EAS_PROJECT_ID",
+    iosInfoPlist: {
+      NSLocationWhenInUseUsageDescription:
+        "Ride 360 Driver V2 uses your location to start shifts and receive nearby ride offers.",
+    },
   },
 };
 
@@ -52,6 +56,7 @@ module.exports = {
       supportsTablet: false,
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
+        ...(app.iosInfoPlist ?? {}),
       },
     },
     extra: {

@@ -18,6 +18,8 @@ const expectedApps = {
     role: "driver",
     slug: "ride360-driver-v2",
     bundleIdentifier: "app.ride360.driver",
+    locationUsageDescription:
+      "Ride 360 Driver V2 uses your location to start shifts and receive nearby ride offers.",
   },
 };
 
@@ -47,6 +49,13 @@ for (const [target, expected] of Object.entries(expectedApps)) {
   assertEqual(config.extra.appRole, expected.role, `${target} app role`);
   assertEqual(config.extra.appEnv, "production", `${target} app env`);
   assertEqual(config.extra.apiBaseUrl, productionApiBaseUrl, `${target} API base URL`);
+  if (expected.locationUsageDescription) {
+    assertEqual(
+      config.ios.infoPlist.NSLocationWhenInUseUsageDescription,
+      expected.locationUsageDescription,
+      `${target} location usage description`,
+    );
+  }
   assertEqual(
     config.extra.eas.projectId,
     "00000000-0000-4000-8000-000000000000",
@@ -62,6 +71,14 @@ const configSource = await readFile(
 );
 if (!configSource.includes(`const DEFAULT_API_BASE_URL = "${productionApiBaseUrl}"`)) {
   fail("packages/config default API base URL is not production.");
+}
+
+const entrySource = await readFile(path.join(root, "index.js"), "utf8");
+if (!entrySource.includes("EXPO_PUBLIC_APP_ROLE")) {
+  fail("root entrypoint must select the app using EXPO_PUBLIC_APP_ROLE.");
+}
+if (entrySource.includes("EXPO_APP_TARGET")) {
+  fail("root entrypoint must not select the app using non-public EXPO_APP_TARGET.");
 }
 
 await scanForDevUrls();

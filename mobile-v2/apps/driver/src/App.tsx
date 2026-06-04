@@ -1,5 +1,12 @@
-import { useEffect, useState } from "react";
-import { Pressable, TextInput, View, type KeyboardTypeOptions } from "react-native";
+import { Component, useEffect, useState, type ErrorInfo, type ReactNode } from "react";
+import {
+  Platform as NativePlatform,
+  Pressable,
+  Text as NativeText,
+  TextInput,
+  View,
+  type KeyboardTypeOptions,
+} from "react-native";
 
 import { ApiError, createApiClient } from "@ride360/api";
 import {
@@ -53,7 +60,7 @@ import {
   type ShiftStatus,
 } from "./driver-dashboard";
 
-const APP_VERSION = "0.1.0";
+const APP_VERSION = readPublicEnv("EXPO_PUBLIC_APP_VERSION") ?? "0.1.0";
 const config = createRuntimeConfig({
   appName: "Ride 360 Driver V2",
   appRole: "driver",
@@ -91,7 +98,21 @@ type ScreenState = {
   startupError?: string;
 };
 
+type ErrorBoundaryState = {
+  cleared: boolean;
+  componentStack?: string;
+  error?: Error;
+};
+
 export default function App() {
+  return (
+    <DriverErrorBoundary>
+      <DriverApp />
+    </DriverErrorBoundary>
+  );
+}
+
+function DriverApp() {
   const [state, setState] = useState<ScreenState>({
     screen: "welcome",
     mode: "login",
@@ -113,7 +134,7 @@ export default function App() {
     try {
       persisted = await storage.read();
     } catch {
-      await auth.clearSession();
+      await clearStoredSessionSafely();
       setState((current) => ({
         ...current,
         screen: "welcome",
@@ -140,7 +161,7 @@ export default function App() {
       }));
     } catch (error) {
       if (shouldClearSessionOnStartupError(error)) {
-        await auth.clearSession();
+        await clearStoredSessionSafely();
         setState((current) => ({
           ...current,
           screen: "welcome",
@@ -215,7 +236,7 @@ export default function App() {
   }
 
   async function clearSessionToWelcome(message?: string) {
-    await auth.clearSession();
+    await clearStoredSessionSafely();
     setState((current) => ({
       ...current,
       screen: "welcome",
@@ -375,6 +396,120 @@ export default function App() {
       onRegister={() => openWelcomeAction("registration")}
       onDiagnostics={() => openWelcomeAction("diagnostics")}
     />
+  );
+}
+
+class DriverErrorBoundary extends Component<
+  { children: ReactNode },
+  ErrorBoundaryState
+> {
+  state: ErrorBoundaryState = { cleared: false };
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { cleared: false, error };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    this.setState((current) => ({
+      ...current,
+      componentStack: info.componentStack ?? undefined,
+    }));
+    diagnosticsStore.recordError({
+      code: "driver.root.render",
+      message: error.message,
+      details: { componentStack: info.componentStack },
+      bodyExcerpt: stackExcerpt(error, info.componentStack ?? undefined),
+    });
+  }
+
+  clearSession = async () => {
+    await clearStoredSessionSafely();
+    this.setState((current) => ({ ...current, cleared: true }));
+  };
+
+  render() {
+    if (this.state.error) {
+      return (
+        <StartupCrashScreen
+          cleared={this.state.cleared}
+          error={this.state.error}
+          stack={stackExcerpt(this.state.error, this.state.componentStack)}
+          onClearSession={this.clearSession}
+        />
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+function StartupCrashScreen({
+  cleared,
+  error,
+  stack,
+  onClearSession,
+}: {
+  cleared: boolean;
+  error: Error;
+  stack: string;
+  onClearSession: () => void;
+}) {
+  const diagnostics = diagnosticsStore.getState();
+
+  return (
+    <View
+      style={{
+        backgroundColor: "#f7f8fb",
+        flex: 1,
+        gap: 12,
+        justifyContent: "center",
+        padding: 24,
+      }}
+    >
+      <NativeText style={{ color: "#151922", fontSize: 22, fontWeight: "700" }}>
+        Ride 360 Driver V2
+      </NativeText>
+      <NativeText style={{ color: "#526070", fontSize: 13 }}>
+        Driver V2 · {APP_VERSION} · {config.APP_ENV}
+      </NativeText>
+      <NativeText style={{ color: "#151922", fontSize: 16, fontWeight: "700" }}>
+        აპის გაშვების შეცდომა
+      </NativeText>
+      <NativeText style={{ color: "#526070", fontSize: 14 }}>
+        {error.message || "გაუთვალისწინებელი შეცდომა."}
+      </NativeText>
+      <NativeText style={{ color: "#526070", fontSize: 12 }}>
+        ეკრანი: {diagnostics.currentRoute ?? "-"}
+      </NativeText>
+      <NativeText style={{ color: "#526070", fontSize: 12 }}>
+        ბოლო მოთხოვნა: {diagnostics.lastRequestMethod ?? "-"}{" "}
+        {diagnostics.lastRequestUrl ?? "-"}
+      </NativeText>
+      <NativeText style={{ color: "#526070", fontSize: 12 }}>
+        stack: {stack || "-"}
+      </NativeText>
+      {cleared ? (
+        <NativeText style={{ color: "#1557d8", fontSize: 13 }}>
+          სესია გასუფთავდა. დახურეთ და თავიდან გახსენით აპი.
+        </NativeText>
+      ) : null}
+      <Pressable
+        accessibilityRole="button"
+        onPress={onClearSession}
+        style={{
+          alignItems: "center",
+          backgroundColor: "#1557d8",
+          borderRadius: 8,
+          minHeight: 48,
+          justifyContent: "center",
+          paddingHorizontal: 16,
+        }}
+      >
+        <NativeText style={{ color: "#ffffff", fontWeight: "700" }}>
+          სესიის გასუფთავება
+        </NativeText>
+      </Pressable>
+    </View>
   );
 }
 
@@ -1417,15 +1552,34 @@ function driverErrorMessage(error: unknown): string {
 }
 
 function currentPlatform(): Platform {
-  const env = globalThis as typeof globalThis & {
-    process?: { env?: Record<string, string | undefined> };
-  };
-  const os = env.process?.env?.EXPO_OS;
+  const os = NativePlatform.OS;
   if (os === "ios" || os === "android" || os === "web") return os;
   return "web";
 }
 
 async function getCurrentLocation(): Promise<LocationPoint> {
+  const Location = await import("expo-location").catch(() => null);
+
+  if (Location) {
+    const permission = await Location.requestForegroundPermissionsAsync();
+    if (permission.status !== "granted") {
+      throw new Error("ლოკაციის ნებართვა საჭიროა ცვლის დასაწყებად.");
+    }
+
+    const position = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.High,
+    });
+
+    return {
+      lat: position.coords.latitude,
+      lng: position.coords.longitude,
+    };
+  }
+
+  return getNavigatorLocation();
+}
+
+async function getNavigatorLocation(): Promise<LocationPoint> {
   const navigatorLike = globalThis.navigator as
     | {
         geolocation?: {
@@ -1459,6 +1613,34 @@ async function getCurrentLocation(): Promise<LocationPoint> {
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 },
     );
   });
+}
+
+async function clearStoredSessionSafely() {
+  try {
+    await auth.clearSession();
+  } catch (error) {
+    diagnosticsStore.recordError({
+      code: "driver.session.clear_failed",
+      message: error instanceof Error ? error.message : "Session clear failed.",
+      bodyExcerpt: stackExcerpt(error),
+    });
+  }
+}
+
+function readPublicEnv(key: string): string | undefined {
+  const env = globalThis as typeof globalThis & {
+    process?: { env?: Record<string, string | undefined> };
+  };
+
+  return env.process?.env?.[key];
+}
+
+function stackExcerpt(error: unknown, componentStack?: string): string {
+  const stack = error instanceof Error ? error.stack : undefined;
+  return [stack, componentStack]
+    .filter(Boolean)
+    .join("\n")
+    .slice(0, 900);
 }
 
 const inputStyle = {

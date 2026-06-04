@@ -15,7 +15,8 @@
       "buildNumber": "200000",
       "supportsTablet": false,
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocationWhenInUseUsageDescription": "Ride 360 Driver V2 uses your location to start shifts and receive nearby ride offers."
       }
     },
     "extra": {
