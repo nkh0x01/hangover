@@ -21,6 +21,14 @@ on:
         required: false
         default: false
         type: boolean
+      driver_js_engine:
+        description: "Driver V2 iOS JS engine for isolation builds."
+        required: false
+        default: hermes
+        type: choice
+        options:
+          - hermes
+          - jsc
 
 permissions:
   contents: read
@@ -52,6 +60,7 @@ jobs:
       EXPO_PUBLIC_APP_ENV: production
       EXPO_PUBLIC_API_BASE_URL: https://ride.365sakartvelo.com
       EXPO_DRIVER_BOOT_ONLY: ${{ inputs.driver_boot_only }}
+      EXPO_DRIVER_JS_ENGINE: ${{ inputs.driver_js_engine }}
       EXPO_EAS_PROJECT_ID: ${{ secrets.EXPO_DRIVER_EAS_PROJECT_ID }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
       APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
@@ -114,6 +123,7 @@ jobs:
           const version = process.env.EXPO_PUBLIC_APP_VERSION;
           const buildNumber = process.env.IOS_BUILD_NUMBER;
           const driverBootOnly = process.env.EXPO_DRIVER_BOOT_ONLY;
+          const driverJsEngine = process.env.EXPO_DRIVER_JS_ENGINE;
 
           if (!profile || !version || !buildNumber) {
             throw new Error("Missing EAS build profile, app version, or iOS build number.");
@@ -135,6 +145,10 @@ jobs:
 
           if (driverBootOnly) {
             buildProfile.env.EXPO_DRIVER_BOOT_ONLY = driverBootOnly;
+          }
+
+          if (driverJsEngine) {
+            buildProfile.env.EXPO_DRIVER_JS_ENGINE = driverJsEngine;
           }
 
           fs.writeFileSync(path, `${JSON.stringify(eas, null, 2)}\n`);
