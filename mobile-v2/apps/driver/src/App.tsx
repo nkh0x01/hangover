@@ -32,6 +32,7 @@ import {
   stateForWelcomeAction,
   shouldClearSessionOnStartupError,
 } from "./driver-flow";
+import { shouldRenderNativeStartupScreen } from "./driver-startup";
 import {
   APPLICATION_STEPS,
   blankApplicationForm,
@@ -250,13 +251,8 @@ function DriverApp() {
 
   const diagnostics = useDiagnosticsSnapshot(state.screen);
 
-  if (state.loading && state.screen === "welcome") {
-    return (
-      <Screen>
-        <BuildLabel />
-        <LoadingState label="იტვირთება" />
-      </Screen>
-    );
+  if (shouldRenderNativeStartupScreen(state)) {
+    return <NativeStartupScreen />;
   }
 
   if (state.screen === "phone") {
@@ -459,38 +455,37 @@ function StartupCrashScreen({
   return (
     <View
       style={{
-        backgroundColor: "#f7f8fb",
         flex: 1,
-        gap: 12,
         justifyContent: "center",
         padding: 24,
+        backgroundColor: "#f7f8fb",
       }}
     >
-      <NativeText style={{ color: "#151922", fontSize: 22, fontWeight: "700" }}>
+      <NativeText style={{ color: "#151922", fontSize: 22, marginBottom: 8 }}>
         Ride 360 Driver V2
       </NativeText>
-      <NativeText style={{ color: "#526070", fontSize: 13 }}>
+      <NativeText style={{ color: "#526070", fontSize: 13, marginBottom: 16 }}>
         Driver V2 · {APP_VERSION} · {config.APP_ENV}
       </NativeText>
-      <NativeText style={{ color: "#151922", fontSize: 16, fontWeight: "700" }}>
-        აპის გაშვების შეცდომა
+      <NativeText style={{ color: "#151922", fontSize: 16, marginBottom: 8 }}>
+        Startup error
       </NativeText>
-      <NativeText style={{ color: "#526070", fontSize: 14 }}>
-        {error.message || "გაუთვალისწინებელი შეცდომა."}
+      <NativeText style={{ color: "#526070", fontSize: 14, marginBottom: 8 }}>
+        {error.message || "Unexpected startup error."}
       </NativeText>
-      <NativeText style={{ color: "#526070", fontSize: 12 }}>
-        ეკრანი: {diagnostics.currentRoute ?? "-"}
+      <NativeText style={{ color: "#526070", fontSize: 12, marginBottom: 4 }}>
+        Route: {diagnostics.currentRoute ?? "-"}
       </NativeText>
-      <NativeText style={{ color: "#526070", fontSize: 12 }}>
-        ბოლო მოთხოვნა: {diagnostics.lastRequestMethod ?? "-"}{" "}
+      <NativeText style={{ color: "#526070", fontSize: 12, marginBottom: 4 }}>
+        Last request: {diagnostics.lastRequestMethod ?? "-"}{" "}
         {diagnostics.lastRequestUrl ?? "-"}
       </NativeText>
-      <NativeText style={{ color: "#526070", fontSize: 12 }}>
-        stack: {stack || "-"}
+      <NativeText style={{ color: "#526070", fontSize: 12, marginBottom: 8 }}>
+        Stack: {stack || "-"}
       </NativeText>
       {cleared ? (
-        <NativeText style={{ color: "#1557d8", fontSize: 13 }}>
-          სესია გასუფთავდა. დახურეთ და თავიდან გახსენით აპი.
+        <NativeText style={{ color: "#1557d8", fontSize: 13, marginBottom: 8 }}>
+          Session cleared. Close and reopen the app.
         </NativeText>
       ) : null}
       <Pressable
@@ -505,10 +500,31 @@ function StartupCrashScreen({
           paddingHorizontal: 16,
         }}
       >
-        <NativeText style={{ color: "#ffffff", fontWeight: "700" }}>
-          სესიის გასუფთავება
-        </NativeText>
+        <NativeText style={{ color: "#ffffff" }}>Clear session</NativeText>
       </Pressable>
+    </View>
+  );
+}
+
+function NativeStartupScreen() {
+  return (
+    <View
+      style={{
+        flex: 1,
+        justifyContent: "center",
+        padding: 24,
+        backgroundColor: "#f7f8fb",
+      }}
+    >
+      <NativeText style={{ color: "#151922", fontSize: 22, marginBottom: 8 }}>
+        Ride 360 Driver V2
+      </NativeText>
+      <NativeText style={{ color: "#526070", fontSize: 14, marginBottom: 8 }}>
+        Starting...
+      </NativeText>
+      <NativeText style={{ color: "#697386", fontSize: 12 }}>
+        Driver V2 · {APP_VERSION} · {config.APP_ENV}
+      </NativeText>
     </View>
   );
 }

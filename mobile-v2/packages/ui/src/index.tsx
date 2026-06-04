@@ -10,6 +10,8 @@ import {
   type ViewProps,
 } from "react-native";
 
+import { textSelectableProp } from "./text-defaults";
+
 export function Screen({ children, style, ...props }: PropsWithChildren<ViewProps>) {
   return (
     <ScrollView
@@ -25,6 +27,7 @@ export function Screen({ children, style, ...props }: PropsWithChildren<ViewProp
 
 export function Text({
   children,
+  selectable,
   style,
   variant = "body",
   ...props
@@ -39,7 +42,11 @@ export function Text({
   }[variant];
 
   return (
-    <NativeText selectable style={[variantStyle, style]} {...props}>
+    <NativeText
+      style={[variantStyle, style]}
+      {...textSelectableProp(selectable)}
+      {...props}
+    >
       {children}
     </NativeText>
   );
