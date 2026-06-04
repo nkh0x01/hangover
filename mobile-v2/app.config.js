@@ -45,7 +45,7 @@ module.exports = {
     version: appVersion,
     orientation: "portrait",
     userInterfaceStyle: "automatic",
-    newArchEnabled: true,
+    newArchEnabled: false,
     entryPoint: "./index.js",
     runtimeVersion: {
       policy: "appVersion",
