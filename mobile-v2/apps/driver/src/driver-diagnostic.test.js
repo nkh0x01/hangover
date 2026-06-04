@@ -6,6 +6,10 @@ const diagnosticSource = readFileSync(
   new URL("../diagnostic-index.js", import.meta.url),
   "utf8",
 );
+const nullRenderSource = readFileSync(
+  new URL("../null-render-index.js", import.meta.url),
+  "utf8",
+);
 const minimalShellSource = readFileSync(
   new URL("./driver-minimal-shell.tsx", import.meta.url),
   "utf8",
@@ -13,6 +17,18 @@ const minimalShellSource = readFileSync(
 const appSource = readFileSync(new URL("./App.tsx", import.meta.url), "utf8");
 
 describe("Driver diagnostic boot", () => {
+  it("keeps null-render isolation free of UI and lazy app imports", () => {
+    expect(nullRenderSource).toContain('from "react"');
+    expect(nullRenderSource).toContain('AppRegistry');
+    expect(nullRenderSource).toContain("return null");
+    expect(nullRenderSource).not.toContain("Text");
+    expect(nullRenderSource).not.toContain("View");
+    expect(nullRenderSource).not.toContain("Pressable");
+    expect(nullRenderSource).not.toContain("import(");
+    expect(nullRenderSource).not.toContain("@ride360/");
+    expect(nullRenderSource).not.toContain("expo-");
+  });
+
   it("keeps suspected modules out of top-level imports", () => {
     const topLevelImports = diagnosticSource.slice(
       0,

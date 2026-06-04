@@ -41,11 +41,15 @@ const driverBootOnly =
   target === "driver" && process.env.EXPO_DRIVER_BOOT_ONLY === "true";
 const driverDiagnosticBoot =
   target === "driver" && process.env.EXPO_DRIVER_DIAGNOSTIC_BOOT === "true";
+const driverNullBoot =
+  target === "driver" && process.env.EXPO_DRIVER_NULL_BOOT === "true";
 const driverJsEngine =
   target === "driver" && process.env.EXPO_DRIVER_JS_ENGINE === "jsc"
     ? "jsc"
     : undefined;
-const entryPoint = driverDiagnosticBoot
+const entryPoint = driverNullBoot
+  ? "./apps/driver/null-render-index.js"
+  : driverDiagnosticBoot
   ? "./apps/driver/diagnostic-index.js"
   : driverBootOnly
     ? "./apps/driver/boot-only-index.js"
@@ -83,6 +87,7 @@ module.exports = {
       appEnv,
       driverBootOnly,
       driverDiagnosticBoot,
+      driverNullBoot,
       driverJsEngine,
       eas: easProjectId ? { projectId: easProjectId } : undefined,
     },
