@@ -1,0 +1,647 @@
+name: Expo V2 Driver Cleanroom iOS TestFlight
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_number:
+        description: "CFBundleVersion for the cleanroom isolation build."
+        required: true
+        default: "200017"
+        type: string
+      submit_to_testflight:
+        description: "Upload the generated cleanroom IPA to App Store Connect/TestFlight."
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: expo-v2-driver-cleanroom-ios-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Driver cleanroom iOS EAS build
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    env:
+      APP_TARGET: driver-cleanroom
+      APP_LABEL: Driver-Cleanroom
+      APP_BUNDLE_ID: app.ride360.driver
+      APP_NAME: Ride 360 Driver V2
+      EAS_BUILD_PROFILE: driver-ios-testflight
+      CLEANROOM_DIR: /tmp/ride360-driver-cleanroom
+      EXPO_PUBLIC_API_BASE_URL: https://ride.365sakartvelo.com
+      EXPO_EAS_PROJECT_ID: ${{ secrets.EXPO_DRIVER_EAS_PROJECT_ID }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+      APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+      IOS_DISTRIBUTION_CERTIFICATE_BASE64: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
+      IOS_DISTRIBUTION_CERTIFICATE_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}
+      IOS_DRIVER_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_DRIVER_PROVISIONING_PROFILE_BASE64 }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Resolve cleanroom version
+        env:
+          INPUT_BUILD_NUMBER: ${{ inputs.build_number }}
+        run: |
+          set -euo pipefail
+          build_number="${INPUT_BUILD_NUMBER:-}"
+
+          if [ -z "$build_number" ]; then
+            build_number="200017"
+          fi
+
+          if ! [[ "$build_number" =~ ^[0-9]+$ ]]; then
+            echo "build_number must be an integer."
+            exit 1
+          fi
+
+          echo "EXPO_PUBLIC_APP_VERSION=2.0.0" >> "$GITHUB_ENV"
+          echo "IOS_BUILD_NUMBER=$build_number" >> "$GITHUB_ENV"
+
+      - name: Verify required CI configuration
+        run: |
+          set -euo pipefail
+
+          if [ -z "${EXPO_EAS_PROJECT_ID:-}" ]; then
+            echo "Missing EXPO_DRIVER_EAS_PROJECT_ID secret."
+            exit 1
+          fi
+
+          if [ -z "${IOS_DISTRIBUTION_CERTIFICATE_BASE64:-}" ]; then
+            echo "Missing IOS_DISTRIBUTION_CERTIFICATE_BASE64 secret."
+            exit 1
+          fi
+
+          if [ -z "${IOS_DISTRIBUTION_CERTIFICATE_PASSWORD:-}" ]; then
+            echo "Missing IOS_DISTRIBUTION_CERTIFICATE_PASSWORD secret."
+            exit 1
+          fi
+
+          if [ -z "${IOS_DRIVER_PROVISIONING_PROFILE_BASE64:-}" ]; then
+            echo "Missing IOS_DRIVER_PROVISIONING_PROFILE_BASE64 secret."
+            exit 1
+          fi
+
+          if [ "${{ inputs.submit_to_testflight }}" = "true" ] && [ -z "${APP_STORE_CONNECT_ISSUER_ID:-}" ]; then
+            echo "Missing APP_STORE_CONNECT_ISSUER_ID secret required for TestFlight upload."
+            exit 1
+          fi
+
+          if [ "${{ inputs.submit_to_testflight }}" = "true" ] && [ -z "${APP_STORE_CONNECT_KEY_ID:-}" ]; then
+            echo "Missing APP_STORE_CONNECT_KEY_ID secret required for TestFlight upload."
+            exit 1
+          fi
+
+          if [ "${{ inputs.submit_to_testflight }}" = "true" ] && [ -z "${APP_STORE_CONNECT_PRIVATE_KEY:-}" ]; then
+            echo "Missing APP_STORE_CONNECT_PRIVATE_KEY secret required for TestFlight upload."
+            exit 1
+          fi
+
+      - name: Create cleanroom Expo Driver app
+        run: |
+          set -euo pipefail
+          rm -rf "$CLEANROOM_DIR"
+          mkdir -p "$CLEANROOM_DIR/scripts" "$CLEANROOM_DIR/assets"
+
+          cd "$CLEANROOM_DIR"
+
+          node - <<'NODE'
+          const fs = require("node:fs");
+          const path = require("node:path");
+          const zlib = require("node:zlib");
+
+          const buildNumber = process.env.IOS_BUILD_NUMBER || "200017";
+
+          fs.writeFileSync(
+            "package.json",
+            `${JSON.stringify(
+              {
+                name: "ride360-driver-cleanroom",
+                version: "0.0.0",
+                private: true,
+                main: "index.js",
+                scripts: {
+                  check: "node scripts/check-cleanroom.mjs",
+                },
+                dependencies: {
+                  expo: "55.0.26",
+                  react: "19.2.0",
+                  "react-native": "0.83.6",
+                },
+                devDependencies: {
+                  typescript: "5.9.3",
+                },
+              },
+              null,
+              2,
+            )}\n`,
+          );
+
+          fs.writeFileSync(
+            "index.js",
+            `import React from "react";
+          import { registerRootComponent } from "expo";
+          import { Text, View } from "react-native";
+
+          function App() {
+            return React.createElement(
+              View,
+              {
+                style: {
+                  flex: 1,
+                  justifyContent: "center",
+                  padding: 24,
+                  backgroundColor: "#f7f8fb",
+                },
+              },
+              React.createElement(
+                Text,
+                { style: { color: "#151922", fontSize: 22, marginBottom: 8 } },
+                "Ride 360 Driver Clean Boot",
+              ),
+              React.createElement(
+                Text,
+                { style: { color: "#526070", fontSize: 16, marginBottom: 8 } },
+                "Build ${buildNumber}",
+              ),
+              React.createElement(
+                Text,
+                { style: { color: "#697386", fontSize: 13 } },
+                "Boot OK",
+              ),
+            );
+          }
+
+          registerRootComponent(App);
+          `,
+          );
+
+          fs.writeFileSync(
+            "app.config.js",
+            `const buildNumber = process.env.IOS_BUILD_NUMBER ?? "${buildNumber}";
+          const projectId = process.env.EXPO_EAS_PROJECT_ID;
+
+          module.exports = {
+            expo: {
+              name: "Ride 360 Driver V2",
+              slug: "ride360-driver-v2",
+              scheme: "ride360-driver-v2",
+              version: "2.0.0",
+              orientation: "portrait",
+              userInterfaceStyle: "automatic",
+              newArchEnabled: false,
+              jsEngine: "jsc",
+              icon: "./assets/icon.png",
+              entryPoint: "./index.js",
+              ios: {
+                bundleIdentifier: "app.ride360.driver",
+                buildNumber,
+                supportsTablet: false,
+                jsEngine: "jsc",
+                icon: "./assets/icon.png",
+                infoPlist: {
+                  ITSAppUsesNonExemptEncryption: false,
+                  NSLocationWhenInUseUsageDescription:
+                    "Ride 360 Driver V2 uses your location to start shifts and receive nearby ride offers.",
+                },
+              },
+              extra: {
+                appRole: "driver",
+                apiBaseUrl: "https://ride.365sakartvelo.com",
+                cleanroom: true,
+                eas: projectId ? { projectId } : undefined,
+              },
+            },
+          };
+          `,
+          );
+
+          fs.writeFileSync(
+            "eas.json",
+            `${JSON.stringify(
+              {
+                cli: {
+                  version: ">= 18.11.0",
+                  appVersionSource: "local",
+                  requireCommit: false,
+                },
+                build: {
+                  "driver-ios-testflight": {
+                    distribution: "store",
+                    credentialsSource: "local",
+                    autoIncrement: false,
+                    ios: {
+                      image: "latest",
+                    },
+                    env: {
+                      IOS_BUILD_NUMBER: buildNumber,
+                      EXPO_PUBLIC_API_BASE_URL: "https://ride.365sakartvelo.com",
+                    },
+                  },
+                },
+                submit: {
+                  "driver-ios-testflight": {
+                    ios: {},
+                  },
+                },
+              },
+              null,
+              2,
+            )}\n`,
+          );
+
+          fs.writeFileSync(
+            "scripts/check-cleanroom.mjs",
+            `import { readFile, readdir } from "node:fs/promises";
+          import path from "node:path";
+
+          const root = process.cwd();
+          const forbidden = [
+            "mobile-v2",
+            "@ride360/",
+            "expo-location",
+            "expo-secure-store",
+            "localhost",
+            "127.0.0.1",
+            "packages/ui",
+            "packages/auth",
+            "packages/api",
+            "packages/diagnostics",
+          ];
+
+          for await (const file of walk(root)) {
+            if (file.includes("node_modules")) continue;
+            if (!/\\.(js|json|mjs)$/.test(file)) continue;
+            const contents = await readFile(file, "utf8");
+            for (const value of forbidden) {
+              if (contents.includes(value)) {
+                throw new Error(
+                  \`Forbidden cleanroom string "\${value}" in \${path.relative(root, file)}\`,
+                );
+              }
+            }
+          }
+
+          console.log("Cleanroom source checks passed.");
+
+          async function* walk(fileOrDirectory) {
+            const entries = await readdir(fileOrDirectory, { withFileTypes: true }).catch(
+              () => null,
+            );
+            if (!entries) {
+              yield fileOrDirectory;
+              return;
+            }
+
+            for (const entry of entries) {
+              const fullPath = path.join(fileOrDirectory, entry.name);
+              if (entry.isDirectory()) {
+                yield* walk(fullPath);
+              } else {
+                yield fullPath;
+              }
+            }
+          }
+          `,
+          );
+
+          writeIcon(path.join("assets", "icon.png"));
+
+          function writeIcon(filePath) {
+            const size = 1024;
+            const rowStride = 1 + size * 3;
+            const rows = Buffer.alloc(rowStride * size);
+
+            for (let y = 0; y < size; y += 1) {
+              const row = y * rowStride;
+              rows[row] = 0;
+              for (let x = 0; x < size; x += 1) {
+                const index = row + 1 + x * 3;
+                const dx = x - size / 2;
+                const dy = y - size / 2;
+                const distance = Math.sqrt(dx * dx + dy * dy) / (size / 2);
+                const stripe = Math.sin((x + y) / 42) * 8;
+                const base = Math.max(0, 1 - distance);
+                rows[index] = Math.round(10 + 18 * base + stripe);
+                rows[index + 1] = Math.round(41 + 94 * base + stripe);
+                rows[index + 2] = Math.round(65 + 126 * base);
+              }
+            }
+
+            drawRoundedSquare(rows, size, 160, 260, 704, 504, 44, [255, 255, 255]);
+            drawRoad(rows, size);
+            drawTextBars(rows, size);
+
+            const png = Buffer.concat([
+              pngSignature(),
+              chunk("IHDR", Buffer.concat([
+                u32(size),
+                u32(size),
+                Buffer.from([8, 2, 0, 0, 0]),
+              ])),
+              chunk("IDAT", zlib.deflateSync(rows, { level: 9 })),
+              chunk("IEND", Buffer.alloc(0)),
+            ]);
+
+            fs.writeFileSync(filePath, png);
+          }
+
+          function drawRoundedSquare(rows, size, left, top, width, height, radius, color) {
+            for (let y = top; y < top + height; y += 1) {
+              for (let x = left; x < left + width; x += 1) {
+                const cx = x < left + radius ? left + radius : x >= left + width - radius ? left + width - radius - 1 : x;
+                const cy = y < top + radius ? top + radius : y >= top + height - radius ? top + height - radius - 1 : y;
+                if ((x - cx) * (x - cx) + (y - cy) * (y - cy) <= radius * radius) {
+                  pixel(rows, size, x, y, color);
+                }
+              }
+            }
+          }
+
+          function drawRoad(rows, size) {
+            const color = [15, 23, 42];
+            for (let y = 360; y < 710; y += 1) {
+              const center = 512 + Math.round(Math.sin((y - 360) / 72) * 36);
+              const half = 34 + Math.round((y - 360) / 12);
+              for (let x = center - half; x <= center + half; x += 1) {
+                pixel(rows, size, x, y, color);
+              }
+            }
+            for (let y = 392; y < 676; y += 54) {
+              for (let yy = y; yy < y + 28; yy += 1) {
+                const center = 512 + Math.round(Math.sin((yy - 360) / 72) * 36);
+                for (let x = center - 5; x <= center + 5; x += 1) {
+                  pixel(rows, size, x, yy, [255, 255, 255]);
+                }
+              }
+            }
+          }
+
+          function drawTextBars(rows, size) {
+            const color = [15, 23, 42];
+            for (let y = 704; y < 740; y += 1) {
+              for (let x = 300; x < 724; x += 1) {
+                pixel(rows, size, x, y, color);
+              }
+            }
+            for (let y = 764; y < 790; y += 1) {
+              for (let x = 360; x < 664; x += 1) {
+                pixel(rows, size, x, y, color);
+              }
+            }
+          }
+
+          function pixel(rows, size, x, y, color) {
+            if (x < 0 || y < 0 || x >= size || y >= size) return;
+            const rowStride = 1 + size * 3;
+            const index = y * rowStride + 1 + x * 3;
+            rows[index] = color[0];
+            rows[index + 1] = color[1];
+            rows[index + 2] = color[2];
+          }
+
+          function pngSignature() {
+            return Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+          }
+
+          function chunk(type, data) {
+            const typeBuffer = Buffer.from(type);
+            return Buffer.concat([
+              u32(data.length),
+              typeBuffer,
+              data,
+              u32(crc32(Buffer.concat([typeBuffer, data]))),
+            ]);
+          }
+
+          function u32(value) {
+            const buffer = Buffer.alloc(4);
+            buffer.writeUInt32BE(value >>> 0);
+            return buffer;
+          }
+
+          function crc32(buffer) {
+            let crc = 0xffffffff;
+            for (const byte of buffer) {
+              crc ^= byte;
+              for (let bit = 0; bit < 8; bit += 1) {
+                crc = crc & 1 ? 0xedb88320 ^ (crc >>> 1) : crc >>> 1;
+              }
+            }
+            return (crc ^ 0xffffffff) >>> 0;
+          }
+          NODE
+
+      - name: Install cleanroom dependencies
+        run: |
+          set -euo pipefail
+          cd "$CLEANROOM_DIR"
+          npm install --no-audit --no-fund
+
+      - name: Validate cleanroom Expo config
+        run: |
+          set -euo pipefail
+          cd "$CLEANROOM_DIR"
+          npm run check
+          npx expo config --json > "$GITHUB_WORKSPACE/cleanroom-expo-config.json"
+
+          node - <<'NODE'
+          const fs = require("node:fs");
+          const config = JSON.parse(fs.readFileSync(process.env.GITHUB_WORKSPACE + "/cleanroom-expo-config.json", "utf8"));
+          const expo = config.exp ?? config;
+
+          assertEqual(expo.name, "Ride 360 Driver V2", "app name");
+          assertEqual(expo.slug, "ride360-driver-v2", "slug");
+          assertEqual(expo.version, "2.0.0", "version");
+          assertEqual(expo.newArchEnabled, false, "newArchEnabled");
+          assertEqual(expo.jsEngine, "jsc", "top-level jsEngine");
+          assertEqual(expo.ios?.bundleIdentifier, "app.ride360.driver", "bundle identifier");
+          assertEqual(expo.ios?.buildNumber, process.env.IOS_BUILD_NUMBER, "iOS build number");
+          assertEqual(expo.ios?.jsEngine, "jsc", "iOS jsEngine");
+          assertEqual(expo.extra?.apiBaseUrl, "https://ride.365sakartvelo.com", "API base URL");
+
+          if (!expo.ios?.infoPlist?.NSLocationWhenInUseUsageDescription) {
+            throw new Error("Missing NSLocationWhenInUseUsageDescription.");
+          }
+
+          const serialized = JSON.stringify(expo);
+          if (serialized.includes("localhost") || serialized.includes("127.0.0.1")) {
+            throw new Error("Cleanroom config contains a dev API URL.");
+          }
+
+          console.log("Cleanroom Expo config validated.");
+
+          function assertEqual(actual, expected, label) {
+            if (actual !== expected) {
+              throw new Error(`${label}: expected ${expected}, got ${actual}`);
+            }
+          }
+          NODE
+
+      - name: Prepare EAS local iOS credentials
+        run: |
+          set -euo pipefail
+          cd "$CLEANROOM_DIR"
+          mkdir -p .ci/driver
+
+          node - <<'NODE'
+          const fs = require("node:fs");
+
+          fs.writeFileSync(
+            ".ci/driver/distribution.p12",
+            Buffer.from(process.env.IOS_DISTRIBUTION_CERTIFICATE_BASE64.replace(/\s/g, ""), "base64"),
+          );
+          fs.writeFileSync(
+            ".ci/driver/profile.mobileprovision",
+            Buffer.from(process.env.IOS_DRIVER_PROVISIONING_PROFILE_BASE64.replace(/\s/g, ""), "base64"),
+          );
+
+          const credentials = {
+            ios: {
+              provisioningProfilePath: ".ci/driver/profile.mobileprovision",
+              distributionCertificate: {
+                path: ".ci/driver/distribution.p12",
+                password: process.env.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD,
+              },
+            },
+          };
+
+          fs.writeFileSync("credentials.json", `${JSON.stringify(credentials, null, 2)}\n`);
+          NODE
+
+      - name: Build cleanroom iOS on EAS
+        run: |
+          set -euo pipefail
+          cd "$CLEANROOM_DIR"
+          eas build \
+            --platform ios \
+            --profile "$EAS_BUILD_PROFILE" \
+            --non-interactive \
+            --wait \
+            --json > "$GITHUB_WORKSPACE/eas-build-cleanroom.json"
+
+      - name: Download cleanroom IPA artifact from EAS
+        run: |
+          set -euo pipefail
+          build_id="$(node "$GITHUB_WORKSPACE/mobile-v2/scripts/eas-build-id.mjs" "$GITHUB_WORKSPACE/eas-build-cleanroom.json")"
+          echo "EAS_BUILD_ID=$build_id" >> "$GITHUB_ENV"
+
+          artifact_url="$(node - <<'NODE'
+          const fs = require("node:fs");
+          const parsed = JSON.parse(fs.readFileSync(process.env.GITHUB_WORKSPACE + "/eas-build-cleanroom.json", "utf8"));
+          const build = Array.isArray(parsed) ? parsed[0] : parsed;
+          const url = build?.artifacts?.applicationArchiveUrl ?? build?.artifacts?.buildUrl;
+          if (!url) {
+            console.error("Could not read EAS build artifact URL from eas-build-cleanroom.json.");
+            process.exit(1);
+          }
+          console.log(url);
+          NODE
+          )"
+
+          mkdir -p "$GITHUB_WORKSPACE/artifacts/driver-cleanroom"
+          ipa_path="$GITHUB_WORKSPACE/artifacts/driver-cleanroom/Ride360-Driver-Cleanroom-V2-${IOS_BUILD_NUMBER}.ipa"
+          curl --fail --location --retry 3 --output "$ipa_path" "$artifact_url"
+          node -e 'const fs = require("node:fs"); const path = process.argv[1]; const bytes = fs.statSync(path).size; if (bytes < 1000000) { console.error(`Downloaded IPA is unexpectedly small: ${bytes} bytes`); process.exit(1); }' "$ipa_path"
+          printf '{"buildId":"%s","artifactPath":"%s"}\n' "$build_id" "$ipa_path" > "$GITHUB_WORKSPACE/eas-download-cleanroom.json"
+
+          echo "IPA_PATH=$ipa_path" >> "$GITHUB_ENV"
+
+      - name: Submit cleanroom IPA to TestFlight
+        if: ${{ inputs.submit_to_testflight }}
+        run: |
+          set -euo pipefail
+          cd "$CLEANROOM_DIR"
+          mkdir -p .ci/asc
+
+          node - <<'NODE'
+          const fs = require("node:fs");
+          let key = process.env.APP_STORE_CONNECT_PRIVATE_KEY.trim().replace(/\\n/g, "\n");
+          if (!key.endsWith("\n")) key += "\n";
+          const path = `.ci/asc/AuthKey_${process.env.APP_STORE_CONNECT_KEY_ID}.p8`;
+          fs.writeFileSync(path, key, { mode: 0o600 });
+          NODE
+
+          asc_app_id="$(node "$GITHUB_WORKSPACE/mobile-v2/scripts/resolve-asc-app-id.mjs" \
+            "$APP_BUNDLE_ID" \
+            ".ci/asc/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8" \
+            "$APP_STORE_CONNECT_KEY_ID" \
+            "$APP_STORE_CONNECT_ISSUER_ID")"
+          echo "Resolved App Store Connect app id for $APP_BUNDLE_ID."
+
+          ASC_APP_ID="$asc_app_id" node - <<'NODE'
+          const fs = require("node:fs");
+
+          const eas = JSON.parse(fs.readFileSync("eas.json", "utf8"));
+          const profile = process.env.EAS_BUILD_PROFILE;
+          eas.submit ??= {};
+          eas.submit[profile] ??= {};
+          eas.submit[profile].ios ??= {};
+          eas.submit[profile].ios.ascAppId = process.env.ASC_APP_ID;
+          if (process.env.APPLE_TEAM_ID) {
+            eas.submit[profile].ios.appleTeamId = process.env.APPLE_TEAM_ID;
+          }
+          eas.submit[profile].ios.ascApiKeyPath = `.ci/asc/AuthKey_${process.env.APP_STORE_CONNECT_KEY_ID}.p8`;
+          eas.submit[profile].ios.ascApiKeyId = process.env.APP_STORE_CONNECT_KEY_ID;
+          eas.submit[profile].ios.ascApiKeyIssuerId = process.env.APP_STORE_CONNECT_ISSUER_ID;
+          fs.writeFileSync("eas.json", `${JSON.stringify(eas, null, 2)}\n`);
+          NODE
+          eas submit \
+            --platform ios \
+            --profile "$EAS_BUILD_PROFILE" \
+            --path "$IPA_PATH" \
+            --non-interactive \
+            --wait | tee "$GITHUB_WORKSPACE/eas-submit-cleanroom.log"
+          printf '{"status":"submitted","ipaPath":"%s"}\n' "$IPA_PATH" > "$GITHUB_WORKSPACE/eas-submit-cleanroom.json"
+
+      - name: Write cleanroom build report
+        if: always()
+        run: |
+          if [ -z "${GITHUB_STEP_SUMMARY:-}" ]; then
+            exit 0
+          fi
+
+          {
+            echo "## Ride 360 Driver Cleanroom Expo V2 iOS"
+            echo
+            echo "- GitHub run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            echo "- EAS build ID: ${EAS_BUILD_ID:-unknown}"
+            echo "- Bundle ID: ${APP_BUNDLE_ID}"
+            echo "- Version/build: ${EXPO_PUBLIC_APP_VERSION:-2.0.0}/${IOS_BUILD_NUMBER:-unknown}"
+            echo "- JS engine requested: jsc"
+            echo "- New Architecture requested: false"
+            echo "- IPA path/artifact: ${IPA_PATH:-not downloaded}"
+            echo "- TestFlight upload requested: ${{ inputs.submit_to_testflight }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload cleanroom artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ride360-Driver-Cleanroom-Expo-V2-iOS
+          if-no-files-found: ignore
+          path: |
+            artifacts/driver-cleanroom/*.ipa
+            cleanroom-expo-config.json
+            eas-build-cleanroom.json
+            eas-download-cleanroom.json
+            eas-submit-cleanroom.log
+            eas-submit-cleanroom.json
