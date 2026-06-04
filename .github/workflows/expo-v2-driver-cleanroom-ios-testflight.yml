@@ -458,6 +458,16 @@ jobs:
           cd "$CLEANROOM_DIR"
           npm install --no-audit --no-fund
 
+      - name: Initialize cleanroom git repository
+        run: |
+          set -euo pipefail
+          cd "$CLEANROOM_DIR"
+          git init
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+          git add package.json package-lock.json index.js app.config.js eas.json scripts/check-cleanroom.mjs assets/icon.png
+          git commit -m "Cleanroom Driver V2 isolation build"
+
       - name: Validate cleanroom Expo config
         run: |
           set -euo pipefail
