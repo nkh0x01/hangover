@@ -12,6 +12,7 @@ const apps = {
     name: "Ride 360 Driver V2",
     slug: "ride360-driver-v2",
     scheme: "ride360-driver-v2",
+    icon: "./apps/driver/assets/icon.png",
     iosBundleIdentifier: "app.ride360.driver",
     easProjectIdEnv: "EXPO_DRIVER_EAS_PROJECT_ID",
     iosInfoPlist: {
@@ -46,6 +47,7 @@ module.exports = {
     orientation: "portrait",
     userInterfaceStyle: "automatic",
     newArchEnabled: false,
+    ...(app.icon ? { icon: app.icon } : {}),
     entryPoint: "./index.js",
     runtimeVersion: {
       policy: "appVersion",
@@ -54,6 +56,7 @@ module.exports = {
       bundleIdentifier: app.iosBundleIdentifier,
       buildNumber: iosBuildNumber,
       supportsTablet: false,
+      ...(app.icon ? { icon: app.icon } : {}),
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
         ...(app.iosInfoPlist ?? {}),

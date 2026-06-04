@@ -5,14 +5,16 @@
     "scheme": "ride360-driver-v2",
     "version": "0.1.0",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "runtimeVersion": {
       "policy": "appVersion"
     },
     "ios": {
       "bundleIdentifier": "app.ride360.driver",
       "buildNumber": "200000",
+      "icon": "./assets/icon.png",
       "supportsTablet": false,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
