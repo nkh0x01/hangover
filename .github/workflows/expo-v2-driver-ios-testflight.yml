@@ -16,6 +16,11 @@ on:
         required: true
         default: false
         type: boolean
+      driver_boot_only:
+        description: "Build a boot-only Driver V2 isolation app without importing the full app tree."
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -46,6 +51,7 @@ jobs:
       EXPO_PUBLIC_APP_ROLE: driver
       EXPO_PUBLIC_APP_ENV: production
       EXPO_PUBLIC_API_BASE_URL: https://ride.365sakartvelo.com
+      EXPO_DRIVER_BOOT_ONLY: ${{ inputs.driver_boot_only }}
       EXPO_EAS_PROJECT_ID: ${{ secrets.EXPO_DRIVER_EAS_PROJECT_ID }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
       APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
@@ -107,6 +113,7 @@ jobs:
           const profile = process.env.EAS_BUILD_PROFILE;
           const version = process.env.EXPO_PUBLIC_APP_VERSION;
           const buildNumber = process.env.IOS_BUILD_NUMBER;
+          const driverBootOnly = process.env.EXPO_DRIVER_BOOT_ONLY;
 
           if (!profile || !version || !buildNumber) {
             throw new Error("Missing EAS build profile, app version, or iOS build number.");
@@ -125,6 +132,10 @@ jobs:
             EXPO_PUBLIC_APP_VERSION: version,
             IOS_BUILD_NUMBER: buildNumber,
           };
+
+          if (driverBootOnly) {
+            buildProfile.env.EXPO_DRIVER_BOOT_ONLY = driverBootOnly;
+          }
 
           fs.writeFileSync(path, `${JSON.stringify(eas, null, 2)}\n`);
           console.log(`Prepared ${profile} for ${version} (${buildNumber}).`);

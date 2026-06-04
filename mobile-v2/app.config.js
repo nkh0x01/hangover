@@ -37,6 +37,8 @@ const appVersion = process.env.EXPO_PUBLIC_APP_VERSION ?? "0.1.0";
 const iosBuildNumber = process.env.IOS_BUILD_NUMBER ?? "200000";
 const easProjectId =
   process.env.EXPO_EAS_PROJECT_ID ?? process.env[app.easProjectIdEnv];
+const driverBootOnly =
+  target === "driver" && process.env.EXPO_DRIVER_BOOT_ONLY === "true";
 
 module.exports = {
   expo: {
@@ -48,7 +50,7 @@ module.exports = {
     userInterfaceStyle: "automatic",
     newArchEnabled: false,
     ...(app.icon ? { icon: app.icon } : {}),
-    entryPoint: "./index.js",
+    entryPoint: driverBootOnly ? "./apps/driver/boot-only-index.js" : "./index.js",
     runtimeVersion: {
       policy: "appVersion",
     },
@@ -66,6 +68,7 @@ module.exports = {
       appRole: app.role,
       apiBaseUrl,
       appEnv,
+      driverBootOnly,
       eas: easProjectId ? { projectId: easProjectId } : undefined,
     },
   },
