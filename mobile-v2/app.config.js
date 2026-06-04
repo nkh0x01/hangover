@@ -63,6 +63,7 @@ module.exports = {
       bundleIdentifier: app.iosBundleIdentifier,
       buildNumber: iosBuildNumber,
       supportsTablet: false,
+      ...(driverJsEngine ? { jsEngine: driverJsEngine } : {}),
       ...(app.icon ? { icon: app.icon } : {}),
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
