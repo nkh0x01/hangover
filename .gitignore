@@ -80,6 +80,9 @@ mobile/**/*.freezed.dart
 !mobile/**/keep/*.g.dart
 mobile/.melos_tool/
 
+# Expo V2 local native prebuild output
+mobile-v2/ios/
+
 # Generated codegen output we DO want to commit (override): allow .gen.dart
 !mobile/**/*.gen.dart
 

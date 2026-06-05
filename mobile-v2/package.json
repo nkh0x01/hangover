@@ -12,12 +12,12 @@
     "start:customer:web": "npm --workspace @ride360/customer run web",
     "start:customer:web:proxy": "node scripts/dev-api-proxy.mjs & EXPO_PUBLIC_API_BASE_URL=http://localhost:8083 npm --workspace @ride360/customer run web",
     "start:driver": "npm --workspace @ride360/driver start",
-    "start:driver:ios": "EXPO_APP_TARGET=driver EXPO_PUBLIC_APP_ROLE=driver EXPO_PUBLIC_APP_NAME='Ride 360 Driver V2 Local' EXPO_PUBLIC_APP_ENV=development EXPO_DRIVER_DIAGNOSTIC_MODE=${EXPO_DRIVER_DIAGNOSTIC_MODE:-full} expo start --ios",
+    "start:driver:ios": "EXPO_APP_TARGET=driver EXPO_PUBLIC_APP_ROLE=driver EXPO_PUBLIC_APP_NAME='Ride 360 Driver V2 Local' EXPO_PUBLIC_APP_ENV=development EXPO_DRIVER_DIAGNOSTIC_MODE=${EXPO_DRIVER_DIAGNOSTIC_MODE:-full} EXPO_PUBLIC_DRIVER_DIAGNOSTIC_MODE=${EXPO_DRIVER_DIAGNOSTIC_MODE:-full} expo start --ios",
     "start:driver:web": "npm --workspace @ride360/driver run web",
     "start:driver:web:proxy": "node scripts/dev-api-proxy.mjs & EXPO_PUBLIC_API_BASE_URL=http://localhost:8083 npm --workspace @ride360/driver run web",
-    "run:driver:ios": "EXPO_APP_TARGET=driver EXPO_PUBLIC_APP_ROLE=driver EXPO_PUBLIC_APP_NAME='Ride 360 Driver V2 Local' EXPO_PUBLIC_APP_ENV=development EXPO_DRIVER_DIAGNOSTIC_MODE=${EXPO_DRIVER_DIAGNOSTIC_MODE:-full} expo run:ios",
-    "run:driver:ios:release": "EXPO_APP_TARGET=driver EXPO_PUBLIC_APP_ROLE=driver EXPO_PUBLIC_APP_NAME='Ride 360 Driver V2 Local' EXPO_PUBLIC_APP_ENV=development EXPO_DRIVER_DIAGNOSTIC_MODE=${EXPO_DRIVER_DIAGNOSTIC_MODE:-full} expo run:ios --configuration Release",
-    "config:driver": "EXPO_APP_TARGET=driver EXPO_PUBLIC_APP_ROLE=driver EXPO_PUBLIC_APP_NAME='Ride 360 Driver V2 Local' EXPO_PUBLIC_APP_ENV=development EXPO_DRIVER_DIAGNOSTIC_MODE=${EXPO_DRIVER_DIAGNOSTIC_MODE:-full} expo config --json",
+    "run:driver:ios": "EXPO_APP_TARGET=driver EXPO_PUBLIC_APP_ROLE=driver EXPO_PUBLIC_APP_NAME='Ride 360 Driver V2 Local' EXPO_PUBLIC_APP_ENV=development EXPO_DRIVER_DIAGNOSTIC_MODE=${EXPO_DRIVER_DIAGNOSTIC_MODE:-full} EXPO_PUBLIC_DRIVER_DIAGNOSTIC_MODE=${EXPO_DRIVER_DIAGNOSTIC_MODE:-full} expo run:ios",
+    "run:driver:ios:release": "EXPO_APP_TARGET=driver EXPO_PUBLIC_APP_ROLE=driver EXPO_PUBLIC_APP_NAME='Ride 360 Driver V2 Local' EXPO_PUBLIC_APP_ENV=development EXPO_DRIVER_DIAGNOSTIC_MODE=${EXPO_DRIVER_DIAGNOSTIC_MODE:-full} EXPO_PUBLIC_DRIVER_DIAGNOSTIC_MODE=${EXPO_DRIVER_DIAGNOSTIC_MODE:-full} expo run:ios --configuration Release",
+    "config:driver": "EXPO_APP_TARGET=driver EXPO_PUBLIC_APP_ROLE=driver EXPO_PUBLIC_APP_NAME='Ride 360 Driver V2 Local' EXPO_PUBLIC_APP_ENV=development EXPO_DRIVER_DIAGNOSTIC_MODE=${EXPO_DRIVER_DIAGNOSTIC_MODE:-full} EXPO_PUBLIC_DRIVER_DIAGNOSTIC_MODE=${EXPO_DRIVER_DIAGNOSTIC_MODE:-full} expo config --json",
     "dev:api-proxy": "node scripts/dev-api-proxy.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "npm run typecheck",
@@ -31,5 +31,12 @@
     "react-native": "0.83.6",
     "typescript": "^5.9.3",
     "vitest": "^4.1.8"
+  },
+  "dependencies": {
+    "expo": "~55.0.26",
+    "expo-location": "~55.1.10",
+    "expo-secure-store": "~55.0.14",
+    "react": "19.2.0",
+    "react-native": "0.83.6"
   }
 }

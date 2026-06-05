@@ -8,6 +8,6 @@
     "@ride360/api": "0.1.0",
     "@ride360/diagnostics": "0.1.0",
     "@ride360/types": "0.1.0",
-    "expo-secure-store": "^56.0.4"
+    "expo-secure-store": "~55.0.14"
   }
 }

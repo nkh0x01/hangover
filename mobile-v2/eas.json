@@ -50,6 +50,7 @@
         "EXPO_PUBLIC_APP_NAME": "Ride 360 Driver V2 Local",
         "EXPO_PUBLIC_APP_ENV": "development",
         "EXPO_PUBLIC_API_BASE_URL": "https://ride.365sakartvelo.com",
+        "EXPO_PUBLIC_DRIVER_DIAGNOSTIC_MODE": "primitive",
         "EXPO_DRIVER_DIAGNOSTIC_MODE": "primitive"
       }
     },
@@ -66,6 +67,7 @@
         "EXPO_PUBLIC_APP_NAME": "Ride 360 Driver V2 Local",
         "EXPO_PUBLIC_APP_ENV": "development",
         "EXPO_PUBLIC_API_BASE_URL": "https://ride.365sakartvelo.com",
+        "EXPO_PUBLIC_DRIVER_DIAGNOSTIC_MODE": "primitive",
         "EXPO_DRIVER_DIAGNOSTIC_MODE": "primitive"
       }
     }

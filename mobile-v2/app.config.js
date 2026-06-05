@@ -40,7 +40,10 @@ const iosBuildNumber = process.env.IOS_BUILD_NUMBER ?? "200000";
 const easProjectId =
   process.env.EXPO_EAS_PROJECT_ID ?? process.env[app.easProjectIdEnv];
 const explicitDriverDiagnosticMode =
-  target === "driver" ? process.env.EXPO_DRIVER_DIAGNOSTIC_MODE : undefined;
+  target === "driver"
+    ? process.env.EXPO_PUBLIC_DRIVER_DIAGNOSTIC_MODE ??
+      process.env.EXPO_DRIVER_DIAGNOSTIC_MODE
+    : undefined;
 const legacyDriverDiagnosticMode =
   target === "driver" && process.env.EXPO_DRIVER_PRIMITIVE_BOOT === "true"
     ? "primitive"
@@ -87,6 +90,7 @@ module.exports = {
     ...(driverJsEngine ? { jsEngine: driverJsEngine } : {}),
     ...(app.icon ? { icon: app.icon } : {}),
     entryPoint,
+    plugins: ["expo-secure-store"],
     runtimeVersion: {
       policy: "appVersion",
     },

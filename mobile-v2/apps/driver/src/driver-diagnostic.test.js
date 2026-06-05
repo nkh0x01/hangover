@@ -19,6 +19,10 @@ const minimalShellSource = readFileSync(
   "utf8",
 );
 const appSource = readFileSync(new URL("./App.tsx", import.meta.url), "utf8");
+const rootEntrySource = readFileSync(
+  new URL("../../../index.js", import.meta.url),
+  "utf8",
+);
 
 describe("Driver diagnostic boot", () => {
   it("keeps null-render isolation free of UI and lazy app imports", () => {
@@ -50,6 +54,18 @@ describe("Driver diagnostic boot", () => {
     expect(primitiveUiSource).toContain('"single-ascii-text"');
     expect(primitiveUiSource).toContain('"georgian-text"');
     expect(primitiveUiSource).toContain('"button-list"');
+  });
+
+  it("routes driver diagnostic modes from the root native entrypoint", () => {
+    expect(rootEntrySource).toContain("EXPO_DRIVER_DIAGNOSTIC_MODE");
+    expect(rootEntrySource).toContain('case "cleanroom"');
+    expect(rootEntrySource).toContain('require("./apps/driver/boot-only-index")');
+    expect(rootEntrySource).toContain('case "null"');
+    expect(rootEntrySource).toContain('require("./apps/driver/null-render-index")');
+    expect(rootEntrySource).toContain('case "primitive"');
+    expect(rootEntrySource).toContain('require("./apps/driver/primitive-ui-index")');
+    expect(rootEntrySource).toContain('case "staged"');
+    expect(rootEntrySource).toContain('require("./apps/driver/diagnostic-index")');
   });
 
   it("keeps suspected modules out of top-level imports", () => {

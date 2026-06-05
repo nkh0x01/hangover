@@ -64,6 +64,9 @@ EXPO_DRIVER_DIAGNOSTIC_MODE=primitive  # staged RN primitives
 EXPO_DRIVER_DIAGNOSTIC_MODE=staged     # lazy full-app import probes
 ```
 
+The scripts mirror this into `EXPO_PUBLIC_DRIVER_DIAGNOSTIC_MODE`, which is the
+value read by the JavaScript entrypoint in Expo/Metro bundles.
+
 The Driver iOS simulator config uses:
 
 - `EXPO_APP_TARGET=driver`
@@ -116,13 +119,20 @@ brew install cocoapods
 
 Do not install CocoaPods automatically in CI/debug scripts.
 
-On this machine, `pod` is currently missing, and `expo run:ios` stops at:
+On this machine, CocoaPods is installed in the user gem directory. Use this
+shell setup before local native runs:
 
-```txt
-The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.
+```bash
+export PATH="$HOME/.gem/ruby/2.6.0/bin:$PATH"
+export RUBYOPT=-rlogger
 ```
 
-Install CocoaPods before continuing native simulator reproduction.
+If a generated `ios/` folder has stale native config, regenerate it with the
+same Driver env before running:
+
+```bash
+EXPO_DRIVER_DIAGNOSTIC_MODE=full npx expo prebuild --platform ios --clean
+```
 
 ### C. EAS iOS simulator build, no TestFlight
 
