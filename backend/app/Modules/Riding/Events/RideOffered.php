@@ -47,15 +47,20 @@ final class RideOffered implements ShouldBroadcastNow
     public static function build(Ride $ride, Driver $driver, int $distanceM, \DateTimeInterface $expiresAt): self
     {
         $driver->loadMissing('user');
+        $coords = $ride->mapCoordinates();
 
         return new self($ride->ulid, $driver->user->ulid, [
             'ride_ulid' => $ride->ulid,
             'expires_at' => $expiresAt->format(DATE_ATOM),
             'pickup' => [
                 'address' => $ride->pickup_address,
+                'lat' => $coords['pickup_lat'],
+                'lng' => $coords['pickup_lng'],
             ],
             'dropoff' => [
                 'address' => $ride->dropoff_address,
+                'lat' => $coords['dropoff_lat'],
+                'lng' => $coords['dropoff_lng'],
             ],
             'distance_to_pickup_m' => $distanceM,
             'fare' => [

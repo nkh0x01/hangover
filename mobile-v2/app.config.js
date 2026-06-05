@@ -37,6 +37,17 @@ const appEnv = process.env.EXPO_PUBLIC_APP_ENV ?? "development";
 const appName = process.env.EXPO_PUBLIC_APP_NAME ?? app.name;
 const appVersion = process.env.EXPO_PUBLIC_APP_VERSION ?? "0.1.0";
 const iosBuildNumber = process.env.IOS_BUILD_NUMBER ?? "200000";
+const iosMapsApiKey =
+  target === "driver"
+    ? process.env.IOS_MAPS_API_KEY ??
+      process.env.GOOGLE_MAPS_IOS_API_KEY ??
+      process.env.GOOGLE_MAPS_API_KEY ??
+      process.env.MAPS_API_KEY
+    : undefined;
+const mapProvider =
+  target === "driver"
+    ? process.env.EXPO_PUBLIC_MAP_PROVIDER ?? (iosMapsApiKey ? "google" : "apple")
+    : undefined;
 const easProjectId =
   process.env.EXPO_EAS_PROJECT_ID ?? process.env[app.easProjectIdEnv];
 const explicitDriverDiagnosticMode =
@@ -90,7 +101,17 @@ module.exports = {
     ...(driverJsEngine ? { jsEngine: driverJsEngine } : {}),
     ...(app.icon ? { icon: app.icon } : {}),
     entryPoint,
-    plugins: ["expo-secure-store"],
+    plugins: [
+      "expo-secure-store",
+      ...(target === "driver"
+        ? [
+            [
+              "react-native-maps",
+              iosMapsApiKey ? { iosGoogleMapsApiKey: iosMapsApiKey } : {},
+            ],
+          ]
+        : []),
+    ],
     runtimeVersion: {
       policy: "appVersion",
     },
@@ -102,6 +123,7 @@ module.exports = {
       ...(app.icon ? { icon: app.icon } : {}),
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
+        ...(iosMapsApiKey ? { GMSApiKey: iosMapsApiKey } : {}),
         ...(app.iosInfoPlist ?? {}),
       },
     },
@@ -112,6 +134,8 @@ module.exports = {
       gitCommit,
       driverDiagnosticMode,
       driverJsEngine,
+      mapProvider,
+      googleMapsConfigured: Boolean(iosMapsApiKey),
       eas: easProjectId ? { projectId: easProjectId } : undefined,
     },
   },

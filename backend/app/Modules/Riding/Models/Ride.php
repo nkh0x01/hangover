@@ -12,6 +12,7 @@ use App\Support\Ulid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
 
 /**
@@ -141,6 +142,36 @@ class Ride extends Model
     public function offers(): HasMany
     {
         return $this->hasMany(RideOffer::class);
+    }
+
+    /**
+     * @return array{pickup_lat: float, pickup_lng: float, dropoff_lat: float, dropoff_lng: float}
+     */
+    public function mapCoordinates(): array
+    {
+        if (DB::getDriverName() !== 'mysql') {
+            return [
+                'pickup_lat' => 0.0, 'pickup_lng' => 0.0,
+                'dropoff_lat' => 0.0, 'dropoff_lng' => 0.0,
+            ];
+        }
+
+        $row = DB::selectOne(
+            'SELECT
+                ST_Y(pickup_location)  AS pickup_lat,
+                ST_X(pickup_location)  AS pickup_lng,
+                ST_Y(dropoff_location) AS dropoff_lat,
+                ST_X(dropoff_location) AS dropoff_lng
+              FROM rides WHERE id = ?',
+            [$this->id],
+        );
+
+        return [
+            'pickup_lat' => (float) ($row->pickup_lat ?? 0.0),
+            'pickup_lng' => (float) ($row->pickup_lng ?? 0.0),
+            'dropoff_lat' => (float) ($row->dropoff_lat ?? 0.0),
+            'dropoff_lng' => (float) ($row->dropoff_lng ?? 0.0),
+        ];
     }
 
     public function messages(): HasMany

@@ -7,7 +7,6 @@ namespace App\Modules\Riding\Http\Resources;
 use App\Modules\Riding\Models\Ride;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\DB;
 
 /**
  * @mixin Ride
@@ -73,27 +72,6 @@ final class RideResource extends JsonResource
      */
     private function coordinates(): array
     {
-        if (DB::getDriverName() !== 'mysql') {
-            return [
-                'pickup_lat' => 0.0, 'pickup_lng' => 0.0,
-                'dropoff_lat' => 0.0, 'dropoff_lng' => 0.0,
-            ];
-        }
-        $row = DB::selectOne(
-            'SELECT
-                ST_Y(pickup_location)  AS pickup_lat,
-                ST_X(pickup_location)  AS pickup_lng,
-                ST_Y(dropoff_location) AS dropoff_lat,
-                ST_X(dropoff_location) AS dropoff_lng
-              FROM rides WHERE id = ?',
-            [$this->id],
-        );
-
-        return [
-            'pickup_lat' => (float) ($row->pickup_lat ?? 0.0),
-            'pickup_lng' => (float) ($row->pickup_lng ?? 0.0),
-            'dropoff_lat' => (float) ($row->dropoff_lat ?? 0.0),
-            'dropoff_lng' => (float) ($row->dropoff_lng ?? 0.0),
-        ];
+        return $this->resource->mapCoordinates();
     }
 }

@@ -34,6 +34,9 @@ for (const [target, expected] of Object.entries(expectedApps)) {
     EXPO_PUBLIC_APP_ENV: "production",
     EXPO_PUBLIC_API_BASE_URL: productionApiBaseUrl,
     EXPO_PUBLIC_APP_VERSION: "2.0.0",
+    EXPO_PUBLIC_MAP_PROVIDER: target === "driver" ? "google" : undefined,
+    EXPO_PUBLIC_GOOGLE_MAPS_ENABLED: target === "driver" ? "true" : undefined,
+    IOS_MAPS_API_KEY: target === "driver" ? "test-ios-google-maps-key" : undefined,
     IOS_BUILD_NUMBER: "200000",
     EXPO_EAS_PROJECT_ID: "00000000-0000-4000-8000-000000000000",
   };
@@ -49,6 +52,11 @@ for (const [target, expected] of Object.entries(expectedApps)) {
   assertEqual(config.extra.appRole, expected.role, `${target} app role`);
   assertEqual(config.extra.appEnv, "production", `${target} app env`);
   assertEqual(config.extra.apiBaseUrl, productionApiBaseUrl, `${target} API base URL`);
+  if (target === "driver") {
+    assertEqual(config.extra.mapProvider, "google", `${target} map provider`);
+    assertEqual(config.extra.googleMapsConfigured, true, `${target} Google Maps configured`);
+    assertEqual(config.ios.infoPlist.GMSApiKey, "test-ios-google-maps-key", `${target} GMS API key`);
+  }
   if (expected.locationUsageDescription) {
     assertEqual(
       config.ios.infoPlist.NSLocationWhenInUseUsageDescription,

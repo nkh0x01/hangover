@@ -12,6 +12,7 @@ use App\Modules\Identity\Models\User;
 use App\Modules\Pricing\Models\FareEstimate;
 use App\Modules\Riding\Jobs\ExpireRideOffer;
 use App\Modules\Riding\Jobs\OfferRideToNextDriver;
+use App\Modules\Riding\Events\RideOffered;
 use App\Modules\Riding\Models\Ride;
 use App\Modules\Riding\Models\RideOffer;
 use App\Modules\Riding\Services\DispatchService;
@@ -178,7 +179,11 @@ it('lets the driver fetch and accept a DB-fallback offer', function (): void {
 
     $this->getJson('/api/v1/driver/offers/active')
         ->assertOk()
-        ->assertJsonPath('data.ride_ulid', $ride->ulid);
+        ->assertJsonPath('data.ride_ulid', $ride->ulid)
+        ->assertJsonPath('data.pickup.lat', 41.7151)
+        ->assertJsonPath('data.pickup.lng', 44.8271)
+        ->assertJsonPath('data.dropoff.lat', 41.7321)
+        ->assertJsonPath('data.dropoff.lng', 44.8271);
 
     $this->postJson("/api/v1/driver/offers/{$ride->ulid}/accept")
         ->assertOk()
@@ -189,6 +194,26 @@ it('lets the driver fetch and accept a DB-fallback offer', function (): void {
 
     expect($ride->driver_id)->toBe($driver->id)
         ->and($ride->status)->toBe(RideStatus::Accepted);
+});
+
+it('includes pickup and dropoff coordinates in offered event payload', function (): void {
+    $city = City::factory()->create();
+    [, $driver] = dispatchFallbackDriver($city);
+    $customer = User::factory()->create();
+    $ride = dispatchFallbackRide($city, $customer);
+
+    $event = RideOffered::build($ride, $driver, 500, now()->addSeconds(12));
+    $payload = $event->broadcastWith();
+
+    expect($payload['pickup'])->toMatchArray([
+        'address' => 'Freedom Square',
+        'lat' => 41.7151,
+        'lng' => 44.8271,
+    ])->and($payload['dropoff'])->toMatchArray([
+        'address' => 'Vake Park',
+        'lat' => 41.7321,
+        'lng' => 44.8271,
+    ]);
 });
 
 it('returns validation errors for invalid customer ride requests', function (): void {

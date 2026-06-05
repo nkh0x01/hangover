@@ -71,6 +71,11 @@ export function DriverMapPreview({
   const MapView = loadState.maps.default;
   const Marker = loadState.maps.Marker;
   const Polyline = loadState.maps.Polyline;
+  const provider =
+    process.env.EXPO_PUBLIC_MAP_PROVIDER === "google" &&
+    process.env.EXPO_PUBLIC_GOOGLE_MAPS_ENABLED === "true"
+      ? loadState.maps.PROVIDER_GOOGLE
+      : undefined;
   const route = routeCoordinates(mapState.markers);
   const mapKey = mapState.markers
     .map((marker) => `${marker.id}:${marker.lat}:${marker.lng}`)
@@ -91,6 +96,7 @@ export function DriverMapPreview({
         <MapView
           key={mapKey}
           initialRegion={mapState.region}
+          provider={provider}
           showsMyLocationButton={Boolean(currentLocation)}
           showsUserLocation={Boolean(currentLocation)}
           style={{ flex: 1 }}

@@ -36,12 +36,22 @@ final class ActiveOfferController extends Controller
             return new JsonResponse(['data' => null]);
         }
 
+        $coords = $offer->ride->mapCoordinates();
+
         return new JsonResponse([
             'data' => [
                 'ride_ulid' => $offer->ride->ulid,
                 'expires_at' => $offer->expires_at->toIso8601String(),
-                'pickup' => ['address' => $offer->ride->pickup_address],
-                'dropoff' => ['address' => $offer->ride->dropoff_address],
+                'pickup' => [
+                    'address' => $offer->ride->pickup_address,
+                    'lat' => $coords['pickup_lat'],
+                    'lng' => $coords['pickup_lng'],
+                ],
+                'dropoff' => [
+                    'address' => $offer->ride->dropoff_address,
+                    'lat' => $coords['dropoff_lat'],
+                    'lng' => $coords['dropoff_lng'],
+                ],
                 'distance_to_pickup_m' => $offer->distance_to_pickup_m,
                 'fare' => [
                     'amount' => (float) $offer->ride->quoted_amount,
