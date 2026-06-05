@@ -60,6 +60,7 @@ import {
   type LocationPoint,
   type ShiftStatus,
 } from "./driver-dashboard";
+import { DriverMapPreview } from "./driver-map";
 
 const APP_VERSION = readPublicEnv("EXPO_PUBLIC_APP_VERSION") ?? "0.1.0";
 const config = createRuntimeConfig({
@@ -1148,6 +1149,9 @@ function DashboardScreen({
   const [dispatchRefreshing, setDispatchRefreshing] = useState(false);
   const [activeOffer, setActiveOffer] = useState<ActiveRideOffer | null>(null);
   const [activeRide, setActiveRide] = useState<DriverRide | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<LocationPoint | null>(
+    null,
+  );
   const [error, setError] = useState<DashboardError | null>(null);
   const [message, setMessage] = useState<string | undefined>();
 
@@ -1230,6 +1234,7 @@ function DashboardScreen({
     setMessage(undefined);
     try {
       const location = await getCurrentLocation();
+      setCurrentLocation(location);
       const result = await dashboardClient.goOnline(location);
       const nextStatus = result.online ? "online" : "offline";
       setShiftStatus(nextStatus);
@@ -1345,6 +1350,11 @@ function DashboardScreen({
         </Text>
         {blockReason ? <Text>{blockReason}</Text> : null}
       </Card>
+      <DriverMapPreview
+        activeOffer={activeOffer}
+        activeRide={activeRide}
+        currentLocation={currentLocation}
+      />
       <DispatchPanel
         activeOffer={activeOffer}
         activeRide={activeRide}

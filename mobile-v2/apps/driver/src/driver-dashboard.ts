@@ -20,9 +20,13 @@ export type ActiveRideOffer = {
   expires_at: string;
   pickup?: {
     address?: string | null;
+    lat?: number | null;
+    lng?: number | null;
   } | null;
   dropoff?: {
     address?: string | null;
+    lat?: number | null;
+    lng?: number | null;
   } | null;
   distance_to_pickup_m?: number | null;
   fare?: {
@@ -50,6 +54,26 @@ export type DriverRide = {
     currency?: string | null;
   } | null;
   timestamps?: Record<string, string | null> | null;
+};
+
+export type DashboardMapMarker = {
+  id: string;
+  label: string;
+  lat: number;
+  lng: number;
+  kind: "driver" | "pickup" | "dropoff";
+};
+
+export type DashboardMapRegion = {
+  latitude: number;
+  longitude: number;
+  latitudeDelta: number;
+  longitudeDelta: number;
+};
+
+export type DashboardMapState = {
+  markers: DashboardMapMarker[];
+  region: DashboardMapRegion;
 };
 
 export type DashboardError = {
@@ -205,6 +229,57 @@ export function nextRideActionLabel(status?: string | null): string | null {
   }
 }
 
+export function buildDashboardMapState({
+  activeOffer,
+  activeRide,
+  currentLocation,
+}: {
+  activeOffer?: ActiveRideOffer | null;
+  activeRide?: DriverRide | null;
+  currentLocation?: LocationPoint | null;
+}): DashboardMapState {
+  const markers: DashboardMapMarker[] = [];
+
+  if (currentLocation && validCoordinate(currentLocation.lat, currentLocation.lng)) {
+    markers.push({
+      id: "driver",
+      label: "თქვენ",
+      lat: currentLocation.lat,
+      lng: currentLocation.lng,
+      kind: "driver",
+    });
+  }
+
+  const trip = activeRide ?? activeOffer;
+  const pickup = coordinateFromTripPoint(trip?.pickup);
+  const dropoff = coordinateFromTripPoint(trip?.dropoff);
+
+  if (pickup) {
+    markers.push({
+      id: "pickup",
+      label: "აყვანა",
+      lat: pickup.lat,
+      lng: pickup.lng,
+      kind: "pickup",
+    });
+  }
+
+  if (dropoff) {
+    markers.push({
+      id: "dropoff",
+      label: "დანიშნულება",
+      lat: dropoff.lat,
+      lng: dropoff.lng,
+      kind: "dropoff",
+    });
+  }
+
+  return {
+    markers,
+    region: regionForMarkers(markers),
+  };
+}
+
 export function dashboardErrorFrom(error: unknown): DashboardError {
   if (error instanceof ApiError) {
     if (error.status === 403) {
@@ -260,6 +335,65 @@ export function dashboardErrorFrom(error: unknown): DashboardError {
     message: "უცნობი შეცდომა.",
     kind: "unknown",
   };
+}
+
+const TBILISI_REGION: DashboardMapRegion = {
+  latitude: 41.7151,
+  longitude: 44.8271,
+  latitudeDelta: 0.08,
+  longitudeDelta: 0.08,
+};
+
+function coordinateFromTripPoint(point?: {
+  lat?: number | null;
+  lng?: number | null;
+} | null): LocationPoint | null {
+  const lat = point?.lat;
+  const lng = point?.lng;
+  if (!validCoordinate(lat, lng)) return null;
+  return {
+    lat: lat as number,
+    lng: lng as number,
+  };
+}
+
+function regionForMarkers(markers: DashboardMapMarker[]): DashboardMapRegion {
+  if (markers.length === 0) return TBILISI_REGION;
+  if (markers.length === 1) {
+    return {
+      latitude: markers[0].lat,
+      longitude: markers[0].lng,
+      latitudeDelta: 0.02,
+      longitudeDelta: 0.02,
+    };
+  }
+
+  const lats = markers.map((marker) => marker.lat);
+  const lngs = markers.map((marker) => marker.lng);
+  const minLat = Math.min(...lats);
+  const maxLat = Math.max(...lats);
+  const minLng = Math.min(...lngs);
+  const maxLng = Math.max(...lngs);
+
+  return {
+    latitude: (minLat + maxLat) / 2,
+    longitude: (minLng + maxLng) / 2,
+    latitudeDelta: Math.max((maxLat - minLat) * 1.7, 0.02),
+    longitudeDelta: Math.max((maxLng - minLng) * 1.7, 0.02),
+  };
+}
+
+function validCoordinate(lat?: number | null, lng?: number | null): boolean {
+  return (
+    typeof lat === "number" &&
+    typeof lng === "number" &&
+    Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lng >= -180 &&
+    lng <= 180
+  );
 }
 
 function backendMessage(error: ApiError): string | null {

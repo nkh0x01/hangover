@@ -4,6 +4,7 @@ import { ApiError, ApiNetworkError, type ApiClient } from "@ride360/api";
 import type { DriverContext, User } from "@ride360/types";
 
 import {
+  buildDashboardMapState,
   canOpenDashboard,
   createDriverDashboardClient,
   dashboardBlockReason,
@@ -219,5 +220,49 @@ describe("driver dashboard", () => {
     expect(rideStatusText("driver_arrived")).toBe("მძღოლი მივიდა");
     expect(nextRideActionLabel("accepted")).toBe("გზაში ვარ");
     expect(nextRideActionLabel("completed")).toBeNull();
+  });
+
+  it("builds a default Tbilisi map state before coordinates exist", () => {
+    const map = buildDashboardMapState({});
+
+    expect(map.markers).toEqual([]);
+    expect(map.region).toMatchObject({
+      latitude: 41.7151,
+      longitude: 44.8271,
+    });
+  });
+
+  it("builds driver, pickup, and dropoff markers for active rides", () => {
+    const map = buildDashboardMapState({
+      currentLocation: { lat: 41.7151, lng: 44.8271 },
+      activeRide: {
+        id: "01RIDE",
+        status: "accepted",
+        pickup: { address: "Pickup", lat: 41.72, lng: 44.82 },
+        dropoff: { address: "Dropoff", lat: 41.735, lng: 44.79 },
+      },
+    });
+
+    expect(map.markers.map((marker) => marker.kind)).toEqual([
+      "driver",
+      "pickup",
+      "dropoff",
+    ]);
+    expect(map.region.latitudeDelta).toBeGreaterThanOrEqual(0.02);
+    expect(map.region.longitudeDelta).toBeGreaterThanOrEqual(0.02);
+  });
+
+  it("ignores invalid map coordinates", () => {
+    const map = buildDashboardMapState({
+      currentLocation: { lat: 141, lng: 44.8271 },
+      activeOffer: {
+        ride_ulid: "01RIDE",
+        expires_at: "2026-06-05T20:00:00Z",
+        pickup: { lat: 41.72, lng: 44.82 },
+        dropoff: { lat: 41.735, lng: 244.79 },
+      },
+    });
+
+    expect(map.markers.map((marker) => marker.kind)).toEqual(["pickup"]);
   });
 });
