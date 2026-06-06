@@ -38,6 +38,20 @@ describe("driver build info", () => {
     expect(mapProviderLabel(info)).toBe("Google");
   });
 
+  it("defaults Driver iOS maps to Apple/default without requiring a Google key", () => {
+    const info = createDriverBuildInfo({
+      extra: {
+        appEnv: "production",
+        mapProvider: "apple",
+      },
+    });
+
+    expect(info.googleMapsConfigured).toBe(false);
+    expect(info.mapProvider).toBe("apple");
+    expect(info.mapsKeyLength).toBe(0);
+    expect(mapProviderLabel(info)).toBe("Apple/default");
+  });
+
   it("does not report Google Maps key present just because provider is google", () => {
     const info = createDriverBuildInfo({
       extra: {

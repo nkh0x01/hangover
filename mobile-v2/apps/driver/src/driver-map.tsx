@@ -14,6 +14,7 @@ import {
 } from "./driver-dashboard";
 import {
   buildMapDiagnostics,
+  shouldUseGoogleMapProvider,
   type DriverMapRuntimeConfig,
 } from "./driver-map-diagnostics";
 
@@ -48,8 +49,7 @@ export function DriverMapPreview({
     () => buildDashboardMapState({ activeOffer, activeRide, currentLocation }),
     [activeOffer, activeRide, currentLocation],
   );
-  const googleProviderEnabled =
-    mapConfig.provider === "google" && mapConfig.keyPresent === true;
+  const googleProviderEnabled = shouldUseGoogleMapProvider(mapConfig);
 
   useEffect(() => {
     let mounted = true;
@@ -78,11 +78,7 @@ export function DriverMapPreview({
         activeRide,
         currentLocation,
         errorMessage:
-          loadState.status === "failed"
-            ? loadState.error
-            : googleProviderEnabled
-              ? undefined
-              : "Google Maps API key is missing or Google provider is disabled.",
+          loadState.status === "failed" ? loadState.error : undefined,
         googleProviderEnabled,
         lastRegion: lastRegion ?? mapState.region,
         loaded: mapLoaded,
@@ -124,8 +120,11 @@ export function DriverMapPreview({
         <Text variant="caption">
           {loadState.status === "loading"
             ? "რუკა იტვირთება."
-            : `რუკა ვერ ჩაიტვირთა: ${loadState.error}`}
+            : "რუკის ჩატვირთვა ვერ მოხერხდა, მაგრამ შეკვეთის დეტალები ხელმისაწვდომია."}
         </Text>
+        {loadState.status === "failed" ? (
+          <Text variant="caption">{loadState.error}</Text>
+        ) : null}
       </Card>
     );
   }
@@ -197,7 +196,7 @@ export function DriverMapPreview({
           ? "რუკაზე ჩანს მძღოლი, აყვანის ან დანიშნულების წერტილები."
           : "წერტილები გამოჩნდება ცვლის დაწყების ან შეკვეთის მიღების შემდეგ."}
       </Text>
-      {!googleProviderEnabled || showTileWarning ? (
+      {googleProviderEnabled && showTileWarning ? (
         <Text variant="caption">
           რუკის ჩატვირთვა ვერ მოხერხდა. შეამოწმეთ Google Maps API key /
           ინტერნეტი.

@@ -1,6 +1,5 @@
 import { createRequire } from "node:module";
 import { readFile, readdir } from "node:fs/promises";
-import { createHash } from "node:crypto";
 import path from "node:path";
 
 const require = createRequire(import.meta.url);
@@ -25,10 +24,9 @@ const expectedApps = {
 };
 
 const previousEnv = { ...process.env };
-const testMapsKey = "test-ios-google-maps-key";
 
 for (const [target, expected] of Object.entries(expectedApps)) {
-  process.env = {
+  const nextEnv = {
     ...previousEnv,
     EXPO_APP_TARGET: target,
     EXPO_PUBLIC_APP_NAME: expected.name,
@@ -37,12 +35,13 @@ for (const [target, expected] of Object.entries(expectedApps)) {
     EXPO_PUBLIC_API_BASE_URL: productionApiBaseUrl,
     EXPO_PUBLIC_APP_VERSION: "2.0.0",
     EXPO_PUBLIC_APP_BUILD_NUMBER: "200000",
-    EXPO_PUBLIC_MAP_PROVIDER: target === "driver" ? "google" : undefined,
-    EXPO_PUBLIC_GOOGLE_MAPS_ENABLED: target === "driver" ? "true" : undefined,
-    IOS_MAPS_API_KEY: target === "driver" ? testMapsKey : undefined,
     IOS_BUILD_NUMBER: "200000",
     EXPO_EAS_PROJECT_ID: "00000000-0000-4000-8000-000000000000",
   };
+  delete nextEnv.EXPO_PUBLIC_MAP_PROVIDER;
+  delete nextEnv.EXPO_PUBLIC_GOOGLE_MAPS_ENABLED;
+  delete nextEnv.IOS_MAPS_API_KEY;
+  process.env = nextEnv;
 
   delete require.cache[require.resolve("../app.config.js")];
   const config = require("../app.config.js").expo;
@@ -63,15 +62,11 @@ for (const [target, expected] of Object.entries(expectedApps)) {
   assertEqual(config.extra.appEnv, "production", `${target} app env`);
   assertEqual(config.extra.apiBaseUrl, productionApiBaseUrl, `${target} API base URL`);
   if (target === "driver") {
-    assertEqual(config.extra.mapProvider, "google", `${target} map provider`);
-    assertEqual(config.extra.googleMapsConfigured, true, `${target} Google Maps configured`);
-    assertEqual(config.extra.mapsKeyLength, testMapsKey.length, `${target} maps key length`);
-    assertEqual(
-      config.extra.mapsKeySha256Prefix,
-      createHash("sha256").update(testMapsKey).digest("hex").slice(0, 12),
-      `${target} maps key SHA-256 prefix`,
-    );
-    assertEqual(config.ios.infoPlist.GMSApiKey, testMapsKey, `${target} GMS API key`);
+    assertEqual(config.extra.mapProvider, "apple", `${target} map provider`);
+    assertEqual(config.extra.googleMapsConfigured, false, `${target} Google Maps configured`);
+    assertEqual(config.extra.mapsKeyLength, 0, `${target} maps key length`);
+    assertEqual(config.extra.mapsKeySha256Prefix, undefined, `${target} maps key SHA-256 prefix`);
+    assertEqual(config.ios.infoPlist.GMSApiKey, undefined, `${target} GMS API key optional`);
   }
   if (expected.locationUsageDescription) {
     assertEqual(

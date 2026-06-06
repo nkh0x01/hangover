@@ -74,8 +74,6 @@ jobs:
       EXPO_PUBLIC_APP_ROLE: driver
       EXPO_PUBLIC_APP_ENV: production
       EXPO_PUBLIC_API_BASE_URL: https://ride.365sakartvelo.com
-      EXPO_PUBLIC_MAP_PROVIDER: google
-      EXPO_PUBLIC_GOOGLE_MAPS_ENABLED: "true"
       EXPO_DRIVER_BOOT_ONLY: ${{ inputs.driver_boot_only }}
       EXPO_DRIVER_DIAGNOSTIC_BOOT: ${{ inputs.driver_diagnostic_boot }}
       EXPO_DRIVER_NULL_BOOT: ${{ inputs.driver_null_boot }}
@@ -167,8 +165,6 @@ jobs:
             ...(buildProfile.env ?? {}),
             EXPO_PUBLIC_APP_VERSION: version,
             EXPO_PUBLIC_APP_BUILD_NUMBER: buildNumber,
-            EXPO_PUBLIC_MAP_PROVIDER: "google",
-            EXPO_PUBLIC_GOOGLE_MAPS_ENABLED: "true",
             IOS_BUILD_NUMBER: buildNumber,
           };
 
@@ -224,11 +220,6 @@ jobs:
             exit 1
           fi
 
-          if [ -z "${IOS_MAPS_API_KEY:-}" ]; then
-            echo "Missing IOS_MAPS_API_KEY secret required for Google Maps in Driver V2."
-            exit 1
-          fi
-
           if [ "${{ inputs.submit_to_testflight }}" = "true" ] && [ -z "${APP_STORE_CONNECT_ISSUER_ID:-}" ]; then
             echo "Missing APP_STORE_CONNECT_ISSUER_ID secret required for TestFlight upload."
             exit 1
@@ -275,7 +266,12 @@ jobs:
           PY
 
       - name: Print safe Google Maps key fingerprint
-        run: node scripts/maps-key-fingerprint.mjs
+        run: |
+          if [ -n "${IOS_MAPS_API_KEY:-}" ]; then
+            node scripts/maps-key-fingerprint.mjs
+          else
+            echo "IOS_MAPS_API_KEY is not set; Driver iOS pilot uses Apple/default maps."
+          fi
 
       - name: Lint/analyze
         run: npm run lint

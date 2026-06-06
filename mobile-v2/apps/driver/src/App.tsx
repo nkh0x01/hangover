@@ -10,6 +10,7 @@ import Constants from "expo-constants";
 import {
   Platform as NativePlatform,
   Pressable,
+  StatusBar,
   Text as NativeText,
   TextInput,
   View,
@@ -77,6 +78,8 @@ import {
   type ShiftStatus,
 } from "./driver-dashboard";
 import { DriverMapPreview } from "./driver-map";
+import { shouldUseGoogleMapProvider } from "./driver-map-diagnostics";
+import { driverHeaderTopPadding } from "./driver-layout";
 
 const config = createRuntimeConfig({
   appName: "Ride 360 Driver V2",
@@ -86,7 +89,6 @@ const APP_BUILD_INFO = createDriverBuildInfo({
   extra: readExpoExtra(),
   publicAppEnv: process.env.EXPO_PUBLIC_APP_ENV,
   publicBuildNumber: process.env.EXPO_PUBLIC_APP_BUILD_NUMBER,
-  publicGoogleMapsEnabled: process.env.EXPO_PUBLIC_GOOGLE_MAPS_ENABLED,
   publicMapProvider: process.env.EXPO_PUBLIC_MAP_PROVIDER,
   publicVersion: process.env.EXPO_PUBLIC_APP_VERSION,
   runtimeAppEnv: config.APP_ENV,
@@ -1195,8 +1197,7 @@ function DashboardScreen({
   );
   const [mapDiagnostics, setMapDiagnostics] = useState<DriverMapDiagnostics>({
     bundleId: DRIVER_MAP_CONFIG.bundleId,
-    googleProviderEnabled:
-      DRIVER_MAP_CONFIG.provider === "google" && DRIVER_MAP_CONFIG.keyPresent,
+    googleProviderEnabled: shouldUseGoogleMapProvider(DRIVER_MAP_CONFIG),
     keyPresent: DRIVER_MAP_CONFIG.keyPresent,
     mapsKeyLength: DRIVER_MAP_CONFIG.mapsKeyLength,
     mapsKeySha256Prefix: DRIVER_MAP_CONFIG.mapsKeySha256Prefix,
@@ -1704,7 +1705,19 @@ function InlineLink({ label, onPress }: { label: string; onPress: () => void }) 
 }
 
 function BuildLabel() {
-  return <Text variant="caption">{APP_BUILD_LABEL}</Text>;
+  return (
+    <Text
+      variant="caption"
+      style={{
+        paddingTop: driverHeaderTopPadding(
+          NativePlatform.OS,
+          StatusBar.currentHeight,
+        ),
+      }}
+    >
+      {APP_BUILD_LABEL}
+    </Text>
+  );
 }
 
 function useDiagnosticsSnapshot(route: DriverScreen) {

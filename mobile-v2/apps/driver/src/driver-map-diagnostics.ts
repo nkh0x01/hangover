@@ -15,6 +15,12 @@ export type DriverMapRuntimeConfig = {
   provider: "apple" | "google";
 };
 
+export function shouldUseGoogleMapProvider(
+  mapConfig: DriverMapRuntimeConfig,
+): boolean {
+  return mapConfig.provider === "google" && mapConfig.keyPresent;
+}
+
 export function buildMapDiagnostics({
   activeOffer,
   activeRide,

@@ -44,7 +44,7 @@ const iosMapsApiKey = target === "driver" ? process.env.IOS_MAPS_API_KEY : undef
 const iosMapsKeyFingerprint = fingerprintSecret(iosMapsApiKey);
 const mapProvider =
   target === "driver"
-    ? process.env.EXPO_PUBLIC_MAP_PROVIDER ?? (iosMapsApiKey ? "google" : "apple")
+    ? normalizeMapProvider(process.env.EXPO_PUBLIC_MAP_PROVIDER)
     : undefined;
 const easProjectId =
   process.env.EXPO_EAS_PROJECT_ID ?? process.env[app.easProjectIdEnv];
@@ -170,4 +170,8 @@ function fingerprintSecret(secret) {
     length: trimmed.length,
     sha256Prefix: createHash("sha256").update(trimmed).digest("hex").slice(0, 12),
   };
+}
+
+function normalizeMapProvider(provider) {
+  return provider === "google" ? "google" : "apple";
 }

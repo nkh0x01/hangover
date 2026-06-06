@@ -15,7 +15,6 @@ export type DriverBuildInfoInput = {
   extra?: Record<string, unknown>;
   publicAppEnv?: string;
   publicBuildNumber?: string;
-  publicGoogleMapsEnabled?: string;
   publicMapProvider?: string;
   publicVersion?: string;
   runtimeAppEnv?: AppEnv;
@@ -42,9 +41,7 @@ export function createDriverBuildInfo(input: DriverBuildInfoInput): DriverBuildI
   const iosBundleIdentifier = cleanString(extra.iosBundleIdentifier);
   const mapsKeyLength = parseKeyLength(extra.mapsKeyLength);
   const mapsKeySha256Prefix = cleanString(extra.mapsKeySha256Prefix);
-  const googleMapsConfigured =
-    input.publicGoogleMapsEnabled === "true" ||
-    extra.googleMapsConfigured === true;
+  const googleMapsConfigured = extra.googleMapsConfigured === true;
 
   return {
     appEnv,
@@ -65,7 +62,7 @@ export function buildLabelText(info: DriverBuildInfo): string {
 
 export function mapProviderLabel(info: DriverBuildInfo): string {
   if (info.mapProvider === "google" && info.googleMapsConfigured) return "Google";
-  return info.mapProvider === "google" ? "Google (key missing)" : "Apple";
+  return info.mapProvider === "google" ? "Google (key missing)" : "Apple/default";
 }
 
 function cleanString(value: unknown): string | undefined {

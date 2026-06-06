@@ -15,15 +15,14 @@ describe("diagnostics store", () => {
       lastStatusEndpointResponse: "online:true",
       map: {
         bundleId: "app.ride360.driver",
-        googleProviderEnabled: true,
-        keyPresent: true,
+        googleProviderEnabled: false,
+        keyPresent: false,
         loaded: false,
-        mapsKeyLength: 39,
-        mapsKeySha256Prefix: "9242c62ce14f",
-        provider: "google",
+        mapsKeyLength: 0,
+        provider: "apple",
         ready: true,
       },
-      mapProvider: "Google",
+      mapProvider: "Apple/default",
       online: true,
     });
 
@@ -36,15 +35,14 @@ describe("diagnostics store", () => {
       lastStatusEndpointResponse: "online:true",
       map: {
         bundleId: "app.ride360.driver",
-        googleProviderEnabled: true,
-        keyPresent: true,
+        googleProviderEnabled: false,
+        keyPresent: false,
         loaded: false,
-        mapsKeyLength: 39,
-        mapsKeySha256Prefix: "9242c62ce14f",
-        provider: "google",
+        mapsKeyLength: 0,
+        provider: "apple",
         ready: true,
       },
-      mapProvider: "Google",
+      mapProvider: "Apple/default",
       online: true,
     });
   });

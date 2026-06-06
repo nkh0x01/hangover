@@ -1,8 +1,50 @@
 import { describe, expect, it } from "vitest";
 
-import { buildMapDiagnostics } from "./driver-map-diagnostics";
+import {
+  buildMapDiagnostics,
+  shouldUseGoogleMapProvider,
+} from "./driver-map-diagnostics";
 
 describe("driver map diagnostics", () => {
+  it("uses Apple/default provider without forcing Google on iOS pilot", () => {
+    const mapConfig = {
+      bundleId: "app.ride360.driver",
+      keyPresent: false,
+      mapsKeyLength: 0,
+      provider: "apple" as const,
+    };
+
+    expect(shouldUseGoogleMapProvider(mapConfig)).toBe(false);
+    expect(
+      buildMapDiagnostics({
+        currentLocation: { lat: 41.7151, lng: 44.8271 },
+        googleProviderEnabled: shouldUseGoogleMapProvider(mapConfig),
+        loaded: true,
+        mapConfig,
+        ready: true,
+      }),
+    ).toMatchObject({
+      bundleId: "app.ride360.driver",
+      driverCoordinates: "41.715100,44.827100",
+      googleProviderEnabled: false,
+      keyPresent: false,
+      mapsKeyLength: 0,
+      provider: "apple",
+      ready: true,
+    });
+  });
+
+  it("does not force Google provider just because a key exists", () => {
+    expect(
+      shouldUseGoogleMapProvider({
+        keyPresent: true,
+        mapsKeyLength: 39,
+        mapsKeySha256Prefix: "9242c62ce14f",
+        provider: "apple",
+      }),
+    ).toBe(false);
+  });
+
   it("reports Google provider and key-present production config", () => {
     expect(
       buildMapDiagnostics({
