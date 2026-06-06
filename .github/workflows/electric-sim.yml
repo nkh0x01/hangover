@@ -1,0 +1,59 @@
+name: electric-sim
+
+# ელექტრიკის სიმულატორის ვერიფიკაცია:
+#   • solver-ის ერთეულ-ტესტები (swift test, macOS-ზე — წმინდა Foundation)
+#   • SwiftUI აპის კომპილაცია iOS Simulator-ზე (ხელმოწერის გარეშე)
+
+on:
+  push:
+    branches:
+      - "**"
+    paths:
+      - "electric-sim-ios/**"
+      - ".github/workflows/electric-sim.yml"
+  pull_request:
+    paths:
+      - "electric-sim-ios/**"
+      - ".github/workflows/electric-sim.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: electric-sim-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  core-tests:
+    name: Core solver tests (swift test)
+    runs-on: macos-14
+    defaults:
+      run:
+        working-directory: electric-sim-ios
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: |
+          swift --version
+          xcodebuild -version
+
+      - name: Run solver unit tests
+        run: swift test --enable-test-discovery
+
+  app-build:
+    name: Build SwiftUI app (iOS Simulator)
+    runs-on: macos-14
+    defaults:
+      run:
+        working-directory: electric-sim-ios
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build ElectricSim app
+        run: |
+          xcodebuild \
+            -project ElectricSim.xcodeproj \
+            -scheme ElectricSim \
+            -destination 'generic/platform=iOS Simulator' \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO \
+            build
