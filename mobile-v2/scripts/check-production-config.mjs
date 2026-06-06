@@ -67,6 +67,11 @@ for (const [target, expected] of Object.entries(expectedApps)) {
     assertEqual(config.extra.mapsKeyLength, 0, `${target} maps key length`);
     assertEqual(config.extra.mapsKeySha256Prefix, undefined, `${target} maps key SHA-256 prefix`);
     assertEqual(config.ios.infoPlist.GMSApiKey, undefined, `${target} GMS API key optional`);
+    assertIncludes(
+      config.ios.infoPlist.LSApplicationQueriesSchemes,
+      ["comgooglemaps", "yandexnavi", "waze"],
+      `${target} navigation URL schemes`,
+    );
   }
   if (expected.locationUsageDescription) {
     assertEqual(
@@ -106,6 +111,18 @@ console.log("Expo V2 production config checks passed.");
 function assertEqual(actual, expected, label) {
   if (actual !== expected) {
     fail(`${label}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
+  }
+}
+
+function assertIncludes(actual, expectedValues, label) {
+  if (!Array.isArray(actual)) {
+    fail(`${label}: expected array, got ${JSON.stringify(actual)}`);
+  }
+
+  for (const expected of expectedValues) {
+    if (!actual.includes(expected)) {
+      fail(`${label}: missing ${JSON.stringify(expected)} in ${JSON.stringify(actual)}`);
+    }
   }
 }
 

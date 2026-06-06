@@ -26,21 +26,29 @@ export function buildMapDiagnostics({
   activeRide,
   currentLocation,
   errorMessage,
+  fullScreenRouteActive,
   googleProviderEnabled,
+  lastNavigationOpenUrlProvider,
   lastRegion,
   loaded,
   mapConfig,
+  navigationError,
   ready,
+  selectedNavigationProvider,
 }: {
   activeOffer?: ActiveRideOffer | null;
   activeRide?: DriverRide | null;
   currentLocation?: LocationPoint | null;
   errorMessage?: string;
+  fullScreenRouteActive?: boolean;
   googleProviderEnabled: boolean;
+  lastNavigationOpenUrlProvider?: string;
   lastRegion?: DashboardMapRegion | null;
   loaded: boolean;
   mapConfig: DriverMapRuntimeConfig;
+  navigationError?: string;
   ready: boolean;
+  selectedNavigationProvider?: string;
 }): DriverMapDiagnostics {
   const trip = activeRide ?? activeOffer;
 
@@ -49,15 +57,19 @@ export function buildMapDiagnostics({
     driverCoordinates: coordinateText(currentLocation),
     dropoffCoordinates: coordinateText(trip?.dropoff),
     errorMessage,
+    fullScreenRouteActive,
     googleProviderEnabled,
     keyPresent: mapConfig.keyPresent,
+    lastNavigationOpenUrlProvider,
     mapsKeyLength: mapConfig.mapsKeyLength,
     mapsKeySha256Prefix: mapConfig.mapsKeySha256Prefix,
+    navigationError,
     lastRegion: regionText(lastRegion),
     loaded,
     pickupCoordinates: coordinateText(trip?.pickup),
     provider: mapConfig.provider,
     ready,
+    selectedNavigationProvider,
   };
 }
 

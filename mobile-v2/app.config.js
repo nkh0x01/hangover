@@ -19,6 +19,7 @@ const apps = {
     iosBundleIdentifier: "app.ride360.driver",
     easProjectIdEnv: "EXPO_DRIVER_EAS_PROJECT_ID",
     iosInfoPlist: {
+      LSApplicationQueriesSchemes: ["comgooglemaps", "yandexnavi", "waze"],
       NSLocationWhenInUseUsageDescription:
         "Ride 360 Driver V2 uses your location to start shifts and receive nearby ride offers.",
     },

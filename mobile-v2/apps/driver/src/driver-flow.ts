@@ -11,6 +11,7 @@ export type DriverScreen =
   | "onboarding-status"
   | "application"
   | "dashboard"
+  | "driver-map"
   | "role-mismatch";
 
 export const DRIVER_OTP_PURPOSE = "driver_signup" as const;

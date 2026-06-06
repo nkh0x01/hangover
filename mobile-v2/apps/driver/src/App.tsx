@@ -8,8 +8,10 @@ import {
 } from "react";
 import Constants from "expo-constants";
 import {
+  Linking,
   Platform as NativePlatform,
   Pressable,
+  SafeAreaView,
   StatusBar,
   Text as NativeText,
   TextInput,
@@ -77,9 +79,18 @@ import {
   type LocationPoint,
   type ShiftStatus,
 } from "./driver-dashboard";
-import { DriverMapPreview } from "./driver-map";
+import { DriverMapCanvas, DriverMapPreview } from "./driver-map";
 import { shouldUseGoogleMapProvider } from "./driver-map-diagnostics";
 import { driverHeaderTopPadding } from "./driver-layout";
+import {
+  COORDINATES_MISSING_MESSAGE,
+  NAVIGATION_UNAVAILABLE_MESSAGE,
+  OPEN_MAP_LABEL,
+  OPEN_NAVIGATION_LABEL,
+  destinationForTrip,
+  openNavigation,
+  shouldShowNavigationButton,
+} from "./driver-navigation";
 
 const config = createRuntimeConfig({
   appName: "Ride 360 Driver V2",
@@ -140,6 +151,12 @@ type ErrorBoundaryState = {
   cleared: boolean;
   componentStack?: string;
   error?: Error;
+};
+
+type NavigationStatus = {
+  error?: string;
+  lastNavigationOpenUrlProvider?: string;
+  selectedProvider: "auto";
 };
 
 export default function App() {
@@ -1185,6 +1202,10 @@ function DashboardScreen({
   const [dispatchRefreshing, setDispatchRefreshing] = useState(false);
   const [activeOffer, setActiveOffer] = useState<ActiveRideOffer | null>(null);
   const [activeRide, setActiveRide] = useState<DriverRide | null>(null);
+  const [fullMapOpen, setFullMapOpen] = useState(false);
+  const [navigationStatus, setNavigationStatus] = useState<NavigationStatus>({
+    selectedProvider: "auto",
+  });
   const [currentLocation, setCurrentLocation] = useState<LocationPoint | null>(
     null,
   );
@@ -1225,6 +1246,10 @@ function DashboardScreen({
       mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    diagnosticsStore.recordCurrentRoute(fullMapOpen ? "driver-map" : "dashboard");
+  }, [fullMapOpen]);
 
   useEffect(() => {
     if (!shouldPollOffers(shiftStatus)) {
@@ -1423,6 +1448,60 @@ function DashboardScreen({
     }
   }
 
+  async function openTripNavigation() {
+    const destination = destinationForTrip({ activeOffer, activeRide });
+
+    if (!destination) {
+      setNavigationStatus({
+        error: COORDINATES_MISSING_MESSAGE,
+        selectedProvider: "auto",
+      });
+      setMessage(COORDINATES_MISSING_MESSAGE);
+      return;
+    }
+
+    setNavigationStatus({ selectedProvider: "auto" });
+    try {
+      const result = await openNavigation({
+        canOpenURL: Linking.canOpenURL,
+        destination,
+        openURL: Linking.openURL,
+      });
+      setNavigationStatus({
+        lastNavigationOpenUrlProvider: result.provider,
+        selectedProvider: "auto",
+      });
+    } catch {
+      setNavigationStatus({
+        error: NAVIGATION_UNAVAILABLE_MESSAGE,
+        selectedProvider: "auto",
+      });
+      setMessage(NAVIGATION_UNAVAILABLE_MESSAGE);
+    }
+  }
+
+  if (fullMapOpen) {
+    return (
+      <DriverMapScreen
+        activeOffer={activeOffer}
+        activeRide={activeRide}
+        currentLocation={currentLocation}
+        loading={loading}
+        mapConfig={DRIVER_MAP_CONFIG}
+        navigationStatus={navigationStatus}
+        online={online}
+        refreshing={dispatchRefreshing}
+        onAccept={acceptOffer}
+        onAdvance={advanceRide}
+        onBack={() => setFullMapOpen(false)}
+        onDiagnostics={updateMapDiagnostics}
+        onNavigate={() => void openTripNavigation()}
+        onRefresh={() => void refreshDispatchState(true)}
+        onReject={rejectOffer}
+      />
+    );
+  }
+
   return (
     <Screen>
       <BuildLabel />
@@ -1444,9 +1523,15 @@ function DashboardScreen({
         activeOffer={activeOffer}
         activeRide={activeRide}
         currentLocation={currentLocation}
+        lastNavigationOpenUrlProvider={
+          navigationStatus.lastNavigationOpenUrlProvider
+        }
         mapConfig={DRIVER_MAP_CONFIG}
+        navigationError={navigationStatus.error}
         onDiagnostics={updateMapDiagnostics}
+        selectedNavigationProvider={navigationStatus.selectedProvider}
       />
+      <Button onPress={() => setFullMapOpen(true)}>{OPEN_MAP_LABEL}</Button>
       <DispatchPanel
         activeOffer={activeOffer}
         activeRide={activeRide}
@@ -1475,6 +1560,153 @@ function DashboardScreen({
       <Button onPress={onDiagnostics}>დიაგნოსტიკა</Button>
       <InlineLink label="სესიის გასუფთავება" onPress={onClearSession} />
     </Screen>
+  );
+}
+
+function DriverMapScreen({
+  activeOffer,
+  activeRide,
+  currentLocation,
+  loading,
+  mapConfig,
+  navigationStatus,
+  online,
+  refreshing,
+  onAccept,
+  onAdvance,
+  onBack,
+  onDiagnostics,
+  onNavigate,
+  onRefresh,
+  onReject,
+}: {
+  activeOffer: ActiveRideOffer | null;
+  activeRide: DriverRide | null;
+  currentLocation: LocationPoint | null;
+  loading: boolean;
+  mapConfig: typeof DRIVER_MAP_CONFIG;
+  navigationStatus: NavigationStatus;
+  online: boolean;
+  refreshing: boolean;
+  onAccept: () => void;
+  onAdvance: () => void;
+  onBack: () => void;
+  onDiagnostics: (diagnostics: DriverMapDiagnostics) => void;
+  onNavigate: () => void;
+  onRefresh: () => void;
+  onReject: () => void;
+}) {
+  const destination = destinationForTrip({ activeOffer, activeRide });
+  const navigationVisible = shouldShowNavigationButton(destination);
+  const nextActionLabel = activeRide ? nextRideActionLabel(activeRide.status) : null;
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#f7f8fb" }}>
+      <View style={{ flex: 1 }}>
+        <DriverMapCanvas
+          activeOffer={activeOffer}
+          activeRide={activeRide}
+          currentLocation={currentLocation}
+          fullScreenRouteActive
+          lastNavigationOpenUrlProvider={
+            navigationStatus.lastNavigationOpenUrlProvider
+          }
+          mapConfig={mapConfig}
+          navigationError={navigationStatus.error}
+          onDiagnostics={onDiagnostics}
+          selectedNavigationProvider={navigationStatus.selectedProvider}
+          showCaption={false}
+          style={{ flex: 1 }}
+        />
+        <View
+          style={{
+            left: 12,
+            position: "absolute",
+            right: 12,
+            top: 12,
+          }}
+        >
+          <Card style={{ gap: 8, padding: 12 }}>
+            <Text variant="subtitle">მძღოლის რუკა</Text>
+            <Text variant="caption">
+              სტატუსი: {online ? "ონლაინ" : "ოფლაინ"} · provider:{" "}
+              {MAP_PROVIDER_LABEL}
+            </Text>
+            <Button onPress={onBack}>დაფაზე დაბრუნება</Button>
+          </Card>
+        </View>
+        <View
+          style={{
+            bottom: 12,
+            left: 12,
+            position: "absolute",
+            right: 12,
+          }}
+        >
+          <Card style={{ gap: 10 }}>
+            {activeRide ? (
+              <>
+                <Text variant="subtitle">აქტიური მგზავრობა</Text>
+                <Text variant="caption">
+                  სტატუსი: {rideStatusText(activeRide.status)}
+                </Text>
+                <Text variant="caption">
+                  აყვანა: {activeRide.pickup?.address ?? "-"}
+                </Text>
+                <Text variant="caption">
+                  დანიშნულება: {activeRide.dropoff?.address ?? "-"}
+                </Text>
+              </>
+            ) : activeOffer ? (
+              <>
+                <Text variant="subtitle">ახალი შეკვეთა</Text>
+                <Text variant="caption">
+                  აყვანა: {activeOffer.pickup?.address ?? "-"}
+                </Text>
+                <Text variant="caption">
+                  დანიშნულება: {activeOffer.dropoff?.address ?? "-"}
+                </Text>
+                <Text variant="caption">
+                  იწურება: {activeOffer.expires_at}
+                </Text>
+              </>
+            ) : (
+              <>
+                <Text variant="subtitle">შეთავაზება</Text>
+                <Text>აქტიური შეთავაზება ჯერ არ არის.</Text>
+              </>
+            )}
+            {navigationVisible ? (
+              <Button onPress={onNavigate}>{OPEN_NAVIGATION_LABEL}</Button>
+            ) : (
+              <Text variant="caption">{COORDINATES_MISSING_MESSAGE}</Text>
+            )}
+            {navigationStatus.error ? (
+              <Text variant="caption" style={{ color: "#b42318" }}>
+                {navigationStatus.error}
+              </Text>
+            ) : null}
+            {navigationStatus.lastNavigationOpenUrlProvider ? (
+              <Text variant="caption">
+                navigation: {navigationStatus.lastNavigationOpenUrlProvider}
+              </Text>
+            ) : null}
+            {activeOffer ? (
+              <>
+                <Button disabled={loading} onPress={onAccept}>მიღება</Button>
+                <Button disabled={loading} onPress={onReject}>უარყოფა</Button>
+              </>
+            ) : null}
+            {nextActionLabel ? (
+              <Button disabled={loading} onPress={onAdvance}>
+                {nextActionLabel}
+              </Button>
+            ) : null}
+            <Button disabled={refreshing} onPress={onRefresh}>განახლება</Button>
+          </Card>
+        </View>
+      </View>
+    </SafeAreaView>
   );
 }
 
@@ -1617,6 +1849,22 @@ function DiagnosticsScreen({
         <Text variant="caption">
           Google provider enabled:{" "}
           {String(diagnostics.driverDashboard?.map?.googleProviderEnabled ?? false)}
+        </Text>
+        <Text variant="caption">
+          full-screen map:{" "}
+          {String(diagnostics.driverDashboard?.map?.fullScreenRouteActive ?? false)}
+        </Text>
+        <Text variant="caption">
+          selected navigation:{" "}
+          {diagnostics.driverDashboard?.map?.selectedNavigationProvider ?? "-"}
+        </Text>
+        <Text variant="caption">
+          last navigation provider:{" "}
+          {diagnostics.driverDashboard?.map?.lastNavigationOpenUrlProvider ?? "-"}
+        </Text>
+        <Text variant="caption">
+          navigation error:{" "}
+          {diagnostics.driverDashboard?.map?.navigationError ?? "-"}
         </Text>
         <Text variant="caption">
           map error: {diagnostics.driverDashboard?.map?.errorMessage ?? "-"}

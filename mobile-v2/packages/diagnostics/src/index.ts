@@ -60,15 +60,19 @@ export type DriverMapDiagnostics = {
   driverCoordinates?: string;
   dropoffCoordinates?: string;
   errorMessage?: string;
+  fullScreenRouteActive?: boolean;
   googleProviderEnabled?: boolean;
   keyPresent?: boolean;
+  lastNavigationOpenUrlProvider?: string;
   mapsKeyLength?: number;
   mapsKeySha256Prefix?: string;
+  navigationError?: string;
   lastRegion?: string;
   loaded?: boolean;
   pickupCoordinates?: string;
   provider?: string;
   ready?: boolean;
+  selectedNavigationProvider?: string;
 };
 
 export type DiagnosticsStore = {

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { View } from "react-native";
+import { View, type ViewStyle } from "react-native";
 
 import type { DriverMapDiagnostics } from "@ride360/diagnostics";
 import { Card, Text } from "@ride360/ui";
@@ -29,14 +29,75 @@ export function DriverMapPreview({
   activeOffer,
   activeRide,
   currentLocation,
+  lastNavigationOpenUrlProvider,
   mapConfig,
+  navigationError,
   onDiagnostics,
+  selectedNavigationProvider,
 }: {
   activeOffer: ActiveRideOffer | null;
   activeRide: DriverRide | null;
   currentLocation: LocationPoint | null;
+  lastNavigationOpenUrlProvider?: string;
   mapConfig: DriverMapRuntimeConfig;
+  navigationError?: string;
   onDiagnostics?: (diagnostics: DriverMapDiagnostics) => void;
+  selectedNavigationProvider?: string;
+}) {
+  return (
+    <Card>
+      <Text variant="subtitle">რუკა</Text>
+      <DriverMapCanvas
+        activeOffer={activeOffer}
+        activeRide={activeRide}
+        currentLocation={currentLocation}
+        lastNavigationOpenUrlProvider={lastNavigationOpenUrlProvider}
+        mapConfig={mapConfig}
+        navigationError={navigationError}
+        onDiagnostics={onDiagnostics}
+        selectedNavigationProvider={selectedNavigationProvider}
+        showCaption={false}
+        style={{
+          borderColor: "#d7dce5",
+          borderRadius: 8,
+          borderWidth: 1,
+          height: 220,
+          overflow: "hidden",
+        }}
+      />
+      <Text variant="caption">
+        {activeOffer || activeRide || currentLocation
+          ? "რუკაზე ჩანს მძღოლი, აყვანის ან დანიშნულების წერტილები."
+          : "წერტილები გამოჩნდება ცვლის დაწყების ან შეკვეთის მიღების შემდეგ."}
+      </Text>
+    </Card>
+  );
+}
+
+export function DriverMapCanvas({
+  activeOffer,
+  activeRide,
+  currentLocation,
+  fullScreenRouteActive = false,
+  mapConfig,
+  navigationError,
+  lastNavigationOpenUrlProvider,
+  onDiagnostics,
+  selectedNavigationProvider,
+  showCaption = true,
+  style,
+}: {
+  activeOffer: ActiveRideOffer | null;
+  activeRide: DriverRide | null;
+  currentLocation: LocationPoint | null;
+  fullScreenRouteActive?: boolean;
+  mapConfig: DriverMapRuntimeConfig;
+  navigationError?: string;
+  lastNavigationOpenUrlProvider?: string;
+  onDiagnostics?: (diagnostics: DriverMapDiagnostics) => void;
+  selectedNavigationProvider?: string;
+  showCaption?: boolean;
+  style?: ViewStyle;
 }) {
   const [loadState, setLoadState] = useState<MapLoadState>({
     status: "loading",
@@ -79,25 +140,33 @@ export function DriverMapPreview({
         currentLocation,
         errorMessage:
           loadState.status === "failed" ? loadState.error : undefined,
+        fullScreenRouteActive,
         googleProviderEnabled,
+        lastNavigationOpenUrlProvider,
         lastRegion: lastRegion ?? mapState.region,
         loaded: mapLoaded,
         mapConfig,
+        navigationError,
         ready: mapReady,
+        selectedNavigationProvider,
       }),
     );
   }, [
     activeOffer,
     activeRide,
     currentLocation,
+    fullScreenRouteActive,
     googleProviderEnabled,
+    lastNavigationOpenUrlProvider,
     lastRegion,
     loadState,
     mapConfig,
     mapLoaded,
     mapReady,
     mapState.region,
+    navigationError,
     onDiagnostics,
+    selectedNavigationProvider,
   ]);
 
   useEffect(() => {
@@ -115,8 +184,18 @@ export function DriverMapPreview({
 
   if (loadState.status !== "ready") {
     return (
-      <Card>
-        <Text variant="subtitle">რუკა</Text>
+      <View
+        style={[
+          {
+            alignItems: "center",
+            backgroundColor: "#eef2f7",
+            justifyContent: "center",
+            minHeight: 220,
+            padding: 16,
+          },
+          style,
+        ]}
+      >
         <Text variant="caption">
           {loadState.status === "loading"
             ? "რუკა იტვირთება."
@@ -125,7 +204,7 @@ export function DriverMapPreview({
         {loadState.status === "failed" ? (
           <Text variant="caption">{loadState.error}</Text>
         ) : null}
-      </Card>
+      </View>
     );
   }
 
@@ -141,68 +220,59 @@ export function DriverMapPreview({
     .join("|");
 
   return (
-    <Card>
-      <Text variant="subtitle">რუკა</Text>
-      <View
-        style={{
-          borderColor: "#d7dce5",
-          borderRadius: 8,
-          borderWidth: 1,
-          height: 220,
-          overflow: "hidden",
+    <View style={style}>
+      <MapView
+        key={mapKey}
+        initialRegion={mapState.region}
+        mapType="standard"
+        onMapLoaded={() => {
+          setMapLoaded(true);
+          setShowTileWarning(false);
         }}
+        onMapReady={() => setMapReady(true)}
+        onRegionChangeComplete={(region) => {
+          setLastRegion({
+            latitude: region.latitude,
+            longitude: region.longitude,
+            latitudeDelta: region.latitudeDelta,
+            longitudeDelta: region.longitudeDelta,
+          });
+        }}
+        provider={provider}
+        showsMyLocationButton={Boolean(currentLocation)}
+        showsUserLocation={Boolean(currentLocation)}
+        style={{ flex: 1 }}
       >
-        <MapView
-          key={mapKey}
-          initialRegion={mapState.region}
-          mapType="standard"
-          onMapLoaded={() => {
-            setMapLoaded(true);
-            setShowTileWarning(false);
-          }}
-          onMapReady={() => setMapReady(true)}
-          onRegionChangeComplete={(region) => {
-            setLastRegion({
-              latitude: region.latitude,
-              longitude: region.longitude,
-              latitudeDelta: region.latitudeDelta,
-              longitudeDelta: region.longitudeDelta,
-            });
-          }}
-          provider={provider}
-          showsMyLocationButton={Boolean(currentLocation)}
-          showsUserLocation={Boolean(currentLocation)}
-          style={{ flex: 1 }}
-        >
-          {mapState.markers.map((marker) => (
-            <Marker
-              coordinate={{ latitude: marker.lat, longitude: marker.lng }}
-              key={marker.id}
-              pinColor={pinColor(marker.kind)}
-              title={marker.label}
-            />
-          ))}
-          {route.length >= 2 ? (
-            <Polyline
-              coordinates={route}
-              strokeColor="#1557d8"
-              strokeWidth={3}
-            />
-          ) : null}
-        </MapView>
-      </View>
-      <Text variant="caption">
-        {mapState.markers.length > 0
-          ? "რუკაზე ჩანს მძღოლი, აყვანის ან დანიშნულების წერტილები."
-          : "წერტილები გამოჩნდება ცვლის დაწყების ან შეკვეთის მიღების შემდეგ."}
-      </Text>
-      {googleProviderEnabled && showTileWarning ? (
+        {mapState.markers.map((marker) => (
+          <Marker
+            coordinate={{ latitude: marker.lat, longitude: marker.lng }}
+            key={marker.id}
+            pinColor={pinColor(marker.kind)}
+            title={marker.label}
+          />
+        ))}
+        {route.length >= 2 ? (
+          <Polyline
+            coordinates={route}
+            strokeColor="#1557d8"
+            strokeWidth={3}
+          />
+        ) : null}
+      </MapView>
+      {showCaption ? (
+        <Text variant="caption">
+          {mapState.markers.length > 0
+            ? "რუკაზე ჩანს მძღოლი, აყვანის ან დანიშნულების წერტილები."
+            : "წერტილები გამოჩნდება ცვლის დაწყების ან შეკვეთის მიღების შემდეგ."}
+        </Text>
+      ) : null}
+      {showCaption && googleProviderEnabled && showTileWarning ? (
         <Text variant="caption">
           რუკის ჩატვირთვა ვერ მოხერხდა. შეამოწმეთ Google Maps API key /
           ინტერნეტი.
         </Text>
       ) : null}
-    </Card>
+    </View>
   );
 }
 

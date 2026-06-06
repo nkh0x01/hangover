@@ -18,19 +18,26 @@ describe("driver map diagnostics", () => {
     expect(
       buildMapDiagnostics({
         currentLocation: { lat: 41.7151, lng: 44.8271 },
+        fullScreenRouteActive: true,
         googleProviderEnabled: shouldUseGoogleMapProvider(mapConfig),
+        lastNavigationOpenUrlProvider: "waze",
         loaded: true,
         mapConfig,
+        navigationError: undefined,
         ready: true,
+        selectedNavigationProvider: "auto",
       }),
     ).toMatchObject({
       bundleId: "app.ride360.driver",
       driverCoordinates: "41.715100,44.827100",
+      fullScreenRouteActive: true,
       googleProviderEnabled: false,
       keyPresent: false,
+      lastNavigationOpenUrlProvider: "waze",
       mapsKeyLength: 0,
       provider: "apple",
       ready: true,
+      selectedNavigationProvider: "auto",
     });
   });
 
