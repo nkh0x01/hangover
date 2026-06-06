@@ -22,6 +22,9 @@
 		E1EC0000000000000000020D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E1EC000000000000000000FD /* Assets.xcassets */; };
 		E1EC0000000000000000020E /* components.json in Resources */ = {isa = PBXBuildFile; fileRef = E1EC000000000000000000FE /* components.json */; };
 		E1EC0000000000000000020F /* levels.json in Resources */ = {isa = PBXBuildFile; fileRef = E1EC000000000000000000FF /* levels.json */; };
+		E1EC00000000000000000210 /* Monetization.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC00000000000000000110 /* Monetization.swift */; };
+		E1EC00000000000000000211 /* StoreViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC00000000000000000111 /* StoreViews.swift */; };
+		E1EC00000000000000000212 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E1EC00000000000000000112 /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -41,6 +44,9 @@
 		E1EC000000000000000000FE /* components.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = components.json; sourceTree = "<group>"; };
 		E1EC000000000000000000FF /* levels.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = levels.json; sourceTree = "<group>"; };
 		E1EC00000000000000000100 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		E1EC00000000000000000110 /* Monetization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Monetization.swift; sourceTree = "<group>"; };
+		E1EC00000000000000000111 /* StoreViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreViews.swift; sourceTree = "<group>"; };
+		E1EC00000000000000000112 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		E1EC00000000000000000101 /* ElectricSim.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ElectricSim.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -101,6 +107,7 @@
 				E1EC000000000000000000F7 /* ElectricSimApp.swift */,
 				E1EC000000000000000000F8 /* GameState.swift */,
 				E1EC000000000000000000F9 /* Style.swift */,
+				E1EC00000000000000000110 /* Monetization.swift */,
 				E1EC00000000000000000305 /* Views */,
 				E1EC000000000000000000FD /* Assets.xcassets */,
 				E1EC00000000000000000307 /* Resources */,
@@ -114,6 +121,7 @@
 				E1EC000000000000000000FA /* LevelListView.swift */,
 				E1EC000000000000000000FB /* WorkbenchView.swift */,
 				E1EC000000000000000000FC /* ResultPanelView.swift */,
+				E1EC00000000000000000111 /* StoreViews.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -122,6 +130,7 @@
 			isa = PBXGroup;
 			children = (
 				E1EC00000000000000000100 /* Info.plist */,
+				E1EC00000000000000000112 /* PrivacyInfo.xcprivacy */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -196,6 +205,7 @@
 				E1EC0000000000000000020D /* Assets.xcassets in Resources */,
 				E1EC0000000000000000020E /* components.json in Resources */,
 				E1EC0000000000000000020F /* levels.json in Resources */,
+				E1EC00000000000000000212 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -218,6 +228,8 @@
 				E1EC0000000000000000020A /* LevelListView.swift in Sources */,
 				E1EC0000000000000000020B /* WorkbenchView.swift in Sources */,
 				E1EC0000000000000000020C /* ResultPanelView.swift in Sources */,
+				E1EC00000000000000000210 /* Monetization.swift in Sources */,
+				E1EC00000000000000000211 /* StoreViews.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

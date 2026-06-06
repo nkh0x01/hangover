@@ -11,11 +11,15 @@ import SwiftUI
 @main
 struct ElectricSimApp: App {
     @StateObject private var game = GameState()
+    @StateObject private var store = StoreManager()
+    @StateObject private var ads = AdManager()
 
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environmentObject(game)
+                .environmentObject(store)
+                .environmentObject(ads)
         }
     }
 }
