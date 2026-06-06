@@ -12,6 +12,19 @@ const DEFAULT_API_BASE_URL = "https://ride.365sakartvelo.com";
 const DEFAULT_APP_ENV: AppEnv = "development";
 
 function readPublicEnv(key: string): string | undefined {
+  switch (key) {
+    case "EXPO_PUBLIC_API_BASE_URL":
+      return process.env.EXPO_PUBLIC_API_BASE_URL;
+    case "EXPO_PUBLIC_APP_ENV":
+      return process.env.EXPO_PUBLIC_APP_ENV;
+    case "EXPO_PUBLIC_APP_NAME":
+      return process.env.EXPO_PUBLIC_APP_NAME;
+    case "EXPO_PUBLIC_APP_ROLE":
+      return process.env.EXPO_PUBLIC_APP_ROLE;
+    default:
+      break;
+  }
+
   const env = globalThis as typeof globalThis & {
     process?: { env?: Record<string, string | undefined> };
   };

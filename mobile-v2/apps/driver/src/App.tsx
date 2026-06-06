@@ -1,4 +1,5 @@
 import { Component, useEffect, useState, type ErrorInfo, type ReactNode } from "react";
+import Constants from "expo-constants";
 import {
   Platform as NativePlatform,
   Pressable,
@@ -34,6 +35,11 @@ import {
 } from "./driver-flow";
 import { shouldRenderNativeStartupScreen } from "./driver-startup";
 import {
+  buildLabelText,
+  createDriverBuildInfo,
+  mapProviderLabel,
+} from "./driver-build-info";
+import {
   APPLICATION_STEPS,
   blankApplicationForm,
   createDriverApplicationClient,
@@ -51,9 +57,12 @@ import {
   createDriverDashboardClient,
   dashboardBlockReason,
   dashboardErrorFrom,
+  dispatchPanelPresentation,
   nextRideActionLabel,
   rideStatusText,
+  shiftActionState,
   shiftStatusFromContext,
+  shouldPollOffers,
   type ActiveRideOffer,
   type DashboardError,
   type DriverRide,
@@ -62,11 +71,22 @@ import {
 } from "./driver-dashboard";
 import { DriverMapPreview } from "./driver-map";
 
-const APP_VERSION = readPublicEnv("EXPO_PUBLIC_APP_VERSION") ?? "0.1.0";
 const config = createRuntimeConfig({
   appName: "Ride 360 Driver V2",
   appRole: "driver",
 });
+const APP_BUILD_INFO = createDriverBuildInfo({
+  extra: readExpoExtra(),
+  publicAppEnv: process.env.EXPO_PUBLIC_APP_ENV,
+  publicBuildNumber: process.env.EXPO_PUBLIC_APP_BUILD_NUMBER,
+  publicGoogleMapsEnabled: process.env.EXPO_PUBLIC_GOOGLE_MAPS_ENABLED,
+  publicMapProvider: process.env.EXPO_PUBLIC_MAP_PROVIDER,
+  publicVersion: process.env.EXPO_PUBLIC_APP_VERSION,
+  runtimeAppEnv: config.APP_ENV,
+});
+const APP_VERSION = APP_BUILD_INFO.version;
+const APP_BUILD_LABEL = buildLabelText(APP_BUILD_INFO);
+const MAP_PROVIDER_LABEL = mapProviderLabel(APP_BUILD_INFO);
 
 const storage = createSecureTokenStorage();
 const authStore = createAuthStore();
@@ -466,7 +486,7 @@ function StartupCrashScreen({
         Ride 360 Driver V2
       </NativeText>
       <NativeText style={{ color: "#526070", fontSize: 13, marginBottom: 16 }}>
-        Driver V2 · {APP_VERSION} · {config.APP_ENV}
+        {APP_BUILD_LABEL}
       </NativeText>
       <NativeText style={{ color: "#151922", fontSize: 16, marginBottom: 8 }}>
         Startup error
@@ -524,7 +544,7 @@ function NativeStartupScreen() {
         Starting...
       </NativeText>
       <NativeText style={{ color: "#697386", fontSize: 12 }}>
-        Driver V2 · {APP_VERSION} · {config.APP_ENV}
+        {APP_BUILD_LABEL}
       </NativeText>
     </View>
   );
@@ -1154,6 +1174,11 @@ function DashboardScreen({
   );
   const [error, setError] = useState<DashboardError | null>(null);
   const [message, setMessage] = useState<string | undefined>();
+  const [lastStatusEndpointResponse, setLastStatusEndpointResponse] =
+    useState("not called");
+  const [lastOfferPollStatus, setLastOfferPollStatus] = useState(
+    shiftStatus === "online" ? "waiting" : "offline",
+  );
 
   useEffect(() => {
     let mounted = true;
@@ -1177,8 +1202,9 @@ function DashboardScreen({
   }, []);
 
   useEffect(() => {
-    if (shiftStatus !== "online") {
+    if (!shouldPollOffers(shiftStatus)) {
       setActiveOffer(null);
+      setLastOfferPollStatus("offline");
       return;
     }
 
@@ -1201,6 +1227,26 @@ function DashboardScreen({
 
   const context = dashboardUser?.driver_context;
   const blockReason = dashboardBlockReason(dashboardUser);
+  const online = shiftStatus === "online";
+  const shiftAction = shiftActionState(shiftStatus, loading);
+
+  useEffect(() => {
+    diagnosticsStore.recordDriverDashboard({
+      activeOfferId: activeOffer?.ride_ulid ?? null,
+      appBuildNumber: APP_BUILD_INFO.buildNumber,
+      appEnv: APP_BUILD_INFO.appEnv,
+      appVersion: APP_BUILD_INFO.version,
+      lastOfferPollStatus,
+      lastStatusEndpointResponse,
+      mapProvider: MAP_PROVIDER_LABEL,
+      online,
+    });
+  }, [
+    activeOffer?.ride_ulid,
+    lastOfferPollStatus,
+    lastStatusEndpointResponse,
+    online,
+  ]);
 
   async function refreshDispatchState(
     showSpinner = false,
@@ -1213,16 +1259,22 @@ function DashboardScreen({
 
       if (ride) {
         setActiveOffer(null);
+        setLastOfferPollStatus(`active_ride:${ride.id}`);
         return;
       }
 
-      if (statusOverride === "online") {
-        setActiveOffer(await dashboardClient.getActiveOffer());
+      if (shouldPollOffers(statusOverride)) {
+        const offer = await dashboardClient.getActiveOffer();
+        setActiveOffer(offer);
+        setLastOfferPollStatus(offer ? `offer:${offer.ride_ulid}` : "none");
       } else {
         setActiveOffer(null);
+        setLastOfferPollStatus("offline");
       }
     } catch (dispatchError) {
-      setError(dashboardErrorFrom(dispatchError));
+      const mapped = dashboardErrorFrom(dispatchError);
+      setError(mapped);
+      setLastOfferPollStatus(`error:${mapped.message}`);
     } finally {
       if (showSpinner) setDispatchRefreshing(false);
     }
@@ -1238,11 +1290,13 @@ function DashboardScreen({
       const result = await dashboardClient.goOnline(location);
       const nextStatus = result.online ? "online" : "offline";
       setShiftStatus(nextStatus);
+      setLastStatusEndpointResponse(`online:${String(result.online)}`);
       setMessage(result.online ? "ცვლა დაწყებულია." : "სტატუსი განახლდა.");
       await refreshDispatchState(true, nextStatus);
     } catch (startError) {
       const mapped = dashboardErrorFrom(startError);
       setError(mapped);
+      setLastStatusEndpointResponse(`online:error:${mapped.message}`);
       if (mapped.kind === "permission" && context?.reason_if_cannot_go_online) {
         setError({ ...mapped, message: context.reason_if_cannot_go_online });
       }
@@ -1258,11 +1312,15 @@ function DashboardScreen({
     try {
       const result = await dashboardClient.goOffline();
       setShiftStatus(result.online ? "online" : "offline");
+      setLastStatusEndpointResponse(`offline:${String(result.online)}`);
       setActiveOffer(null);
       setActiveRide(null);
+      setLastOfferPollStatus("offline");
       setMessage("ცვლა დასრულებულია.");
     } catch (offlineError) {
-      setError(dashboardErrorFrom(offlineError));
+      const mapped = dashboardErrorFrom(offlineError);
+      setError(mapped);
+      setLastStatusEndpointResponse(`offline:error:${mapped.message}`);
     } finally {
       setLoading(false);
     }
@@ -1360,7 +1418,7 @@ function DashboardScreen({
         activeRide={activeRide}
         loading={loading}
         refreshing={dispatchRefreshing}
-        online={shiftStatus === "online"}
+        online={online}
         onAccept={acceptOffer}
         onReject={rejectOffer}
         onAdvance={advanceRide}
@@ -1373,13 +1431,13 @@ function DashboardScreen({
           message={`${error.message}${error.requestId ? ` · request_id: ${error.requestId}` : ""}`}
         />
       ) : null}
-      <Button disabled={loading || shiftStatus === "online"} onPress={startShift}>
-        ცვლის დაწყება
+      <Button
+        disabled={shiftAction.primaryDisabled}
+        onPress={shiftAction.primaryAction === "start" ? startShift : endShift}
+      >
+        {shiftAction.primaryLabel}
       </Button>
-      <Text variant="caption">Tap to start shift</Text>
-      <Button disabled={loading || shiftStatus === "offline"} onPress={endShift}>
-        ცვლის დასრულება
-      </Button>
+      {shiftAction.helperText ? <Text variant="caption">{shiftAction.helperText}</Text> : null}
       <Button onPress={onDiagnostics}>დიაგნოსტიკა</Button>
       <InlineLink label="სესიის გასუფთავება" onPress={onClearSession} />
     </Screen>
@@ -1407,6 +1465,12 @@ function DispatchPanel({
   onAdvance: () => void;
   onRefresh: () => void;
 }) {
+  const presentation = dispatchPanelPresentation({
+    activeOffer,
+    activeRide,
+    online,
+  });
+
   if (activeRide) {
     const nextActionLabel = nextRideActionLabel(activeRide.status);
     return (
@@ -1452,11 +1516,7 @@ function DispatchPanel({
   return (
     <Card>
       <Text variant="subtitle">შეთავაზება</Text>
-      <Text>
-        {online
-          ? "აქტიური შეთავაზება ჯერ არ არის."
-          : "შეთავაზებების მისაღებად დაიწყეთ ცვლა."}
-      </Text>
+      <Text>{presentation.emptyMessage}</Text>
       {refreshing ? <LoadingState label="მოწმდება" /> : null}
       <Button disabled={refreshing} onPress={onRefresh}>განახლება</Button>
     </Card>
@@ -1474,6 +1534,33 @@ function DiagnosticsScreen({
     <Screen>
       <BuildLabel />
       <Text variant="title">დიაგნოსტიკა</Text>
+      <Card>
+        <Text variant="subtitle">Driver runtime</Text>
+        <Text variant="caption">
+          app: {diagnostics.driverDashboard?.appVersion ?? APP_BUILD_INFO.version}
+          {diagnostics.driverDashboard?.appBuildNumber
+            ? ` (${diagnostics.driverDashboard.appBuildNumber})`
+            : APP_BUILD_INFO.buildNumber
+              ? ` (${APP_BUILD_INFO.buildNumber})`
+              : ""} · {diagnostics.driverDashboard?.appEnv ?? APP_BUILD_INFO.appEnv}
+        </Text>
+        <Text variant="caption">
+          online: {String(diagnostics.driverDashboard?.online ?? false)}
+        </Text>
+        <Text variant="caption">
+          status endpoint:{" "}
+          {diagnostics.driverDashboard?.lastStatusEndpointResponse ?? "-"}
+        </Text>
+        <Text variant="caption">
+          offer poll: {diagnostics.driverDashboard?.lastOfferPollStatus ?? "-"}
+        </Text>
+        <Text variant="caption">
+          active offer: {diagnostics.driverDashboard?.activeOfferId ?? "none"}
+        </Text>
+        <Text variant="caption">
+          map provider: {diagnostics.driverDashboard?.mapProvider ?? MAP_PROVIDER_LABEL}
+        </Text>
+      </Card>
       <Card>
         <Text variant="caption">ეკრანი: {diagnostics.currentRoute ?? "-"}</Text>
         <Text variant="caption">
@@ -1545,11 +1632,7 @@ function InlineLink({ label, onPress }: { label: string; onPress: () => void }) 
 }
 
 function BuildLabel() {
-  return (
-    <Text variant="caption">
-      Driver V2 · {APP_VERSION} · {config.APP_ENV}
-    </Text>
-  );
+  return <Text variant="caption">{APP_BUILD_LABEL}</Text>;
 }
 
 function useDiagnosticsSnapshot(route: DriverScreen) {
@@ -1653,12 +1736,24 @@ async function clearStoredSessionSafely() {
   }
 }
 
-function readPublicEnv(key: string): string | undefined {
-  const env = globalThis as typeof globalThis & {
-    process?: { env?: Record<string, string | undefined> };
+function readExpoExtra(): Record<string, unknown> {
+  const constants = Constants as typeof Constants & {
+    manifest?: { extra?: Record<string, unknown> };
+    manifest2?: {
+      extra?: {
+        expoClient?: {
+          extra?: Record<string, unknown>;
+        };
+      };
+    };
   };
 
-  return env.process?.env?.[key];
+  return (
+    constants.expoConfig?.extra ??
+    constants.manifest?.extra ??
+    constants.manifest2?.extra?.expoClient?.extra ??
+    {}
+  );
 }
 
 function stackExcerpt(error: unknown, componentStack?: string): string {

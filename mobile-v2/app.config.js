@@ -37,6 +37,8 @@ const appEnv = process.env.EXPO_PUBLIC_APP_ENV ?? "development";
 const appName = process.env.EXPO_PUBLIC_APP_NAME ?? app.name;
 const appVersion = process.env.EXPO_PUBLIC_APP_VERSION ?? "0.1.0";
 const iosBuildNumber = process.env.IOS_BUILD_NUMBER ?? "200000";
+const appBuildNumber =
+  process.env.EXPO_PUBLIC_APP_BUILD_NUMBER ?? iosBuildNumber;
 const iosMapsApiKey =
   target === "driver"
     ? process.env.IOS_MAPS_API_KEY ??
@@ -131,6 +133,8 @@ module.exports = {
       appRole: app.role,
       apiBaseUrl,
       appEnv,
+      appVersion,
+      appBuildNumber,
       gitCommit,
       driverDiagnosticMode,
       driverJsEngine,

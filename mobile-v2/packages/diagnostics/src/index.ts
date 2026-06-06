@@ -33,6 +33,7 @@ export type DiagnosticsState = {
   tokenAbilities: string[];
   authUserType?: string | null;
   currentRoute?: string;
+  driverDashboard?: DriverDashboardDiagnostics;
   lastResponse?: DiagnosticsResponse;
   lastError?: DiagnosticsError;
   events: Array<{
@@ -40,6 +41,17 @@ export type DiagnosticsState = {
     at: string;
     payload: unknown;
   }>;
+};
+
+export type DriverDashboardDiagnostics = {
+  activeOfferId?: string | null;
+  appBuildNumber?: string;
+  appEnv?: string;
+  appVersion?: string;
+  lastOfferPollStatus?: string;
+  lastStatusEndpointResponse?: string;
+  mapProvider?: string;
+  online?: boolean;
 };
 
 export type DiagnosticsStore = {
@@ -50,6 +62,7 @@ export type DiagnosticsStore = {
   recordError: (error: DiagnosticsError) => void;
   recordAuth: (auth: { abilities: string[]; userType?: string | null }) => void;
   recordCurrentRoute: (route: string) => void;
+  recordDriverDashboard: (dashboard: DriverDashboardDiagnostics) => void;
   clear: () => void;
 };
 
@@ -176,6 +189,12 @@ export function createDiagnosticsStore(): DiagnosticsStore {
       emit({
         ...state,
         currentRoute: route,
+      });
+    },
+    recordDriverDashboard(dashboard) {
+      emit({
+        ...state,
+        driverDashboard: redactTokens(dashboard),
       });
     },
     clear() {

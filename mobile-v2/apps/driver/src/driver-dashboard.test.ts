@@ -9,9 +9,12 @@ import {
   createDriverDashboardClient,
   dashboardBlockReason,
   dashboardErrorFrom,
+  dispatchPanelPresentation,
   nextRideActionLabel,
   rideStatusText,
+  shiftActionState,
   shiftStatusFromContext,
+  shouldPollOffers,
 } from "./driver-dashboard";
 
 const approvedContext: DriverContext = {
@@ -214,6 +217,61 @@ describe("driver dashboard", () => {
     expect(shiftStatusFromContext({ ...approvedContext, online_status: true })).toBe(
       "online",
     );
+  });
+
+  it("offline state shows Start shift only", () => {
+    expect(shiftActionState("offline")).toMatchObject({
+      endShiftVisible: false,
+      helperText: "Tap to start shift",
+      primaryAction: "start",
+      primaryLabel: "ცვლის დაწყება",
+      startShiftVisible: true,
+    });
+  });
+
+  it("online state shows End shift only and hides start helper", () => {
+    expect(shiftActionState("online")).toEqual({
+      endShiftVisible: true,
+      primaryAction: "end",
+      primaryDisabled: false,
+      primaryLabel: "ცვლის დასრულება",
+      startShiftVisible: false,
+    });
+  });
+
+  it("offer polling continues only while online", () => {
+    expect(shouldPollOffers("online")).toBe(true);
+    expect(shouldPollOffers("offline")).toBe(false);
+  });
+
+  it("no active offer shows empty offer message", () => {
+    expect(
+      dispatchPanelPresentation({
+        activeOffer: null,
+        activeRide: null,
+        online: true,
+      }),
+    ).toMatchObject({
+      emptyMessage: "აქტიური შეთავაზება ჯერ არ არის.",
+      kind: "empty",
+    });
+  });
+
+  it("active offer shows accept and reject actions", () => {
+    expect(
+      dispatchPanelPresentation({
+        activeOffer: {
+          ride_ulid: "01RIDE",
+          expires_at: "2026-06-06T16:00:00Z",
+        },
+        activeRide: null,
+        online: true,
+      }),
+    ).toMatchObject({
+      acceptVisible: true,
+      kind: "active-offer",
+      rejectVisible: true,
+    });
   });
 
   it("maps ride status to Georgian labels and next actions", () => {

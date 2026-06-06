@@ -132,6 +132,7 @@ jobs:
           fi
 
           echo "EXPO_PUBLIC_APP_VERSION=$version" >> "$GITHUB_ENV"
+          echo "EXPO_PUBLIC_APP_BUILD_NUMBER=$build_number" >> "$GITHUB_ENV"
           echo "IOS_BUILD_NUMBER=$build_number" >> "$GITHUB_ENV"
 
       - name: Inject version into EAS build profile
@@ -165,6 +166,7 @@ jobs:
           buildProfile.env = {
             ...(buildProfile.env ?? {}),
             EXPO_PUBLIC_APP_VERSION: version,
+            EXPO_PUBLIC_APP_BUILD_NUMBER: buildNumber,
             EXPO_PUBLIC_MAP_PROVIDER: "google",
             EXPO_PUBLIC_GOOGLE_MAPS_ENABLED: "true",
             IOS_BUILD_NUMBER: buildNumber,

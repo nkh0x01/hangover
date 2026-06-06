@@ -34,6 +34,7 @@ for (const [target, expected] of Object.entries(expectedApps)) {
     EXPO_PUBLIC_APP_ENV: "production",
     EXPO_PUBLIC_API_BASE_URL: productionApiBaseUrl,
     EXPO_PUBLIC_APP_VERSION: "2.0.0",
+    EXPO_PUBLIC_APP_BUILD_NUMBER: "200000",
     EXPO_PUBLIC_MAP_PROVIDER: target === "driver" ? "google" : undefined,
     EXPO_PUBLIC_GOOGLE_MAPS_ENABLED: target === "driver" ? "true" : undefined,
     IOS_MAPS_API_KEY: target === "driver" ? "test-ios-google-maps-key" : undefined,
@@ -49,6 +50,8 @@ for (const [target, expected] of Object.entries(expectedApps)) {
   assertEqual(config.version, "2.0.0", `${target} version`);
   assertEqual(config.ios.bundleIdentifier, expected.bundleIdentifier, `${target} bundle ID`);
   assertEqual(config.ios.buildNumber, "200000", `${target} build number`);
+  assertEqual(config.extra.appVersion, "2.0.0", `${target} extra app version`);
+  assertEqual(config.extra.appBuildNumber, "200000", `${target} extra app build number`);
   assertEqual(config.extra.appRole, expected.role, `${target} app role`);
   assertEqual(config.extra.appEnv, "production", `${target} app env`);
   assertEqual(config.extra.apiBaseUrl, productionApiBaseUrl, `${target} API base URL`);

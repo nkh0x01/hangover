@@ -83,6 +83,22 @@ export type DashboardError = {
   kind: "permission" | "validation" | "server" | "network" | "unknown";
 };
 
+export type ShiftActionState = {
+  endShiftVisible: boolean;
+  helperText?: string;
+  primaryAction: "start" | "end";
+  primaryDisabled: boolean;
+  primaryLabel: string;
+  startShiftVisible: boolean;
+};
+
+export type DispatchPanelPresentation = {
+  acceptVisible: boolean;
+  emptyMessage?: string;
+  kind: "active-offer" | "active-ride" | "empty";
+  rejectVisible: boolean;
+};
+
 export type DashboardClient = {
   getDriverMe: () => Promise<User>;
   goOnline: (location: LocationPoint) => Promise<OnlineResponse["data"]>;
@@ -193,6 +209,69 @@ export function dashboardBlockReason(user?: User): string | null {
 
 export function shiftStatusFromContext(context?: DriverContext): ShiftStatus {
   return context?.online_status ? "online" : "offline";
+}
+
+export function shouldPollOffers(status: ShiftStatus): boolean {
+  return status === "online";
+}
+
+export function shiftActionState(
+  status: ShiftStatus,
+  loading = false,
+): ShiftActionState {
+  if (status === "online") {
+    return {
+      endShiftVisible: true,
+      primaryAction: "end",
+      primaryDisabled: loading,
+      primaryLabel: "ცვლის დასრულება",
+      startShiftVisible: false,
+    };
+  }
+
+  return {
+    endShiftVisible: false,
+    helperText: "Tap to start shift",
+    primaryAction: "start",
+    primaryDisabled: loading,
+    primaryLabel: "ცვლის დაწყება",
+    startShiftVisible: true,
+  };
+}
+
+export function dispatchPanelPresentation({
+  activeOffer,
+  activeRide,
+  online,
+}: {
+  activeOffer?: ActiveRideOffer | null;
+  activeRide?: DriverRide | null;
+  online: boolean;
+}): DispatchPanelPresentation {
+  if (activeRide) {
+    return {
+      acceptVisible: false,
+      kind: "active-ride",
+      rejectVisible: false,
+    };
+  }
+
+  if (activeOffer) {
+    return {
+      acceptVisible: true,
+      kind: "active-offer",
+      rejectVisible: true,
+    };
+  }
+
+  return {
+    acceptVisible: false,
+    emptyMessage: online
+      ? "აქტიური შეთავაზება ჯერ არ არის."
+      : "შეთავაზებების მისაღებად დაიწყეთ ცვლა.",
+    kind: "empty",
+    rejectVisible: false,
+  };
 }
 
 export function rideStatusText(status?: string | null): string {
