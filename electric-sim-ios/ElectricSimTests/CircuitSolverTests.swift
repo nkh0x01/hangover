@@ -385,6 +385,21 @@ final class CircuitSolverTests: XCTestCase {
         XCTAssertNotNil(motor.port(conductor: .L3))
     }
 
+    // MARK: - Phase 4: sandbox + custom level (Codable persistence)
+
+    func testPhase4SandboxAndCodable() throws {
+        let levels = try GameData.loadLevels()
+        let sandboxes = levels.filter { $0.resolvedMode == .sandbox }
+        XCTAssertEqual(sandboxes.count, 2, "უნდა იყოს 2 sandbox დონე (1ph + 3ph)")
+        XCTAssertTrue(sandboxes.allSatisfy { $0.goal.poweredLoads.isEmpty })
+
+        // Level Codable round-trip — ამაზეა დაფუძნებული custom დონეების შენახვა.
+        let data = try JSONEncoder().encode(levels)
+        let decoded = try JSONDecoder().decode([Level].self, from: data)
+        XCTAssertEqual(decoded.count, levels.count)
+        XCTAssertEqual(decoded.map(\.id), levels.map(\.id))
+    }
+
     // MARK: - 13. სადენის ფერები (IEC)
 
     func testWireColors() {

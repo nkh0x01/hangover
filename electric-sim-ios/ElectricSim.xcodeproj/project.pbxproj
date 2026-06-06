@@ -25,6 +25,8 @@
 		E1EC00000000000000000210 /* Monetization.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC00000000000000000110 /* Monetization.swift */; };
 		E1EC00000000000000000211 /* StoreViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC00000000000000000111 /* StoreViews.swift */; };
 		E1EC00000000000000000212 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E1EC00000000000000000112 /* PrivacyInfo.xcprivacy */; };
+		E1EC00000000000000000213 /* Achievements.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC00000000000000000113 /* Achievements.swift */; };
+		E1EC00000000000000000214 /* LevelEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC00000000000000000114 /* LevelEditorView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -47,6 +49,8 @@
 		E1EC00000000000000000110 /* Monetization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Monetization.swift; sourceTree = "<group>"; };
 		E1EC00000000000000000111 /* StoreViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreViews.swift; sourceTree = "<group>"; };
 		E1EC00000000000000000112 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		E1EC00000000000000000113 /* Achievements.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Achievements.swift; sourceTree = "<group>"; };
+		E1EC00000000000000000114 /* LevelEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelEditorView.swift; sourceTree = "<group>"; };
 		E1EC00000000000000000101 /* ElectricSim.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ElectricSim.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -108,6 +112,7 @@
 				E1EC000000000000000000F8 /* GameState.swift */,
 				E1EC000000000000000000F9 /* Style.swift */,
 				E1EC00000000000000000110 /* Monetization.swift */,
+				E1EC00000000000000000113 /* Achievements.swift */,
 				E1EC00000000000000000305 /* Views */,
 				E1EC000000000000000000FD /* Assets.xcassets */,
 				E1EC00000000000000000307 /* Resources */,
@@ -122,6 +127,7 @@
 				E1EC000000000000000000FB /* WorkbenchView.swift */,
 				E1EC000000000000000000FC /* ResultPanelView.swift */,
 				E1EC00000000000000000111 /* StoreViews.swift */,
+				E1EC00000000000000000114 /* LevelEditorView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -230,6 +236,8 @@
 				E1EC0000000000000000020C /* ResultPanelView.swift in Sources */,
 				E1EC00000000000000000210 /* Monetization.swift in Sources */,
 				E1EC00000000000000000211 /* StoreViews.swift in Sources */,
+				E1EC00000000000000000213 /* Achievements.swift in Sources */,
+				E1EC00000000000000000214 /* LevelEditorView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

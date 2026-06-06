@@ -164,7 +164,8 @@ final class WorkbenchModel: ObservableObject {
         result = r
         liveAnalysis = solver.analyze(board)
         showResult = true
-        if goalMet(r) {
+        game.noteSimulation(level: level, result: r)
+        if level.resolvedMode != .sandbox && goalMet(r) {
             levelPassed = true
             game.markCompleted(level)
         }

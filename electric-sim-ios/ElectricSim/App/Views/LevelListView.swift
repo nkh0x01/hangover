@@ -2,7 +2,7 @@
 //  LevelListView.swift
 //  ElectricSim
 //
-//  დონეების სია პროგრესით + მონეტიზაცია (Pro-გეითინგი, რეკლამა, „შესახებ").
+//  დონეების სია + მონეტიზაცია (Pro) + Phase 4 (sandbox, რედაქტორი, მიღწევები).
 //
 
 import SwiftUI
@@ -20,9 +20,7 @@ struct LevelListView: View {
     var body: some View {
         List {
             if let err = game.loadError {
-                Section {
-                    Label(err, systemImage: "exclamationmark.triangle").foregroundStyle(.red)
-                }
+                Section { Label(err, systemImage: "exclamationmark.triangle").foregroundStyle(.red) }
             }
 
             if !store.isPro {
@@ -42,13 +40,47 @@ struct LevelListView: View {
             }
 
             Section {
-                ForEach(game.levels) { level in
-                    levelRow(level)
-                }
+                ForEach(game.campaignLevels) { levelRow($0) }
             } header: {
                 Text("დონეები")
             } footer: {
                 Text("ააწყვე ფარი, დააკავშირე სადენები და ჩართე ძაბვა. შეცდომებზე მიიღებ ახსნას ქართულად.")
+            }
+
+            if !game.customLevels.isEmpty {
+                Section("ჩემი დონეები") {
+                    ForEach(game.customLevels) { level in
+                        NavigationLink {
+                            WorkbenchView(level: level)
+                        } label: {
+                            LevelRowContent(level: level, completed: game.isCompleted(level),
+                                            unlocked: true, proLocked: false)
+                        }
+                    }
+                    .onDelete { idx in
+                        idx.map { game.customLevels[$0].id }.forEach(game.deleteCustomLevel)
+                    }
+                }
+            }
+
+            Section("ხელსაწყოები") {
+                ForEach(game.sandboxLevels) { levelRow($0) }
+
+                // Level editor — Pro
+                if store.isPro {
+                    NavigationLink { LevelEditorView() } label: { editorLabel(pro: false) }
+                } else {
+                    Button { showPaywall = true } label: { editorLabel(pro: true) }
+                }
+
+                NavigationLink { AchievementsView() } label: {
+                    Label {
+                        let n = Achievement.all.filter { game.isUnlocked($0) }.count
+                        Text("მიღწევები — \(n)/\(Achievement.all.count)")
+                    } icon: {
+                        Image(systemName: "trophy.fill").foregroundStyle(.yellow)
+                    }
+                }
             }
         }
         .navigationTitle("ელექტრიკის სიმულატორი")
@@ -59,11 +91,23 @@ struct LevelListView: View {
             }
         }
         .safeAreaInset(edge: .bottom) { AdBannerView() }
-        .sheet(isPresented: $showPaywall) {
-            PaywallView().environmentObject(store)
-        }
+        .sheet(isPresented: $showPaywall) { PaywallView().environmentObject(store) }
         .sheet(isPresented: $showAbout) {
             AboutView().environmentObject(store).environmentObject(game)
+        }
+    }
+
+    private func editorLabel(pro: Bool) -> some View {
+        HStack {
+            Label("დონის რედაქტორი", systemImage: "square.and.pencil")
+            if pro {
+                Spacer()
+                Text("PRO")
+                    .font(.system(size: 9, weight: .heavy))
+                    .padding(.horizontal, 5).padding(.vertical, 1)
+                    .background(Color.yellow, in: Capsule())
+                    .foregroundStyle(.black)
+            }
         }
     }
 
@@ -102,8 +146,7 @@ private struct LevelRowContent: View {
                 Circle()
                     .fill(completed ? Color.green.opacity(0.2) : Color.yellow.opacity(0.15))
                     .frame(width: 40, height: 40)
-                Image(systemName: iconName)
-                    .foregroundStyle(iconColor)
+                Image(systemName: iconName).foregroundStyle(iconColor)
             }
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
@@ -114,12 +157,15 @@ private struct LevelRowContent: View {
                             .padding(.horizontal, 5).padding(.vertical, 1)
                             .background(Color.yellow, in: Capsule())
                             .foregroundStyle(.black)
+                    } else if level.resolvedMode == .sandbox {
+                        Text("SANDBOX")
+                            .font(.system(size: 9, weight: .heavy))
+                            .padding(.horizontal, 5).padding(.vertical, 1)
+                            .background(Color.blue.opacity(0.2), in: Capsule())
+                            .foregroundStyle(.blue)
                     }
                 }
-                Text(level.brief)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
+                Text(level.brief).font(.caption).foregroundStyle(.secondary).lineLimit(2)
             }
         }
         .padding(.vertical, 4)
@@ -127,6 +173,7 @@ private struct LevelRowContent: View {
 
     private var iconName: String {
         if proLocked { return "lock.fill" }
+        if level.resolvedMode == .sandbox { return "hammer.fill" }
         if completed { return "checkmark" }
         return unlocked ? "bolt.fill" : "lock.fill"
     }

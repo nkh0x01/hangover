@@ -72,6 +72,7 @@ public struct LevelGoal: Codable, Sendable {
 public enum LevelMode: String, Codable, Sendable {
     case build       // ცარიელი ფარი — ააწყობ ნულიდან
     case faultFind   // წინასწარ აწყობილი ფარი დეფექტით — იპოვე და გაასწორე
+    case sandbox     // თავისუფალი აწყობა — შეზღუდვების/მიზნის გარეშე
 }
 
 // MARK: - Pre-built board (fault-finding დონეებისთვის)

@@ -2,8 +2,9 @@
 //  GameState.swift
 //  ElectricSim
 //
-//  გლობალური მდგომარეობა: დონეები, პროგრესი, კომპონენტების ბიბლიოთეკა.
-//  პროგრესი ინახება ლოკალურად (UserDefaults).
+//  გლობალური მდგომარეობა: დონეები, პროგრესი, კომპონენტების ბიბლიოთეკა,
+//  მომხმარებლის შექმნილი დონეები (level editor) და მიღწევები (achievements).
+//  ყველაფერი ინახება ლოკალურად (UserDefaults).
 //
 
 import Foundation
@@ -11,12 +12,16 @@ import SwiftUI
 
 @MainActor
 final class GameState: ObservableObject {
-    @Published var levels: [Level] = []
+    @Published var levels: [Level] = []                 // ჩაშენებული დონეები (JSON)
+    @Published var customLevels: [Level] = []           // მომხმარებლის შექმნილი
     @Published var templates: [String: ComponentTemplate] = [:]
     @Published var completedLevelIDs: Set<String> = []
+    @Published var unlockedAchievements: Set<String> = []
     @Published var loadError: String?
 
     private let progressKey = "completedLevelIDs.v1"
+    private let customKey = "customLevels.v1"
+    private let achKey = "achievements.v1"
 
     init() {
         load()
@@ -32,26 +37,97 @@ final class GameState: ObservableObject {
         if let saved = UserDefaults.standard.array(forKey: progressKey) as? [String] {
             completedLevelIDs = Set(saved)
         }
+        if let saved = UserDefaults.standard.array(forKey: achKey) as? [String] {
+            unlockedAchievements = Set(saved)
+        }
+        if let data = UserDefaults.standard.data(forKey: customKey),
+           let decoded = try? JSONDecoder().decode([Level].self, from: data) {
+            customLevels = decoded
+        }
     }
 
     func template(_ id: String) -> ComponentTemplate? { templates[id] }
 
+    // MARK: - პროგრესია
+
+    /// პროგრესიის (numbered) დონეები — sandbox-ის გარეშე.
+    var campaignLevels: [Level] { levels.filter { $0.resolvedMode != .sandbox } }
+    var sandboxLevels: [Level] { levels.filter { $0.resolvedMode == .sandbox } }
+
     func isCompleted(_ level: Level) -> Bool { completedLevelIDs.contains(level.id) }
 
     func isUnlocked(_ level: Level) -> Bool {
-        // პირველი დონე ყოველთვის ღიაა; შემდეგი — როცა წინა დასრულდა.
-        guard let idx = levels.firstIndex(where: { $0.id == level.id }) else { return false }
+        // sandbox და custom დონეები ყოველთვის ღიაა.
+        if level.resolvedMode == .sandbox { return true }
+        guard let idx = campaignLevels.firstIndex(where: { $0.id == level.id }) else { return true }
         if idx == 0 { return true }
-        return completedLevelIDs.contains(levels[idx - 1].id)
+        return completedLevelIDs.contains(campaignLevels[idx - 1].id)
     }
 
     func markCompleted(_ level: Level) {
+        guard !completedLevelIDs.contains(level.id) else { return }
         completedLevelIDs.insert(level.id)
         UserDefaults.standard.set(Array(completedLevelIDs), forKey: progressKey)
+        evaluateCompletionAchievements(level)
     }
 
     func resetProgress() {
         completedLevelIDs.removeAll()
         UserDefaults.standard.removeObject(forKey: progressKey)
+    }
+
+    // MARK: - Level editor (custom დონეები)
+
+    func addCustomLevel(_ level: Level) {
+        customLevels.append(level)
+        saveCustomLevels()
+        unlock(.creator)
+    }
+
+    func deleteCustomLevel(_ id: String) {
+        customLevels.removeAll { $0.id == id }
+        completedLevelIDs.remove(id)
+        saveCustomLevels()
+    }
+
+    private func saveCustomLevels() {
+        if let data = try? JSONEncoder().encode(customLevels) {
+            UserDefaults.standard.set(data, forKey: customKey)
+        }
+    }
+
+    // MARK: - Achievements
+
+    func isUnlocked(_ achievement: Achievement) -> Bool {
+        unlockedAchievements.contains(achievement.id)
+    }
+
+    func unlock(_ achievement: Achievement) {
+        guard !unlockedAchievements.contains(achievement.id) else { return }
+        unlockedAchievements.insert(achievement.id)
+        UserDefaults.standard.set(Array(unlockedAchievements), forKey: achKey)
+    }
+
+    /// გამოიძახება დონის წარმატებით დასრულებისას.
+    private func evaluateCompletionAchievements(_ level: Level) {
+        if level.id == "lvl_tutorial" { unlock(.firstLight) }
+        if level.resolvedMode == .faultFind { unlock(.faultHunter) }
+        if level.goal.requireBalanced == true { unlock(.balanced) }
+        if level.id == "lvl_motor" { unlock(.motorMaster) }
+        // ყველა ჩაშენებული campaign დონე გავლილია?
+        if campaignLevels.allSatisfy({ completedLevelIDs.contains($0.id) }) {
+            unlock(.masterElectrician)
+        }
+    }
+
+    /// გამოიძახება ყოველ „ჩართე ძაბვა"-ზე (sandbox/perfect-run მიღწევებისთვის).
+    func noteSimulation(level: Level, result: SimulationResult) {
+        let anyPowered = result.loadStates.contains { $0.isPowered }
+        if level.resolvedMode == .sandbox && anyPowered {
+            unlock(.sandboxBuilder)
+        }
+        if result.energized, result.passed, result.warnings.isEmpty, anyPowered {
+            unlock(.perfectionist)
+        }
     }
 }

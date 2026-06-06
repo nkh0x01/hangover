@@ -185,5 +185,53 @@
       "poweredLoads": { "motor": 1 },
       "description": "მოტორი უნდა ამუშავდეს სამივე ფაზაზე, C-ავტომატითა და მიწით."
     }
+  },
+  {
+    "id": "lvl_sandbox_1ph",
+    "index": 90,
+    "title": "Sandbox — 1 ფაზა",
+    "brief": "თავისუფალი აწყობა შეზღუდვების გარეშე. ააწყვე ნებისმიერი ერთფაზიანი წრედი და ექსპერიმენტი ჩაატარე.",
+    "hint": "ყველა კომპონენტი ხელმისაწვდომია. მიზანი არ არის — უბრალოდ ისწავლე და სცადე.",
+    "phase": "single",
+    "mode": "sandbox",
+    "palette": [
+      { "templateId": "main_2p", "max": 1 },
+      { "templateId": "spd", "max": 1 },
+      { "templateId": "rcd_30", "max": 2 },
+      { "templateId": "rcbo_b16_30", "max": 2 },
+      { "templateId": "busbar_l", "max": 1 },
+      { "templateId": "mcb_b10", "max": 4, "csaOptions": [1.5, 2.5, 4, 6, 10] },
+      { "templateId": "mcb_b16", "max": 4, "csaOptions": [1.5, 2.5, 4, 6, 10] },
+      { "templateId": "mcb_b20", "max": 4, "csaOptions": [1.5, 2.5, 4, 6, 10] },
+      { "templateId": "mcb_c32", "max": 4, "csaOptions": [1.5, 2.5, 4, 6, 10] },
+      { "templateId": "lamp_60", "max": 6 },
+      { "templateId": "socket_16", "max": 6 }
+    ],
+    "goal": {
+      "poweredLoads": {},
+      "description": "თავისუფალი რეჟიმი — მიზანი არ არის."
+    }
+  },
+  {
+    "id": "lvl_sandbox_3ph",
+    "index": 91,
+    "title": "Sandbox — 3 ფაზა",
+    "brief": "თავისუფალი აწყობა სამფაზიან ფარზე. ექსპერიმენტი ჩაატარე ფაზებით, ბალანსით და მოტორით.",
+    "hint": "ყველა სამფაზიანი კომპონენტი ხელმისაწვდომია. მიზანი არ არის.",
+    "phase": "three",
+    "mode": "sandbox",
+    "palette": [
+      { "templateId": "main_4p", "max": 1 },
+      { "templateId": "busbar_l", "max": 1 },
+      { "templateId": "mcb_b16", "max": 6, "csaOptions": [1.5, 2.5, 4, 6, 10] },
+      { "templateId": "mcb_c16", "max": 6, "csaOptions": [1.5, 2.5, 4, 6, 10] },
+      { "templateId": "lamp_60", "max": 6 },
+      { "templateId": "socket_16", "max": 6 },
+      { "templateId": "motor_3ph", "max": 2 }
+    ],
+    "goal": {
+      "poweredLoads": {},
+      "description": "თავისუფალი რეჟიმი — მიზანი არ არის."
+    }
   }
 ]
