@@ -97,6 +97,8 @@ const MAP_PROVIDER_LABEL = mapProviderLabel(APP_BUILD_INFO);
 const DRIVER_MAP_CONFIG = {
   bundleId: APP_BUILD_INFO.iosBundleIdentifier,
   keyPresent: APP_BUILD_INFO.googleMapsConfigured,
+  mapsKeyLength: APP_BUILD_INFO.mapsKeyLength,
+  mapsKeySha256Prefix: APP_BUILD_INFO.mapsKeySha256Prefix,
   provider: APP_BUILD_INFO.mapProvider,
 } as const;
 
@@ -1196,6 +1198,8 @@ function DashboardScreen({
     googleProviderEnabled:
       DRIVER_MAP_CONFIG.provider === "google" && DRIVER_MAP_CONFIG.keyPresent,
     keyPresent: DRIVER_MAP_CONFIG.keyPresent,
+    mapsKeyLength: DRIVER_MAP_CONFIG.mapsKeyLength,
+    mapsKeySha256Prefix: DRIVER_MAP_CONFIG.mapsKeySha256Prefix,
     provider: DRIVER_MAP_CONFIG.provider,
     ready: false,
   });
@@ -1592,6 +1596,13 @@ function DiagnosticsScreen({
         <Text variant="caption">
           maps key present:{" "}
           {String(diagnostics.driverDashboard?.map?.keyPresent ?? false)}
+        </Text>
+        <Text variant="caption">
+          maps key length: {diagnostics.driverDashboard?.map?.mapsKeyLength ?? 0}
+        </Text>
+        <Text variant="caption">
+          maps key sha256:{" "}
+          {diagnostics.driverDashboard?.map?.mapsKeySha256Prefix ?? "-"}
         </Text>
         <Text variant="caption">
           bundle id: {diagnostics.driverDashboard?.map?.bundleId ?? "-"}

@@ -12,6 +12,8 @@ describe("driver map diagnostics", () => {
         mapConfig: {
           bundleId: "app.ride360.driver",
           keyPresent: true,
+          mapsKeyLength: 39,
+          mapsKeySha256Prefix: "9242c62ce14f",
           provider: "google",
         },
         ready: true,
@@ -21,6 +23,8 @@ describe("driver map diagnostics", () => {
       driverCoordinates: "41.715100,44.827100",
       googleProviderEnabled: true,
       keyPresent: true,
+      mapsKeyLength: 39,
+      mapsKeySha256Prefix: "9242c62ce14f",
       provider: "google",
       ready: true,
     });
@@ -39,6 +43,8 @@ describe("driver map diagnostics", () => {
         loaded: false,
         mapConfig: {
           keyPresent: true,
+          mapsKeyLength: 39,
+          mapsKeySha256Prefix: "9242c62ce14f",
           provider: "google",
         },
         ready: true,
@@ -63,6 +69,7 @@ describe("driver map diagnostics", () => {
         loaded: false,
         mapConfig: {
           keyPresent: false,
+          mapsKeyLength: 0,
           provider: "google",
         },
         ready: false,

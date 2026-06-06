@@ -1,4 +1,5 @@
 const { execSync } = require("node:child_process");
+const { createHash } = require("node:crypto");
 
 const apps = {
   customer: {
@@ -39,13 +40,8 @@ const appVersion = process.env.EXPO_PUBLIC_APP_VERSION ?? "0.1.0";
 const iosBuildNumber = process.env.IOS_BUILD_NUMBER ?? "200000";
 const appBuildNumber =
   process.env.EXPO_PUBLIC_APP_BUILD_NUMBER ?? iosBuildNumber;
-const iosMapsApiKey =
-  target === "driver"
-    ? process.env.IOS_MAPS_API_KEY ??
-      process.env.GOOGLE_MAPS_IOS_API_KEY ??
-      process.env.GOOGLE_MAPS_API_KEY ??
-      process.env.MAPS_API_KEY
-    : undefined;
+const iosMapsApiKey = target === "driver" ? process.env.IOS_MAPS_API_KEY : undefined;
+const iosMapsKeyFingerprint = fingerprintSecret(iosMapsApiKey);
 const mapProvider =
   target === "driver"
     ? process.env.EXPO_PUBLIC_MAP_PROVIDER ?? (iosMapsApiKey ? "google" : "apple")
@@ -141,6 +137,8 @@ module.exports = {
       driverJsEngine,
       mapProvider,
       googleMapsConfigured: Boolean(iosMapsApiKey),
+      mapsKeyLength: iosMapsKeyFingerprint.length,
+      mapsKeySha256Prefix: iosMapsKeyFingerprint.sha256Prefix,
       eas: easProjectId ? { projectId: easProjectId } : undefined,
     },
   },
@@ -156,4 +154,20 @@ function readGitCommit() {
   } catch {
     return "unknown";
   }
+}
+
+function fingerprintSecret(secret) {
+  if (!secret) {
+    return {
+      length: 0,
+      sha256Prefix: undefined,
+    };
+  }
+
+  const trimmed = secret.trim();
+
+  return {
+    length: trimmed.length,
+    sha256Prefix: createHash("sha256").update(trimmed).digest("hex").slice(0, 12),
+  };
 }

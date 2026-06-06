@@ -62,6 +62,8 @@ export type DriverMapDiagnostics = {
   errorMessage?: string;
   googleProviderEnabled?: boolean;
   keyPresent?: boolean;
+  mapsKeyLength?: number;
+  mapsKeySha256Prefix?: string;
   lastRegion?: string;
   loaded?: boolean;
   pickupCoordinates?: string;

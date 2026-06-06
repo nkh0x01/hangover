@@ -25,12 +25,16 @@ describe("driver build info", () => {
         appVersion: "2.0.0",
         googleMapsConfigured: true,
         iosBundleIdentifier: "app.ride360.driver",
+        mapsKeyLength: 39,
+        mapsKeySha256Prefix: "9242c62ce14f",
         mapProvider: "google",
       },
     });
 
     expect(buildLabelText(info)).toBe("Driver V2 · 2.0.0 (200024) · production");
     expect(info.iosBundleIdentifier).toBe("app.ride360.driver");
+    expect(info.mapsKeyLength).toBe(39);
+    expect(info.mapsKeySha256Prefix).toBe("9242c62ce14f");
     expect(mapProviderLabel(info)).toBe("Google");
   });
 

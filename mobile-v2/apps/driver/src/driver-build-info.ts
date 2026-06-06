@@ -5,6 +5,8 @@ export type DriverBuildInfo = {
   buildNumber?: string;
   googleMapsConfigured: boolean;
   iosBundleIdentifier?: string;
+  mapsKeyLength: number;
+  mapsKeySha256Prefix?: string;
   mapProvider: "apple" | "google";
   version: string;
 };
@@ -38,6 +40,8 @@ export function createDriverBuildInfo(input: DriverBuildInfoInput): DriverBuildI
     cleanString(input.publicMapProvider) ?? cleanString(extra.mapProvider),
   );
   const iosBundleIdentifier = cleanString(extra.iosBundleIdentifier);
+  const mapsKeyLength = parseKeyLength(extra.mapsKeyLength);
+  const mapsKeySha256Prefix = cleanString(extra.mapsKeySha256Prefix);
   const googleMapsConfigured =
     input.publicGoogleMapsEnabled === "true" ||
     extra.googleMapsConfigured === true;
@@ -47,6 +51,8 @@ export function createDriverBuildInfo(input: DriverBuildInfoInput): DriverBuildI
     buildNumber,
     googleMapsConfigured,
     iosBundleIdentifier,
+    mapsKeyLength,
+    mapsKeySha256Prefix,
     mapProvider,
     version,
   };
@@ -75,4 +81,8 @@ function parseAppEnv(value: string | undefined): AppEnv {
 
 function parseMapProvider(value: string | undefined): DriverBuildInfo["mapProvider"] {
   return value === "google" ? "google" : "apple";
+}
+
+function parseKeyLength(value: unknown): number {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }

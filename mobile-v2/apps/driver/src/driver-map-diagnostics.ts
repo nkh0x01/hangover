@@ -10,6 +10,8 @@ import type {
 export type DriverMapRuntimeConfig = {
   bundleId?: string;
   keyPresent: boolean;
+  mapsKeyLength: number;
+  mapsKeySha256Prefix?: string;
   provider: "apple" | "google";
 };
 
@@ -43,6 +45,8 @@ export function buildMapDiagnostics({
     errorMessage,
     googleProviderEnabled,
     keyPresent: mapConfig.keyPresent,
+    mapsKeyLength: mapConfig.mapsKeyLength,
+    mapsKeySha256Prefix: mapConfig.mapsKeySha256Prefix,
     lastRegion: regionText(lastRegion),
     loaded,
     pickupCoordinates: coordinateText(trip?.pickup),

@@ -274,6 +274,9 @@ jobs:
           (root / "credentials.json").write_text(json.dumps(credentials, indent=2) + "\n")
           PY
 
+      - name: Print safe Google Maps key fingerprint
+        run: node scripts/maps-key-fingerprint.mjs
+
       - name: Lint/analyze
         run: npm run lint
 
