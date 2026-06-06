@@ -273,7 +273,7 @@ public struct CircuitSolver {
                 perPhase[hot, default: 0] += st.currentA
             }
         }
-        let values = [perPhase[.L1] ?? 0, perPhase[.L2] ?? 0, perPhase[.L3] ?? 0]
+        let values: [Double] = [perPhase[.L1] ?? 0, perPhase[.L2] ?? 0, perPhase[.L3] ?? 0]
         guard let maxV = values.max(), let minV = values.min(), maxV > 0 else { return [] }
         if (maxV - minV) > 0.5 * maxV {
             return [Issue(code: .phaseImbalance)]
