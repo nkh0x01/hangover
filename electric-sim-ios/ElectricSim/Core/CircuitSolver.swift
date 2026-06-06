@@ -316,7 +316,7 @@ public struct CircuitSolver {
 
         // --- 9. სამფაზიანი ბალანსი (Phase 3) ---
         if board.phase == .three {
-            let vals = [phaseCurrent[.L1] ?? 0, phaseCurrent[.L2] ?? 0, phaseCurrent[.L3] ?? 0]
+            let vals: [Double] = [phaseCurrent[.L1] ?? 0, phaseCurrent[.L2] ?? 0, phaseCurrent[.L3] ?? 0]
             if let mx = vals.max(), let mn = vals.min(), mx > 0, (mx - mn) > 0.5 * mx {
                 issues.append(Issue(code: .phaseImbalance))
             }
