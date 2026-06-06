@@ -1,4 +1,11 @@
-import { Component, useEffect, useState, type ErrorInfo, type ReactNode } from "react";
+import {
+  Component,
+  useCallback,
+  useEffect,
+  useState,
+  type ErrorInfo,
+  type ReactNode,
+} from "react";
 import Constants from "expo-constants";
 import {
   Platform as NativePlatform,
@@ -17,7 +24,7 @@ import {
   type Platform,
 } from "@ride360/auth";
 import { createRuntimeConfig } from "@ride360/config";
-import { diagnosticsStore } from "@ride360/diagnostics";
+import { diagnosticsStore, type DriverMapDiagnostics } from "@ride360/diagnostics";
 import { Button, Card, ErrorState, LoadingState, Screen, Text } from "@ride360/ui";
 import type { DriverContext, User } from "@ride360/types";
 
@@ -87,6 +94,11 @@ const APP_BUILD_INFO = createDriverBuildInfo({
 const APP_VERSION = APP_BUILD_INFO.version;
 const APP_BUILD_LABEL = buildLabelText(APP_BUILD_INFO);
 const MAP_PROVIDER_LABEL = mapProviderLabel(APP_BUILD_INFO);
+const DRIVER_MAP_CONFIG = {
+  bundleId: APP_BUILD_INFO.iosBundleIdentifier,
+  keyPresent: APP_BUILD_INFO.googleMapsConfigured,
+  provider: APP_BUILD_INFO.mapProvider,
+} as const;
 
 const storage = createSecureTokenStorage();
 const authStore = createAuthStore();
@@ -1179,6 +1191,14 @@ function DashboardScreen({
   const [lastOfferPollStatus, setLastOfferPollStatus] = useState(
     shiftStatus === "online" ? "waiting" : "offline",
   );
+  const [mapDiagnostics, setMapDiagnostics] = useState<DriverMapDiagnostics>({
+    bundleId: DRIVER_MAP_CONFIG.bundleId,
+    googleProviderEnabled:
+      DRIVER_MAP_CONFIG.provider === "google" && DRIVER_MAP_CONFIG.keyPresent,
+    keyPresent: DRIVER_MAP_CONFIG.keyPresent,
+    provider: DRIVER_MAP_CONFIG.provider,
+    ready: false,
+  });
 
   useEffect(() => {
     let mounted = true;
@@ -1229,6 +1249,11 @@ function DashboardScreen({
   const blockReason = dashboardBlockReason(dashboardUser);
   const online = shiftStatus === "online";
   const shiftAction = shiftActionState(shiftStatus, loading);
+  const updateMapDiagnostics = useCallback((next: DriverMapDiagnostics) => {
+    setMapDiagnostics((current) =>
+      JSON.stringify(current) === JSON.stringify(next) ? current : next,
+    );
+  }, []);
 
   useEffect(() => {
     diagnosticsStore.recordDriverDashboard({
@@ -1238,6 +1263,7 @@ function DashboardScreen({
       appVersion: APP_BUILD_INFO.version,
       lastOfferPollStatus,
       lastStatusEndpointResponse,
+      map: mapDiagnostics,
       mapProvider: MAP_PROVIDER_LABEL,
       online,
     });
@@ -1245,6 +1271,7 @@ function DashboardScreen({
     activeOffer?.ride_ulid,
     lastOfferPollStatus,
     lastStatusEndpointResponse,
+    mapDiagnostics,
     online,
   ]);
 
@@ -1412,6 +1439,8 @@ function DashboardScreen({
         activeOffer={activeOffer}
         activeRide={activeRide}
         currentLocation={currentLocation}
+        mapConfig={DRIVER_MAP_CONFIG}
+        onDiagnostics={updateMapDiagnostics}
       />
       <DispatchPanel
         activeOffer={activeOffer}
@@ -1559,6 +1588,38 @@ function DiagnosticsScreen({
         </Text>
         <Text variant="caption">
           map provider: {diagnostics.driverDashboard?.mapProvider ?? MAP_PROVIDER_LABEL}
+        </Text>
+        <Text variant="caption">
+          maps key present:{" "}
+          {String(diagnostics.driverDashboard?.map?.keyPresent ?? false)}
+        </Text>
+        <Text variant="caption">
+          bundle id: {diagnostics.driverDashboard?.map?.bundleId ?? "-"}
+        </Text>
+        <Text variant="caption">
+          map ready: {String(diagnostics.driverDashboard?.map?.ready ?? false)}
+        </Text>
+        <Text variant="caption">
+          map loaded: {String(diagnostics.driverDashboard?.map?.loaded ?? false)}
+        </Text>
+        <Text variant="caption">
+          Google provider enabled:{" "}
+          {String(diagnostics.driverDashboard?.map?.googleProviderEnabled ?? false)}
+        </Text>
+        <Text variant="caption">
+          map error: {diagnostics.driverDashboard?.map?.errorMessage ?? "-"}
+        </Text>
+        <Text variant="caption">
+          map region: {diagnostics.driverDashboard?.map?.lastRegion ?? "-"}
+        </Text>
+        <Text variant="caption">
+          driver coords: {diagnostics.driverDashboard?.map?.driverCoordinates ?? "-"}
+        </Text>
+        <Text variant="caption">
+          pickup coords: {diagnostics.driverDashboard?.map?.pickupCoordinates ?? "-"}
+        </Text>
+        <Text variant="caption">
+          dropoff coords: {diagnostics.driverDashboard?.map?.dropoffCoordinates ?? "-"}
         </Text>
       </Card>
       <Card>

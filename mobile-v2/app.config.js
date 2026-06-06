@@ -135,6 +135,7 @@ module.exports = {
       appEnv,
       appVersion,
       appBuildNumber,
+      iosBundleIdentifier: app.iosBundleIdentifier,
       gitCommit,
       driverDiagnosticMode,
       driverJsEngine,

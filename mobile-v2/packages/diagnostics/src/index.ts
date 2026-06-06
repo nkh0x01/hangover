@@ -50,8 +50,23 @@ export type DriverDashboardDiagnostics = {
   appVersion?: string;
   lastOfferPollStatus?: string;
   lastStatusEndpointResponse?: string;
+  map?: DriverMapDiagnostics;
   mapProvider?: string;
   online?: boolean;
+};
+
+export type DriverMapDiagnostics = {
+  bundleId?: string;
+  driverCoordinates?: string;
+  dropoffCoordinates?: string;
+  errorMessage?: string;
+  googleProviderEnabled?: boolean;
+  keyPresent?: boolean;
+  lastRegion?: string;
+  loaded?: boolean;
+  pickupCoordinates?: string;
+  provider?: string;
+  ready?: boolean;
 };
 
 export type DiagnosticsStore = {

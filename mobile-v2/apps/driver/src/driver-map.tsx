@@ -1,15 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
 import { View } from "react-native";
 
+import type { DriverMapDiagnostics } from "@ride360/diagnostics";
 import { Card, Text } from "@ride360/ui";
 
 import {
   buildDashboardMapState,
   type ActiveRideOffer,
   type DashboardMapMarker,
+  type DashboardMapRegion,
   type DriverRide,
   type LocationPoint,
 } from "./driver-dashboard";
+import {
+  buildMapDiagnostics,
+  type DriverMapRuntimeConfig,
+} from "./driver-map-diagnostics";
 
 type MapsModule = typeof import("react-native-maps");
 
@@ -22,18 +28,28 @@ export function DriverMapPreview({
   activeOffer,
   activeRide,
   currentLocation,
+  mapConfig,
+  onDiagnostics,
 }: {
   activeOffer: ActiveRideOffer | null;
   activeRide: DriverRide | null;
   currentLocation: LocationPoint | null;
+  mapConfig: DriverMapRuntimeConfig;
+  onDiagnostics?: (diagnostics: DriverMapDiagnostics) => void;
 }) {
   const [loadState, setLoadState] = useState<MapLoadState>({
     status: "loading",
   });
+  const [mapReady, setMapReady] = useState(false);
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const [showTileWarning, setShowTileWarning] = useState(false);
+  const [lastRegion, setLastRegion] = useState<DashboardMapRegion | null>(null);
   const mapState = useMemo(
     () => buildDashboardMapState({ activeOffer, activeRide, currentLocation }),
     [activeOffer, activeRide, currentLocation],
   );
+  const googleProviderEnabled =
+    mapConfig.provider === "google" && mapConfig.keyPresent === true;
 
   useEffect(() => {
     let mounted = true;
@@ -55,6 +71,52 @@ export function DriverMapPreview({
     };
   }, []);
 
+  useEffect(() => {
+    onDiagnostics?.(
+      buildMapDiagnostics({
+        activeOffer,
+        activeRide,
+        currentLocation,
+        errorMessage:
+          loadState.status === "failed"
+            ? loadState.error
+            : googleProviderEnabled
+              ? undefined
+              : "Google Maps API key is missing or Google provider is disabled.",
+        googleProviderEnabled,
+        lastRegion: lastRegion ?? mapState.region,
+        loaded: mapLoaded,
+        mapConfig,
+        ready: mapReady,
+      }),
+    );
+  }, [
+    activeOffer,
+    activeRide,
+    currentLocation,
+    googleProviderEnabled,
+    lastRegion,
+    loadState,
+    mapConfig,
+    mapLoaded,
+    mapReady,
+    mapState.region,
+    onDiagnostics,
+  ]);
+
+  useEffect(() => {
+    if (loadState.status !== "ready" || !googleProviderEnabled || mapLoaded) {
+      setShowTileWarning(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setShowTileWarning(true);
+    }, 8000);
+
+    return () => clearTimeout(timer);
+  }, [googleProviderEnabled, loadState.status, mapLoaded]);
+
   if (loadState.status !== "ready") {
     return (
       <Card>
@@ -71,11 +133,9 @@ export function DriverMapPreview({
   const MapView = loadState.maps.default;
   const Marker = loadState.maps.Marker;
   const Polyline = loadState.maps.Polyline;
-  const provider =
-    process.env.EXPO_PUBLIC_MAP_PROVIDER === "google" &&
-    process.env.EXPO_PUBLIC_GOOGLE_MAPS_ENABLED === "true"
-      ? loadState.maps.PROVIDER_GOOGLE
-      : undefined;
+  const provider = googleProviderEnabled
+    ? loadState.maps.PROVIDER_GOOGLE
+    : undefined;
   const route = routeCoordinates(mapState.markers);
   const mapKey = mapState.markers
     .map((marker) => `${marker.id}:${marker.lat}:${marker.lng}`)
@@ -96,6 +156,20 @@ export function DriverMapPreview({
         <MapView
           key={mapKey}
           initialRegion={mapState.region}
+          mapType="standard"
+          onMapLoaded={() => {
+            setMapLoaded(true);
+            setShowTileWarning(false);
+          }}
+          onMapReady={() => setMapReady(true)}
+          onRegionChangeComplete={(region) => {
+            setLastRegion({
+              latitude: region.latitude,
+              longitude: region.longitude,
+              latitudeDelta: region.latitudeDelta,
+              longitudeDelta: region.longitudeDelta,
+            });
+          }}
           provider={provider}
           showsMyLocationButton={Boolean(currentLocation)}
           showsUserLocation={Boolean(currentLocation)}
@@ -123,6 +197,12 @@ export function DriverMapPreview({
           ? "რუკაზე ჩანს მძღოლი, აყვანის ან დანიშნულების წერტილები."
           : "წერტილები გამოჩნდება ცვლის დაწყების ან შეკვეთის მიღების შემდეგ."}
       </Text>
+      {!googleProviderEnabled || showTileWarning ? (
+        <Text variant="caption">
+          რუკის ჩატვირთვა ვერ მოხერხდა. შეამოწმეთ Google Maps API key /
+          ინტერნეტი.
+        </Text>
+      ) : null}
     </Card>
   );
 }

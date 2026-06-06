@@ -13,6 +13,14 @@ describe("diagnostics store", () => {
       appVersion: "2.0.0",
       lastOfferPollStatus: "none",
       lastStatusEndpointResponse: "online:true",
+      map: {
+        bundleId: "app.ride360.driver",
+        googleProviderEnabled: true,
+        keyPresent: true,
+        loaded: false,
+        provider: "google",
+        ready: true,
+      },
       mapProvider: "Google",
       online: true,
     });
@@ -24,6 +32,14 @@ describe("diagnostics store", () => {
       appVersion: "2.0.0",
       lastOfferPollStatus: "none",
       lastStatusEndpointResponse: "online:true",
+      map: {
+        bundleId: "app.ride360.driver",
+        googleProviderEnabled: true,
+        keyPresent: true,
+        loaded: false,
+        provider: "google",
+        ready: true,
+      },
       mapProvider: "Google",
       online: true,
     });

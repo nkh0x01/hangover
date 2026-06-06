@@ -52,6 +52,11 @@ for (const [target, expected] of Object.entries(expectedApps)) {
   assertEqual(config.ios.buildNumber, "200000", `${target} build number`);
   assertEqual(config.extra.appVersion, "2.0.0", `${target} extra app version`);
   assertEqual(config.extra.appBuildNumber, "200000", `${target} extra app build number`);
+  assertEqual(
+    config.extra.iosBundleIdentifier,
+    expected.bundleIdentifier,
+    `${target} extra iOS bundle ID`,
+  );
   assertEqual(config.extra.appRole, expected.role, `${target} app role`);
   assertEqual(config.extra.appEnv, "production", `${target} app env`);
   assertEqual(config.extra.apiBaseUrl, productionApiBaseUrl, `${target} API base URL`);

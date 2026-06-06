@@ -24,11 +24,24 @@ describe("driver build info", () => {
         appEnv: "production",
         appVersion: "2.0.0",
         googleMapsConfigured: true,
+        iosBundleIdentifier: "app.ride360.driver",
         mapProvider: "google",
       },
     });
 
     expect(buildLabelText(info)).toBe("Driver V2 · 2.0.0 (200024) · production");
+    expect(info.iosBundleIdentifier).toBe("app.ride360.driver");
     expect(mapProviderLabel(info)).toBe("Google");
+  });
+
+  it("does not report Google Maps key present just because provider is google", () => {
+    const info = createDriverBuildInfo({
+      extra: {
+        mapProvider: "google",
+      },
+    });
+
+    expect(info.googleMapsConfigured).toBe(false);
+    expect(mapProviderLabel(info)).toBe("Google (key missing)");
   });
 });
