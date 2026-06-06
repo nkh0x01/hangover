@@ -47,16 +47,7 @@ public struct ComponentTemplate: Codable, Identifiable, Sendable {
         case .socket:
             return ComponentFactory.socket(id: instanceID, powerW: powerW ?? 2300, leakageMa: leakageMa)
         case .motor:
-            // 3-ფაზიანი მოტორი (Phase 3) — გამარტივებული
-            let ports = [
-                Port(id: "\(instanceID).L1", conductor: .L1, side: .single, name: "L1"),
-                Port(id: "\(instanceID).L2", conductor: .L2, side: .single, name: "L2"),
-                Port(id: "\(instanceID).L3", conductor: .L3, side: .single, name: "L3"),
-                Port(id: "\(instanceID).N", conductor: .N, side: .single, name: "N"),
-                Port(id: "\(instanceID).PE", conductor: .PE, side: .single, name: "PE")
-            ]
-            return Component(id: instanceID, kind: .motor, name: name, poles: 3,
-                             powerW: powerW ?? 3000, requiresPE: true, ports: ports)
+            return ComponentFactory.motor(id: instanceID, powerW: powerW ?? 4000)
         }
     }
 }
@@ -74,6 +65,8 @@ public struct LevelGoal: Codable, Sendable {
     /// რომელი დატვირთვები უნდა აანთდეს და რამდენი (kind → count).
     public let poweredLoads: [String: Int]
     public let description: String
+    /// 3-ფაზიან დონეებზე — საჭიროა თუ არა ფაზების დაბალანსება.
+    public let requireBalanced: Bool?
 }
 
 public enum LevelMode: String, Codable, Sendable {

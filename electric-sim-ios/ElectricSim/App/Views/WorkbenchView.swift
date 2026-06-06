@@ -172,6 +172,10 @@ final class WorkbenchModel: ObservableObject {
 
     func goalMet(_ r: SimulationResult) -> Bool {
         guard r.passed else { return false }
+        if level.goal.requireBalanced == true,
+           r.issues.contains(where: { $0.code == .phaseImbalance }) {
+            return false
+        }
         for (kindStr, count) in level.goal.poweredLoads {
             guard let kind = ComponentKind(rawValue: kindStr) else { return false }
             let lit = board.components

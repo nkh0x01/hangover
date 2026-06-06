@@ -76,5 +76,24 @@
     "name": "როზეტი 16A",
     "powerW": 2300,
     "requiresPE": true
+  },
+  {
+    "id": "main_4p",
+    "kind": "mainSwitch",
+    "name": "მთავარი ამომრთველი 4P"
+  },
+  {
+    "id": "mcb_c16",
+    "kind": "mcb",
+    "name": "ავტომატი C16 (მოტორი)",
+    "ratingA": 16,
+    "curve": "C"
+  },
+  {
+    "id": "motor_3ph",
+    "kind": "motor",
+    "name": "3-ფაზიანი მოტორი 4kW",
+    "powerW": 4000,
+    "requiresPE": true
   }
 ]

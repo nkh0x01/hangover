@@ -152,9 +152,67 @@ public struct CircuitSolver {
         }
 
         // --- 7. დატვირთვების ვალიდაცია ---
+        var phaseCurrent: [Conductor: Double] = [.L1: 0, .L2: 0, .L3: 0]
         let loads = board.components.filter { $0.kind.isLoad }
         for load in loads {
-            guard let lineP = load.port(conductor: load.kind == .motor ? .L1 : .L),
+            // 3-ფაზიანი მოტორი — ცალკე დამუშავება (L1/L2/L3 + PE)
+            if load.kind == .motor {
+                let phases: [Conductor] = [.L1, .L2, .L3]
+                var allPresent = true
+                var seen = Set<Conductor>()
+                for ph in phases {
+                    guard let p = load.port(conductor: ph) else { allPresent = false; break }
+                    if let hot = conductors(of: p.id).first(where: { $0.isHot }) {
+                        seen.insert(hot)
+                    } else { allPresent = false }
+                }
+                let complete = allPresent && seen.count >= 3
+                var mTrip: TripType? = nil
+
+                if load.requiresPE {
+                    let peOK = load.port(conductor: .PE).map { conductors(of: $0.id).contains(.PE) } ?? false
+                    if !peOK { issues.append(Issue(code: .missingPE, componentIDs: [load.id])) }
+                }
+                if !complete { issues.append(Issue(code: .openCircuit, componentIDs: [load.id])) }
+
+                let l1Net = load.port(conductor: .L1).map { net($0.id) }
+                let chain = l1Net.map { deviceChain(forHotNet: $0) } ?? []
+                let breaker = chain.first { $0.kind == .mcb || $0.kind == .rcbo }
+                if complete && breaker == nil {
+                    issues.append(Issue(code: .noBreaker, componentIDs: [load.id]))
+                }
+
+                // სამფაზიანი დენი: I = P / (√3 · U_LL)
+                let perPhase = complete ? (load.powerW ?? 0) / (Double(3).squareRoot() * Electrical.phaseToPhase) : 0
+
+                if complete {
+                    if let rating = breaker?.ratingA, let l1Net = l1Net {
+                        let seg = board.wires.filter { net($0.fromPortID) == l1Net || net($0.toPortID) == l1Net }
+                        if let minCsa = seg.map({ $0.csaMm2 }).min(),
+                           rating > Ampacity.maxBreaker(forCsa: minCsa) + 0.001 {
+                            issues.append(Issue(code: .breakerExceedsCable, componentIDs: [load.id]))
+                        }
+                    }
+                    if energize {
+                        let anyShort = phases.contains { ph in
+                            load.port(conductor: ph).map { shortedNets.contains(net($0.id)) } ?? false
+                        }
+                        if anyShort {
+                            mTrip = .magnetic
+                            issues.append(Issue(code: .shortCircuit, componentIDs: [load.id]))
+                        } else if let rating = breaker?.ratingA, perPhase > rating + 0.001 {
+                            mTrip = .thermal
+                            issues.append(Issue(code: .overload, componentIDs: [load.id]))
+                        }
+                    }
+                    for ph in phases { phaseCurrent[ph, default: 0] += perPhase }
+                }
+                let powered = complete && mTrip == nil && energize
+                loadStates.append(LoadState(id: load.id, isPowered: powered, currentA: perPhase, trip: mTrip))
+                continue
+            }
+
+            guard let lineP = load.port(conductor: .L),
                   let neutralP = load.port(conductor: .N) else { continue }
             let lineNet = net(lineP.id)
             let neutralNet = net(neutralP.id)
@@ -246,6 +304,11 @@ public struct CircuitSolver {
                 }
             }
 
+            // ფაზის დატვირთვის აღრიცხვა ბალანსისთვის (რეალური ფაზა line-ქსელიდან)
+            if let ph = lineSet.first(where: { $0.isHot }) {
+                phaseCurrent[ph == .L ? .L1 : ph, default: 0] += current
+            }
+
             let powered = circuitComplete && trip == nil && energize
             loadStates.append(LoadState(id: load.id, isPowered: powered,
                                         currentA: current, trip: trip, shockRisk: shockRisk))
@@ -253,32 +316,16 @@ public struct CircuitSolver {
 
         // --- 9. სამფაზიანი ბალანსი (Phase 3) ---
         if board.phase == .three {
-            issues.append(contentsOf: phaseBalanceWarnings(board: board, loadStates: loadStates))
+            let vals = [phaseCurrent[.L1] ?? 0, phaseCurrent[.L2] ?? 0, phaseCurrent[.L3] ?? 0]
+            if let mx = vals.max(), let mn = vals.min(), mx > 0, (mx - mn) > 0.5 * mx {
+                issues.append(Issue(code: .phaseImbalance))
+            }
         }
 
         // დუბლიკატი issue-ების მოცილება (კოდი + კომპონენტები)
         issues = dedupe(issues)
 
         return SimulationResult(issues: issues, loadStates: loadStates, energized: energize)
-    }
-
-    // MARK: სამფაზიანი ბალანსი
-
-    private func phaseBalanceWarnings(board: Board, loadStates: [LoadState]) -> [Issue] {
-        var perPhase: [Conductor: Double] = [.L1: 0, .L2: 0, .L3: 0]
-        for load in board.components where load.kind.isLoad {
-            guard let st = loadStates.first(where: { $0.id == load.id }) else { continue }
-            // რომელ ფაზაზეა მიერთებული (პირველი ცხელი ფეხი)
-            if let hot = load.ports.first(where: { $0.conductor.isHot })?.conductor {
-                perPhase[hot, default: 0] += st.currentA
-            }
-        }
-        let values: [Double] = [perPhase[.L1] ?? 0, perPhase[.L2] ?? 0, perPhase[.L3] ?? 0]
-        guard let maxV = values.max(), let minV = values.min(), maxV > 0 else { return [] }
-        if (maxV - minV) > 0.5 * maxV {
-            return [Issue(code: .phaseImbalance)]
-        }
-        return []
     }
 
     // MARK: დამხმარე

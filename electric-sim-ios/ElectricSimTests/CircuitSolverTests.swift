@@ -296,6 +296,95 @@ final class CircuitSolverTests: XCTestCase {
         XCTAssertTrue(r.state(for: "good")!.isPowered)
     }
 
+    // MARK: - Phase 3: სამფაზა + ბალანსი + მოტორი
+
+    /// აშენებს სამფაზიან დაფას N ნათურით, თითო ფაზაზე `phaseFor(i)`.
+    private func makeThreePhaseLamps(phaseFor: (Int) -> String, count: Int = 3) -> Board {
+        var b = Board(phase: .three)
+        b.add(ComponentFactory.supply(id: "S", phase: .three))
+        let m = ComponentFactory.mainSwitch(id: "M", phase: .three)
+        b.add(m)
+        b.connect("S.N", "M.Nin", csaMm2: 2.5, color: .blue)
+        for c in ["L1", "L2", "L3"] {
+            b.connect("S.\(c)", "M.\(c)in", csaMm2: 2.5, color: .brown)
+        }
+        for i in 0..<count {
+            let suf = phaseFor(i)
+            let brk = ComponentFactory.mcb(id: "B\(i)", ratingA: 16)
+            let lamp = ComponentFactory.lamp(id: "L\(i)", powerW: 60)
+            b.add(brk); b.add(lamp)
+            b.connect("M.\(suf)out", "B\(i).in", csaMm2: 2.5, color: .brown)
+            b.connect("B\(i).out", "L\(i).L", csaMm2: 2.5, color: .brown)
+            b.connect("M.Nout", "L\(i).N", csaMm2: 2.5, color: .blue)
+            b.connect("S.PE", "L\(i).PE", csaMm2: 2.5, color: .yellowGreen)
+        }
+        return b
+    }
+
+    func testThreePhaseBalanced() {
+        let board = makeThreePhaseLamps { ["L1", "L2", "L3"][$0] }
+        let r = solver.solve(board, energize: true)
+        XCTAssertTrue(r.passed, "დაბალანსებული დატვირთვა: \(r.errors.map(\.code))")
+        XCTAssertFalse(r.issues.contains { $0.code == .phaseImbalance })
+        XCTAssertTrue(r.loadStates.allSatisfy { $0.isPowered })
+    }
+
+    func testThreePhaseImbalance() {
+        // სამივე ნათურა L1-ზე → დისბალანსი
+        let board = makeThreePhaseLamps { _ in "L1" }
+        let r = solver.solve(board, energize: true)
+        XCTAssertTrue(r.warnings.contains { $0.code == .phaseImbalance })
+    }
+
+    func testMotorRuns() {
+        var b = Board(phase: .three)
+        b.add(ComponentFactory.supply(id: "S", phase: .three))
+        b.add(ComponentFactory.mainSwitch(id: "M", phase: .three))
+        b.add(ComponentFactory.mcb(id: "B", ratingA: 16, curve: .C))
+        b.add(ComponentFactory.motor(id: "MOT", powerW: 4000))
+        for c in ["L1", "L2", "L3"] { b.connect("S.\(c)", "M.\(c)in", csaMm2: 2.5, color: .brown) }
+        b.connect("M.L1out", "B.in", csaMm2: 2.5, color: .brown)
+        b.connect("B.out", "MOT.L1", csaMm2: 2.5, color: .brown)
+        b.connect("M.L2out", "MOT.L2", csaMm2: 2.5, color: .black)
+        b.connect("M.L3out", "MOT.L3", csaMm2: 2.5, color: .grey)
+        b.connect("S.PE", "MOT.PE", csaMm2: 2.5, color: .yellowGreen)
+
+        let r = solver.solve(b, energize: true)
+        XCTAssertTrue(r.passed, "მოტორი უნდა ამუშავდეს: \(r.errors.map(\.code))")
+        let st = r.state(for: "MOT")!
+        XCTAssertTrue(st.isPowered)
+        XCTAssertEqual(st.currentA, 4000.0 / (Double(3).squareRoot() * 400.0), accuracy: 0.05)
+    }
+
+    func testMotorMissingPhaseFails() {
+        var b = Board(phase: .three)
+        b.add(ComponentFactory.supply(id: "S", phase: .three))
+        b.add(ComponentFactory.mainSwitch(id: "M", phase: .three))
+        b.add(ComponentFactory.mcb(id: "B", ratingA: 16, curve: .C))
+        b.add(ComponentFactory.motor(id: "MOT", powerW: 4000))
+        for c in ["L1", "L2", "L3"] { b.connect("S.\(c)", "M.\(c)in", csaMm2: 2.5, color: .brown) }
+        b.connect("M.L1out", "B.in", csaMm2: 2.5, color: .brown)
+        b.connect("B.out", "MOT.L1", csaMm2: 2.5, color: .brown)
+        b.connect("M.L2out", "MOT.L2", csaMm2: 2.5, color: .black)
+        // L3 განზრახ არ არის
+        b.connect("S.PE", "MOT.PE", csaMm2: 2.5, color: .yellowGreen)
+
+        let r = solver.solve(b, energize: true)
+        XCTAssertTrue(r.errors.contains { $0.code == .openCircuit })
+        XCTAssertFalse(r.state(for: "MOT")!.isPowered)
+    }
+
+    func testPhase3LevelsLoad() throws {
+        let templates = try GameData.loadTemplates()
+        let levels = try GameData.loadLevels()
+        let motorLevel = try XCTUnwrap(levels.first { $0.id == "lvl_motor" })
+        XCTAssertEqual(motorLevel.phase, .three)
+        XCTAssertEqual(levels.first { $0.id == "lvl_three_phase" }?.goal.requireBalanced, true)
+        // მოტორის შაბლონი იქმნება სამი ფაზის ფეხებით
+        let motor = templates["motor_3ph"]!.makeComponent(instanceID: "x")
+        XCTAssertNotNil(motor.port(conductor: .L3))
+    }
+
     // MARK: - 13. სადენის ფერები (IEC)
 
     func testWireColors() {

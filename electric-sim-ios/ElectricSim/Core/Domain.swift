@@ -281,6 +281,18 @@ public enum ComponentFactory {
                          poles: 1, powerW: powerW, requiresPE: requiresPE, leakageMa: leakageMa, ports: ports)
     }
 
+    public static func motor(id: String, powerW: Double = 4000) -> Component {
+        let ports = [
+            Port(id: pid(id, "L1"), conductor: .L1, side: .single, name: "L1"),
+            Port(id: pid(id, "L2"), conductor: .L2, side: .single, name: "L2"),
+            Port(id: pid(id, "L3"), conductor: .L3, side: .single, name: "L3"),
+            Port(id: pid(id, "N"), conductor: .N, side: .single, name: "N"),
+            Port(id: pid(id, "PE"), conductor: .PE, side: .single, name: "PE")
+        ]
+        return Component(id: id, kind: .motor, name: "3-ფაზიანი მოტორი \(Int(powerW))W",
+                         poles: 3, powerW: powerW, requiresPE: true, ports: ports)
+    }
+
     public static func socket(id: String, powerW: Double = 2300, leakageMa: Double? = nil) -> Component {
         let ports = [
             Port(id: pid(id, "L"), conductor: .L, side: .single, name: "L"),
