@@ -55,5 +55,100 @@
       "poweredLoads": { "lamp": 1, "socket": 1 },
       "description": "ორივე ხაზი უნდა მუშაობდეს, RCD-ითა და სწორი კაბელებით."
     }
+  },
+  {
+    "id": "lvl_fault_open",
+    "index": 4,
+    "title": "დეფექტი 1 — ნათურა არ ანათებს",
+    "brief": "ფარი აწყობილია, მაგრამ ნათურა არ ანათებს. იპოვე რა აკლია და დააკავშირე გამოტოვებული სადენი.",
+    "hint": "გამოიყენე მულტიმეტრი ან ფაზის ინდიკატორი. შეამოწმე — ფაზაც და ნულიც აღწევს თუ არა ნათურამდე? ნული (ლურჯი) აკლია მთავარი ამომრთველიდან ნათურამდე.",
+    "phase": "single",
+    "mode": "faultFind",
+    "palette": [],
+    "prebuilt": {
+      "components": [
+        { "templateId": "supply_1ph", "id": "supply" },
+        { "templateId": "main_2p", "id": "main" },
+        { "templateId": "mcb_b10", "id": "brk" },
+        { "templateId": "lamp_60", "id": "lamp" }
+      ],
+      "wires": [
+        { "from": { "c": "supply", "p": "L" }, "to": { "c": "main", "p": "Lin" }, "csa": 1.5, "color": "brown" },
+        { "from": { "c": "main", "p": "Lout" }, "to": { "c": "brk", "p": "in" }, "csa": 1.5, "color": "brown" },
+        { "from": { "c": "brk", "p": "out" }, "to": { "c": "lamp", "p": "L" }, "csa": 1.5, "color": "brown" },
+        { "from": { "c": "supply", "p": "N" }, "to": { "c": "main", "p": "Nin" }, "csa": 1.5, "color": "blue" },
+        { "from": { "c": "supply", "p": "PE" }, "to": { "c": "lamp", "p": "PE" }, "csa": 1.5, "color": "yellowGreen" }
+      ]
+    },
+    "goal": {
+      "poweredLoads": { "lamp": 1 },
+      "description": "გამოტოვებული ნულის სადენის დამატების შემდეგ ნათურა აანთდება."
+    }
+  },
+  {
+    "id": "lvl_fault_short",
+    "index": 5,
+    "title": "დეფექტი 2 — ავტომატი მყისვე იგდება",
+    "brief": "ძაბვის ჩართვისთანავე ავტომატი მყისიერად იგდება. იპოვე მოკლე ჩართვა და მოაშორე ზედმეტი სადენი.",
+    "hint": "მაგნიტური (მყისიერი) გაგდება = მოკლე ჩართვა. მულტიმეტრით L–N აჩვენებს 0V-ს იქ, სადაც 230V უნდა იყოს. გახსენი „სადენების სია“ და წაშალე ფაზა-ნულის შემაერთებელი ზედმეტი სადენი.",
+    "phase": "single",
+    "mode": "faultFind",
+    "palette": [],
+    "prebuilt": {
+      "components": [
+        { "templateId": "supply_1ph", "id": "supply" },
+        { "templateId": "main_2p", "id": "main" },
+        { "templateId": "mcb_b10", "id": "brk" },
+        { "templateId": "lamp_60", "id": "lamp" }
+      ],
+      "wires": [
+        { "from": { "c": "supply", "p": "L" }, "to": { "c": "main", "p": "Lin" }, "csa": 1.5, "color": "brown" },
+        { "from": { "c": "main", "p": "Lout" }, "to": { "c": "brk", "p": "in" }, "csa": 1.5, "color": "brown" },
+        { "from": { "c": "brk", "p": "out" }, "to": { "c": "lamp", "p": "L" }, "csa": 1.5, "color": "brown" },
+        { "from": { "c": "supply", "p": "N" }, "to": { "c": "main", "p": "Nin" }, "csa": 1.5, "color": "blue" },
+        { "from": { "c": "main", "p": "Nout" }, "to": { "c": "lamp", "p": "N" }, "csa": 1.5, "color": "blue" },
+        { "from": { "c": "supply", "p": "PE" }, "to": { "c": "lamp", "p": "PE" }, "csa": 1.5, "color": "yellowGreen" },
+        { "from": { "c": "lamp", "p": "L" }, "to": { "c": "lamp", "p": "N" }, "csa": 1.5, "color": "brown" }
+      ]
+    },
+    "goal": {
+      "poweredLoads": { "lamp": 1 },
+      "description": "ზედმეტი (L–N) სადენის წაშლის შემდეგ ნათურა აანთდება გაგდების გარეშე."
+    }
+  },
+  {
+    "id": "lvl_fault_leakage",
+    "index": 6,
+    "title": "დეფექტი 3 — RCD ხშირად იგდება",
+    "brief": "ხაზი დაცულია RCD-ით, მაგრამ ძაბვის ჩართვისას RCD იგდება. როზეტში ჩართული მოწყობილობა დენს აჟონავს. შეცვალე გაუმართავი როზეტი ახლით.",
+    "hint": "RCD გაგდება = დენის გაჟონვა (>30mA). RCD სწორად მუშაობს — პრობლემა დატვირთვაშია. წაშალე გაუმართავი როზეტი (− ღილაკით) და დაამატე ახალი პალიტრიდან, შემდეგ დააკავშირე L, N და PE (2.5mm²).",
+    "phase": "single",
+    "mode": "faultFind",
+    "palette": [
+      { "templateId": "socket_16", "max": 1, "csaOptions": [2.5] }
+    ],
+    "prebuilt": {
+      "components": [
+        { "templateId": "supply_1ph", "id": "supply" },
+        { "templateId": "main_2p", "id": "main" },
+        { "templateId": "rcd_30", "id": "rcd" },
+        { "templateId": "mcb_b16", "id": "brk" },
+        { "templateId": "socket_16", "id": "soc", "leakageMa": 80 }
+      ],
+      "wires": [
+        { "from": { "c": "supply", "p": "L" }, "to": { "c": "main", "p": "Lin" }, "csa": 2.5, "color": "brown" },
+        { "from": { "c": "main", "p": "Lout" }, "to": { "c": "rcd", "p": "Lin" }, "csa": 2.5, "color": "brown" },
+        { "from": { "c": "rcd", "p": "Lout" }, "to": { "c": "brk", "p": "in" }, "csa": 2.5, "color": "brown" },
+        { "from": { "c": "brk", "p": "out" }, "to": { "c": "soc", "p": "L" }, "csa": 2.5, "color": "brown" },
+        { "from": { "c": "supply", "p": "N" }, "to": { "c": "main", "p": "Nin" }, "csa": 2.5, "color": "blue" },
+        { "from": { "c": "main", "p": "Nout" }, "to": { "c": "rcd", "p": "Nin" }, "csa": 2.5, "color": "blue" },
+        { "from": { "c": "rcd", "p": "Nout" }, "to": { "c": "soc", "p": "N" }, "csa": 2.5, "color": "blue" },
+        { "from": { "c": "supply", "p": "PE" }, "to": { "c": "soc", "p": "PE" }, "csa": 2.5, "color": "yellowGreen" }
+      ]
+    },
+    "goal": {
+      "poweredLoads": { "socket": 1 },
+      "description": "გაუმართავი როზეტის გამოცვლის შემდეგ ხაზი მუშაობს RCD-ის გაგდების გარეშე."
+    }
   }
 ]

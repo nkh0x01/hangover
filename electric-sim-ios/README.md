@@ -143,6 +143,40 @@ swift test
 - ახალი კომპონენტის ტიპი → დაამატე `components.json`-ში და, საჭიროების შემთხვევაში,
   `ComponentFactory`-ში (`Domain.swift`).
 
+### fault-finding დონე (`prebuilt`)
+
+დაამატე `"mode": "faultFind"` და `"prebuilt"` ბლოკი — წინასწარ აწყობილი ფარი
+დეფექტით. ფეხის მისამართი = კომპონენტის `id` + ფეხის სუფიქსი (ისე, როგორც
+`ComponentFactory` აგენერირებს: `L`, `N`, `PE`, `Lin`, `Lout`, `Nin`, `Nout`,
+`in`, `out`).
+
+```json
+{
+  "id": "lvl_fault_x",
+  "index": 7,
+  "title": "...", "brief": "...", "hint": "...",
+  "phase": "single",
+  "mode": "faultFind",
+  "palette": [],
+  "prebuilt": {
+    "components": [
+      { "templateId": "supply_1ph", "id": "supply" },
+      { "templateId": "main_2p", "id": "main" },
+      { "templateId": "mcb_b10", "id": "brk" },
+      { "templateId": "lamp_60", "id": "lamp", "leakageMa": 80 }
+    ],
+    "wires": [
+      { "from": { "c": "supply", "p": "L" }, "to": { "c": "main", "p": "Lin" }, "csa": 1.5, "color": "brown" }
+    ]
+  },
+  "goal": { "poweredLoads": { "lamp": 1 }, "description": "..." }
+}
+```
+
+დეფექტის ინჟექცია: `leakageMa` (გაჟონვა), `faultShortToN` (შიდა L→N short),
+ან უბრალოდ გამოტოვებული/არასწორი `wire` (open circuit, ლ-ნ short, არასწორი csa).
+`color` არასავალდებულოა (გამოითვლება გამტარიდან).
+
 ---
 
 ## 🗺 დონეების პროგრესია (Roadmap)
@@ -150,9 +184,22 @@ swift test
 | ფაზა | შინაარსი | სტატუსი |
 |---|---|---|
 | **Phase 1** | 1 ფაზა, MCB + RCD, ნათურა + როზეტი, wiring + ვალიდაცია + Test | ✅ მზადაა |
-| Phase 2 | სრული ფარი, რამდენიმე ხაზი, fault-finding | 🟡 საფუძველი ჩადებულია |
+| **Phase 2** | სრული ფარი, რამდენიმე ხაზი, fault-finding (3 დეფექტ-დონე) | ✅ მზადაა |
 | Phase 3 | 3 ფაზა, ბალანსი, მოტორი | 🟡 solver-ში მხარდაჭერილია |
 | Phase 4 | sandbox, level editor, achievements | ⏳ |
+
+### Phase 2 — დეფექტის ძებნა (fault-finding)
+
+`mode: "faultFind"` დონეები იწყება **წინასწარ აწყობილი, დეფექტიანი ფარით**
+(`prebuilt` ველი `levels.json`-ში). მოთამაშე ხელსაწყოებით (მულტიმეტრი /
+ფაზის ინდიკატორი) აღმოაჩენს ხარვეზს და ასწორებს — ამატებს გამოტოვებულ
+სადენს, შლის ზედმეტს (ღილაკი „სადენების სია"), ან ცვლის გაუმართავ კომპონენტს.
+
+- **დონე 4:** ნათურა არ ანათდება → აკლია ნულის სადენი (open circuit).
+- **დონე 5:** ავტომატი მყისვე იგდება → მოკლე ჩართვა, ზედმეტი L–N სადენი.
+- **დონე 6:** RCD იგდება → დატვირთვა დენს აჟონავს, საჭიროა გამოცვლა.
+
+ახალი fault-find დონის დასამატებლად იხ. ქვემოთ მოცემული `prebuilt` ფორმატი.
 
 ---
 

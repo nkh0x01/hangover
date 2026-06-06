@@ -60,6 +60,8 @@ final class WorkbenchModel: ObservableObject {
     @Published var levelPassed = false
     @Published var measurement: String?
     @Published var liveAnalysis: NetAnalysis?
+    @Published var showWires = false
+    private var didConfigure = false
 
     init(level: Level, templates: [String: ComponentTemplate]) {
         self.level = level
@@ -68,6 +70,21 @@ final class WorkbenchModel: ObservableObject {
         b.add(ComponentFactory.supply(id: "supply", phase: level.phase))
         self.board = b
         self.selectedCSA = level.palette.compactMap { $0.csaOptions?.first }.first ?? 1.5
+    }
+
+    /// დონის რეალურ კომპონენტებთან კონფიგურაცია (templates ხელმისაწვდომია onAppear-ზე).
+    /// faultFind დონეებზე აშენებს წინასწარ აწყობილ, დეფექტიან ფარს.
+    func configure(_ t: [String: ComponentTemplate]) {
+        templates = t
+        guard !didConfigure else { return }
+        didConfigure = true
+        board = level.initialBoard(templates: t)
+        resetResult()
+    }
+
+    func deleteWire(_ id: String) {
+        board.wires.removeAll { $0.id == id }
+        resetResult()
     }
 
     func placed(_ tid: String) -> Int { placedCounts[tid] ?? 0 }
@@ -218,11 +235,14 @@ struct WorkbenchView: View {
                 Button { showHint = true } label: { Image(systemName: "questionmark.circle") }
             }
         }
-        .onAppear { if model.templates.isEmpty { model.templates = game.templates } }
+        .onAppear { model.configure(game.templates) }
         .sheet(isPresented: $model.showResult) {
             if let r = model.result {
                 ResultPanelView(result: r, passed: model.levelPassed, level: model.level)
             }
+        }
+        .sheet(isPresented: $model.showWires) {
+            WiresListView(model: model)
         }
         .alert("მინიშნება", isPresented: $showHint) {
             Button("გასაგებია", role: .cancel) {}
@@ -231,6 +251,11 @@ struct WorkbenchView: View {
 
     private var briefBar: some View {
         VStack(alignment: .leading, spacing: 4) {
+            if model.level.resolvedMode == .faultFind {
+                Label("დეფექტის ძებნა — იპოვე და გაასწორე ხარვეზი", systemImage: "magnifyingglass")
+                    .font(.caption.bold())
+                    .foregroundStyle(.orange)
+            }
             Text(model.level.brief)
                 .font(.footnote)
                 .foregroundStyle(.secondary)
@@ -328,6 +353,9 @@ struct WorkbenchView: View {
                 }
                 .pickerStyle(.menu)
                 Spacer()
+                Button { model.showWires = true } label: {
+                    Label("\(model.board.wires.count)", systemImage: "list.bullet")
+                }
                 Button { model.removeLastWire() } label: { Image(systemName: "arrow.uturn.backward") }
                 Button(role: .destructive) { model.clearWires() } label: { Image(systemName: "trash") }
             }.padding(.horizontal)
@@ -445,5 +473,58 @@ struct ComponentCardView: View {
             if st.isPowered { return .orange }
         }
         return component.kind == .supply ? .yellow : .primary
+    }
+}
+
+// MARK: - Wires list (targeted deletion for fault-finding)
+
+struct WiresListView: View {
+    @ObservedObject var model: WorkbenchModel
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                if model.board.wires.isEmpty {
+                    Text("სადენები ჯერ არ არის.")
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(model.board.wires) { wire in
+                        HStack(spacing: 10) {
+                            Circle()
+                                .fill(wire.color.swiftUIColor)
+                                .frame(width: 14, height: 14)
+                                .overlay(Circle().stroke(.gray.opacity(0.4)))
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("\(label(wire.fromPortID))  →  \(label(wire.toPortID))")
+                                    .font(.caption)
+                                Text("\(wire.color.georgianName) · \(wire.csaMm2, specifier: "%.1f")mm²")
+                                    .font(.caption2).foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Button(role: .destructive) {
+                                model.deleteWire(wire.id)
+                            } label: {
+                                Image(systemName: "trash")
+                            }
+                            .buttonStyle(.borderless)
+                        }
+                    }
+                }
+            }
+            .navigationTitle("სადენები")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("დახურვა") { dismiss() }
+                }
+            }
+        }
+    }
+
+    private func label(_ portID: String) -> String {
+        let comp = model.board.component(withPort: portID)
+        let port = model.board.port(portID)
+        return "\(comp?.name ?? "?") · \(port?.name ?? portID)"
     }
 }

@@ -225,6 +225,77 @@ final class CircuitSolverTests: XCTestCase {
         XCTAssertEqual(Ampacity.maxBreaker(forCsa: 3.0), 20)
     }
 
+    // MARK: - Phase 2: fault-finding დონეები (prebuilt + fix)
+
+    func testPhase2LevelsLoad() throws {
+        let levels = try GameData.loadLevels()
+        XCTAssertGreaterThanOrEqual(levels.count, 6)
+        XCTAssertEqual(levels.first { $0.id == "lvl_fault_short" }?.resolvedMode, .faultFind)
+        XCTAssertEqual(levels.first { $0.id == "lvl_tutorial" }?.resolvedMode, .build)
+    }
+
+    func testFaultOpenCircuitLevel() throws {
+        let templates = try GameData.loadTemplates()
+        let levels = try GameData.loadLevels()
+        let level = try XCTUnwrap(levels.first { $0.id == "lvl_fault_open" })
+        var board = level.initialBoard(templates: templates)
+
+        // დეფექტი: ნათურა არ ანათებს (ნული აკლია)
+        var r = solver.solve(board, energize: true)
+        XCTAssertTrue(r.errors.contains { $0.code == .openCircuit })
+        XCTAssertFalse(r.state(for: "lamp")!.isPowered)
+
+        // შესწორება: დააკავშირე გამოტოვებული ნული
+        board.connect("main.Nout", "lamp.N", csaMm2: 1.5, color: .blue)
+        r = solver.solve(board, energize: true)
+        XCTAssertTrue(r.passed, "გასწორების შემდეგ უნდა გაიაროს: \(r.errors.map(\.code))")
+        XCTAssertTrue(r.state(for: "lamp")!.isPowered)
+    }
+
+    func testFaultShortLevel() throws {
+        let templates = try GameData.loadTemplates()
+        let levels = try GameData.loadLevels()
+        let level = try XCTUnwrap(levels.first { $0.id == "lvl_fault_short" })
+        var board = level.initialBoard(templates: templates)
+
+        // დეფექტი: მოკლე ჩართვა → მაგნიტური გაგდება
+        var r = solver.solve(board, energize: true)
+        XCTAssertTrue(r.issues.contains { $0.code == .shortLN })
+        XCTAssertEqual(r.state(for: "lamp")!.trip, .magnetic)
+
+        // შესწორება: წაშალე ზედმეტი L–N სადენი
+        board.wires.removeAll {
+            ($0.fromPortID == "lamp.L" && $0.toPortID == "lamp.N") ||
+            ($0.fromPortID == "lamp.N" && $0.toPortID == "lamp.L")
+        }
+        r = solver.solve(board, energize: true)
+        XCTAssertTrue(r.passed)
+        XCTAssertTrue(r.state(for: "lamp")!.isPowered)
+    }
+
+    func testFaultLeakageLevel() throws {
+        let templates = try GameData.loadTemplates()
+        let levels = try GameData.loadLevels()
+        let level = try XCTUnwrap(levels.first { $0.id == "lvl_fault_leakage" })
+        var board = level.initialBoard(templates: templates)
+
+        // დეფექტი: გაუმართავი როზეტი აჟონავს → RCD იგდება
+        var r = solver.solve(board, energize: true)
+        XCTAssertEqual(r.state(for: "soc")!.trip, .rcd)
+
+        // შესწორება: შეცვალე გაუმართავი როზეტი ახლით
+        board.components.removeAll { $0.id == "soc" }
+        board.wires.removeAll { $0.fromPortID.hasPrefix("soc.") || $0.toPortID.hasPrefix("soc.") }
+        board.add(ComponentFactory.socket(id: "good", powerW: 2300))
+        board.connect("brk.out", "good.L", csaMm2: 2.5, color: .brown)
+        board.connect("rcd.Nout", "good.N", csaMm2: 2.5, color: .blue)
+        board.connect("supply.PE", "good.PE", csaMm2: 2.5, color: .yellowGreen)
+
+        r = solver.solve(board, energize: true)
+        XCTAssertTrue(r.passed, "გასწორების შემდეგ უნდა გაიაროს: \(r.errors.map(\.code))")
+        XCTAssertTrue(r.state(for: "good")!.isPowered)
+    }
+
     // MARK: - 13. სადენის ფერები (IEC)
 
     func testWireColors() {

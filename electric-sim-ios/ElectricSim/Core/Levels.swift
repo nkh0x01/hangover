@@ -76,6 +76,40 @@ public struct LevelGoal: Codable, Sendable {
     public let description: String
 }
 
+public enum LevelMode: String, Codable, Sendable {
+    case build       // ცარიელი ფარი — ააწყობ ნულიდან
+    case faultFind   // წინასწარ აწყობილი ფარი დეფექტით — იპოვე და გაასწორე
+}
+
+// MARK: - Pre-built board (fault-finding დონეებისთვის)
+
+/// ფეხის მისამართი წინასწარ აწყობილ ფარში: კომპონენტის id + ფეხის სუფიქსი
+/// (ისე, როგორც `ComponentFactory` აგენერირებს, მაგ. "Lin", "out", "PE").
+public struct PortRef: Codable, Sendable {
+    public let c: String   // კომპონენტის instance id
+    public let p: String   // ფეხის სუფიქსი
+    public var portID: String { "\(c).\(p)" }
+}
+
+public struct PrebuiltWire: Codable, Sendable {
+    public let from: PortRef
+    public let to: PortRef
+    public let csa: Double
+    public let color: String?   // WireColor rawValue; nil → გამტარიდან გამოითვლება
+}
+
+public struct PrebuiltComponent: Codable, Sendable {
+    public let templateId: String
+    public let id: String
+    public let leakageMa: Double?      // დეფექტი: გაჟონვა
+    public let faultShortToN: Bool?    // დეფექტი: შიდა L→N მოკლე ჩართვა
+}
+
+public struct PrebuiltBoard: Codable, Sendable {
+    public let components: [PrebuiltComponent]
+    public let wires: [PrebuiltWire]
+}
+
 public struct Level: Codable, Identifiable, Sendable {
     public let id: String
     public let index: Int
@@ -85,6 +119,35 @@ public struct Level: Codable, Identifiable, Sendable {
     public let phase: Phase
     public let palette: [PaletteEntry]
     public let goal: LevelGoal
+    public let mode: LevelMode?    // nil → .build
+    public let prebuilt: PrebuiltBoard?
+
+    public var resolvedMode: LevelMode { mode ?? .build }
+
+    /// დონის საწყისი ფარი: ან წინასწარ აწყობილი (faultFind), ან მხოლოდ კვება (build).
+    public func initialBoard(templates: [String: ComponentTemplate]) -> Board {
+        var board = Board(phase: phase)
+        guard let pre = prebuilt else {
+            board.add(ComponentFactory.supply(id: "supply", phase: phase))
+            return board
+        }
+        for pc in pre.components {
+            guard let t = templates[pc.templateId] else { continue }
+            var comp = t.makeComponent(instanceID: pc.id, phase: phase)
+            if let leak = pc.leakageMa { comp.leakageMa = leak }
+            if let short = pc.faultShortToN { comp.faultShortToN = short }
+            board.add(comp)
+        }
+        if board.supply == nil {
+            board.add(ComponentFactory.supply(id: "supply", phase: phase))
+        }
+        for w in pre.wires {
+            let color = w.color.flatMap { WireColor(rawValue: $0) }
+                ?? WireColor.standard(for: board.port(w.from.portID)?.conductor ?? .L)
+            board.connect(w.from.portID, w.to.portID, csaMm2: w.csa, color: color)
+        }
+        return board
+    }
 }
 
 // MARK: - Data loader
