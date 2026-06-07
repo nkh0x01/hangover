@@ -32,6 +32,7 @@
 		E1EC00000000000000000216 /* ReportsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC00000000000000000116 /* ReportsView.swift */; };
 		E1EC00000000000000000217 /* Recommender.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC00000000000000000117 /* Recommender.swift */; };
 		E1EC00000000000000000218 /* Engineering.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC00000000000000000118 /* Engineering.swift */; };
+		E1EC00000000000000000219 /* GameCenterManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC00000000000000000119 /* GameCenterManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -60,6 +61,8 @@
 		E1EC00000000000000000116 /* ReportsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportsView.swift; sourceTree = "<group>"; };
 		E1EC00000000000000000117 /* Recommender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Recommender.swift; sourceTree = "<group>"; };
 		E1EC00000000000000000118 /* Engineering.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Engineering.swift; sourceTree = "<group>"; };
+		E1EC00000000000000000119 /* GameCenterManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameCenterManager.swift; sourceTree = "<group>"; };
+		E1EC0000000000000000011A /* ElectricSim.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ElectricSim.entitlements; sourceTree = "<group>"; };
 		E1EC00000000000000000101 /* ElectricSim.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ElectricSim.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E1EC00000000000000000120 /* ElectricSimUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElectricSimUITests.swift; sourceTree = "<group>"; };
 		E1EC00000000000000000121 /* ElectricSimUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ElectricSimUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -143,6 +146,7 @@
 				E1EC000000000000000000F9 /* Style.swift */,
 				E1EC00000000000000000110 /* Monetization.swift */,
 				E1EC00000000000000000113 /* Achievements.swift */,
+				E1EC00000000000000000119 /* GameCenterManager.swift */,
 				E1EC00000000000000000305 /* Views */,
 				E1EC000000000000000000FD /* Assets.xcassets */,
 				E1EC00000000000000000307 /* Resources */,
@@ -168,6 +172,7 @@
 			children = (
 				E1EC00000000000000000100 /* Info.plist */,
 				E1EC00000000000000000112 /* PrivacyInfo.xcprivacy */,
+				E1EC0000000000000000011A /* ElectricSim.entitlements */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -296,6 +301,7 @@
 				E1EC00000000000000000216 /* ReportsView.swift in Sources */,
 				E1EC00000000000000000217 /* Recommender.swift in Sources */,
 				E1EC00000000000000000218 /* Engineering.swift in Sources */,
+				E1EC00000000000000000219 /* GameCenterManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -384,6 +390,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = ElectricSim/App/Resources/ElectricSim.entitlements;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -408,6 +415,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = ElectricSim/App/Resources/ElectricSim.entitlements;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;

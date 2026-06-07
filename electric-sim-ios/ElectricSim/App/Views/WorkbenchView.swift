@@ -76,11 +76,16 @@ final class WorkbenchModel: ObservableObject {
 
     /// დონის რეალურ კომპონენტებთან კონფიგურაცია (templates ხელმისაწვდომია onAppear-ზე).
     /// faultFind დონეებზე აშენებს წინასწარ აწყობილ, დეფექტიან ფარს.
+    private var startedAt = Date()
+    private(set) var mistakes = 0
+
     func configure(_ t: [String: ComponentTemplate]) {
         templates = t
         guard !didConfigure else { return }
         didConfigure = true
         board = level.initialBoard(templates: t)
+        startedAt = Date()
+        mistakes = 0
         resetResult()
     }
 
@@ -157,7 +162,9 @@ final class WorkbenchModel: ObservableObject {
     }
 
     func check() {
-        result = solver.solve(board, energize: false)
+        let r = solver.solve(board, energize: false)
+        if !r.passed { mistakes += 1 }
+        result = r
         liveAnalysis = nil
         showResult = true
     }
@@ -171,6 +178,10 @@ final class WorkbenchModel: ObservableObject {
         if level.resolvedMode != .sandbox && goalMet(r) {
             levelPassed = true
             game.markCompleted(level)
+            let seconds = Int(Date().timeIntervalSince(startedAt))
+            GameCenterManager.shared.recordCompletion(level: level, seconds: seconds, mistakes: mistakes)
+        } else if !r.passed {
+            mistakes += 1
         }
     }
 

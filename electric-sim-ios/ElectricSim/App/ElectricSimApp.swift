@@ -32,5 +32,6 @@ struct RootView: View {
             LevelListView()
         }
         .tint(.brand)
+        .onAppear { GameCenterManager.shared.authenticate() }   // არ-მბლოკავი
     }
 }
