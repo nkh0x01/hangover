@@ -221,6 +221,8 @@ struct WorkbenchView: View {
     @State private var showReports = false
     @State private var zoom: CGFloat = 1.0
     @GestureState private var pinch: CGFloat = 1.0
+    @State private var pan: CGSize = .zero
+    @GestureState private var drag: CGSize = .zero
 
     init(level: Level) {
         _model = StateObject(wrappedValue: WorkbenchModel(level: level, templates: [:]))
@@ -289,51 +291,66 @@ struct WorkbenchView: View {
     }
 
     private var railView: some View {
-        ScrollView([.horizontal, .vertical]) {
-            HStack(alignment: .top, spacing: 28) {
-                ForEach(model.board.components) { comp in
-                    ComponentCardView(
-                        component: comp,
-                        selectedPort: model.selectedPort,
-                        loadState: model.result?.state(for: comp.id),
-                        isLive: { model.isLive($0) },
-                        onTapPort: { model.tapPort($0) },
-                        onDelete: comp.id == "supply" ? nil : { model.removeComponent(comp.id) }
-                    )
+        ZStack(alignment: .topLeading) {
+            Color(.systemBackground)
+            boardContent
+                .scaleEffect(zoom * pinch, anchor: .topLeading)
+                .offset(x: pan.width + drag.width, y: pan.height + drag.height)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .contentShape(Rectangle())
+        .clipped()
+        .gesture(
+            DragGesture(minimumDistance: 8)
+                .updating($drag) { value, state, _ in state = value.translation }
+                .onEnded { value in
+                    pan.width += value.translation.width
+                    pan.height += value.translation.height
                 }
+        )
+        .simultaneousGesture(
+            MagnificationGesture()
+                .updating($pinch) { value, state, _ in state = value }
+                .onEnded { value in zoom = min(max(zoom * value, 0.3), 3.0) }
+        )
+        .overlay(alignment: .bottomTrailing) { zoomControls }
+    }
+
+    private var boardContent: some View {
+        HStack(alignment: .top, spacing: 28) {
+            ForEach(model.board.components) { comp in
+                ComponentCardView(
+                    component: comp,
+                    selectedPort: model.selectedPort,
+                    loadState: model.result?.state(for: comp.id),
+                    isLive: { model.isLive($0) },
+                    onTapPort: { model.tapPort($0) },
+                    onDelete: comp.id == "supply" ? nil : { model.removeComponent(comp.id) }
+                )
             }
-            .padding(40)
-            .backgroundPreferenceValue(PortAnchorKey.self) { anchors in
-                GeometryReader { proxy in
-                    ForEach(model.board.wires) { wire in
-                        if let a = anchors[wire.fromPortID], let b = anchors[wire.toPortID] {
-                            Path { p in
-                                p.move(to: proxy[a])
-                                p.addLine(to: proxy[b])
-                            }
-                            .stroke(wire.color.swiftUIColor,
-                                    style: StrokeStyle(lineWidth: 4, lineCap: .round))
+        }
+        .padding(40)
+        .backgroundPreferenceValue(PortAnchorKey.self) { anchors in
+            GeometryReader { proxy in
+                ForEach(model.board.wires) { wire in
+                    if let a = anchors[wire.fromPortID], let b = anchors[wire.toPortID] {
+                        Path { p in
+                            p.move(to: proxy[a])
+                            p.addLine(to: proxy[b])
                         }
+                        .stroke(wire.color.swiftUIColor,
+                                style: StrokeStyle(lineWidth: 4, lineCap: .round))
                     }
                 }
             }
-            .scaleEffect(zoom * pinch, anchor: .topLeading)
-            .gesture(
-                MagnificationGesture()
-                    .updating($pinch) { value, state, _ in state = value }
-                    .onEnded { value in zoom = min(max(zoom * value, 0.4), 3.0) }
-            )
         }
-        .frame(maxHeight: .infinity)
-        .background(Color(.systemBackground))
-        .overlay(alignment: .bottomTrailing) { zoomControls }
     }
 
     private var zoomControls: some View {
         VStack(spacing: 6) {
             Button { zoom = min(zoom + 0.2, 3.0) } label: { zoomIcon("plus.magnifyingglass") }
-            Button { zoom = max(zoom - 0.2, 0.4) } label: { zoomIcon("minus.magnifyingglass") }
-            Button { zoom = 1.0 } label: { zoomIcon("1.magnifyingglass") }
+            Button { zoom = max(zoom - 0.2, 0.3) } label: { zoomIcon("minus.magnifyingglass") }
+            Button { zoom = 1.0; pan = .zero } label: { zoomIcon("scope") }
         }
         .padding(8)
     }
@@ -463,9 +480,14 @@ struct ComponentCardView: View {
                     .fill(headerColor)
                     .frame(width: 92, height: 54)
                 VStack(spacing: 2) {
-                    Image(systemName: component.kind.sfSymbol)
-                        .font(.title3)
-                        .foregroundStyle(iconColor)
+                    if component.kind.hasArtwork {
+                        Image(component.kind.assetName)
+                            .resizable().scaledToFit().frame(height: 24)
+                    } else {
+                        Image(systemName: component.kind.sfSymbol)
+                            .font(.title3)
+                            .foregroundStyle(iconColor)
+                    }
                     Text(component.name).font(.caption2).lineLimit(2).multilineTextAlignment(.center)
                 }.padding(2)
             }

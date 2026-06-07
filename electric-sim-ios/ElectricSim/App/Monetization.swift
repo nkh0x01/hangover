@@ -142,9 +142,9 @@ final class AdManager: ObservableObject {
         inventory = [
             HouseAd(
                 title: "Gadget Georgia",
-                subtitle: "ელექტრო და ჭკვიანი მოწყობილობები — gadget.com.ge",
+                subtitle: "ჭკვიანი ტექნიკა და მობილური აქსესუარები — gadget.com.ge",
                 cta: "ნახე მაღაზია",
-                symbol: "bolt.fill",
+                symbol: "sparkles",
                 url: URL(string: "https://gadget.com.ge")
             ),
             HouseAd(

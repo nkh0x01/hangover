@@ -239,14 +239,14 @@ struct ReportsView: View {
                 .padding(.top, 4)
 
                 Link(destination: URL(string: "https://gadget.com.ge")!) {
-                    Label("შეუკვეთე კომპონენტები Gadget Georgia-ზე", systemImage: "cart.fill")
+                    Label("ჭკვიანი ტექნიკა და აქსესუარები — Gadget Georgia", systemImage: "sparkles")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(.yellow)
+                .tint(.brand)
                 .padding(.top, 8)
 
-                Text("ფასები სავარაუდოა და შეიძლება განსხვავდებოდეს.")
+                Text("ჭკვიანი მოდულები — Gadget Georgia-ზე. ელ. მასალები (ავტომატი, კაბელი) — ელექტრო-მაღაზიიდან. ფასები სავარაუდოა.")
                     .font(.caption2).foregroundStyle(.secondary)
             }
             .padding()

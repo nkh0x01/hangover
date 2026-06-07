@@ -6,6 +6,14 @@
 //
 
 import SwiftUI
+import UIKit
+
+extension ComponentKind {
+    /// Assets-ში ჩასასმელი სურათის სახელი (მაგ. "comp_mcb").
+    /// თუ ასეთი იმიჯ-სეტი არსებობს, ბანქოზე ფოტო გამოჩნდება; თუ არა — SF Symbol.
+    var assetName: String { "comp_\(rawValue)" }
+    var hasArtwork: Bool { UIImage(named: assetName) != nil }
+}
 
 extension WireColor {
     /// ეკრანის ფერი (IEC ჰარმონიზებული).
