@@ -30,6 +30,7 @@
 		E1EC00000000000000000220 /* ElectricSimUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC00000000000000000120 /* ElectricSimUITests.swift */; };
 		E1EC00000000000000000215 /* Reports.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC00000000000000000115 /* Reports.swift */; };
 		E1EC00000000000000000216 /* ReportsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC00000000000000000116 /* ReportsView.swift */; };
+		E1EC00000000000000000217 /* Recommender.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC00000000000000000117 /* Recommender.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -56,6 +57,7 @@
 		E1EC00000000000000000114 /* LevelEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelEditorView.swift; sourceTree = "<group>"; };
 		E1EC00000000000000000115 /* Reports.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reports.swift; sourceTree = "<group>"; };
 		E1EC00000000000000000116 /* ReportsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportsView.swift; sourceTree = "<group>"; };
+		E1EC00000000000000000117 /* Recommender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Recommender.swift; sourceTree = "<group>"; };
 		E1EC00000000000000000101 /* ElectricSim.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ElectricSim.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E1EC00000000000000000120 /* ElectricSimUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElectricSimUITests.swift; sourceTree = "<group>"; };
 		E1EC00000000000000000121 /* ElectricSimUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ElectricSimUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -115,6 +117,7 @@
 				E1EC000000000000000000F5 /* CircuitSolver+Analysis.swift */,
 				E1EC000000000000000000F6 /* Levels.swift */,
 				E1EC00000000000000000115 /* Reports.swift */,
+				E1EC00000000000000000117 /* Recommender.swift */,
 				E1EC00000000000000000303 /* Data */,
 			);
 			path = Core;
@@ -288,6 +291,7 @@
 				E1EC00000000000000000214 /* LevelEditorView.swift in Sources */,
 				E1EC00000000000000000215 /* Reports.swift in Sources */,
 				E1EC00000000000000000216 /* ReportsView.swift in Sources */,
+				E1EC00000000000000000217 /* Recommender.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -26,13 +26,18 @@ struct ReportsView: View {
     var body: some View {
         VStack(spacing: 0) {
             Picker("", selection: $tab) {
-                Text("დატვირთვის გრაფი").tag(0)
-                Text("ცალხაზოვანი ნახაზი").tag(1)
+                Text("გრაფი").tag(0)
+                Text("ნახაზი").tag(1)
+                Text("რეკომენდაცია").tag(2)
             }
             .pickerStyle(.segmented)
             .padding()
 
-            if tab == 0 { loadGraph } else { sldTab }
+            switch tab {
+            case 0: loadGraph
+            case 1: sldTab
+            default: recommendationsTab
+            }
         }
         .navigationTitle("ანგარიში")
         .navigationBarTitleDisplayMode(.inline)
@@ -127,6 +132,34 @@ struct ReportsView: View {
         }
         .padding()
         .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
+    }
+
+    // MARK: - რეკომენდაცია (მრჩეველი)
+
+    private var recommendationsTab: some View {
+        let recs = Recommender.boardAdvice(board)
+        return ScrollView {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("მრჩეველი გირჩევს სწორ ავტომატს, კაბელსა და დაცვას თითო დატვირთვისთვის.")
+                    .font(.caption).foregroundStyle(.secondary)
+                if recs.isEmpty {
+                    Text("დაამატე კომპონენტები რეკომენდაციებისთვის.").foregroundStyle(.secondary)
+                }
+                ForEach(recs) { r in
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: r.severity == .info ? "lightbulb.fill" : r.severity.icon)
+                            .foregroundStyle(r.severity == .info ? .yellow : r.severity.color)
+                        Text(r.message)
+                            .font(.callout)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Spacer(minLength: 0)
+                    }
+                    .padding(10)
+                    .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 10))
+                }
+            }
+            .padding()
+        }
     }
 
     // MARK: - ცალხაზოვანი ნახაზი

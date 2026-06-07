@@ -506,6 +506,45 @@ final class CircuitSolverTests: XCTestCase {
         XCTAssertEqual(sld.circuits.first?.csaMm2, 1.5)
     }
 
+    // MARK: - მრჩეველი (Recommender)
+
+    func testRecommenderLamp() {
+        let a = Recommender.advise(kind: .lamp, powerW: 60)
+        XCTAssertEqual(a.breakerRatingA, 6)       // 0.26A → უმცირესი ნომინალი
+        XCTAssertEqual(a.curve, .B)
+        XCTAssertEqual(a.csaMm2, 1.5)
+        XCTAssertFalse(a.needsRCD)
+    }
+
+    func testRecommenderSocketNeedsRCD() {
+        let a = Recommender.advise(kind: .socket, powerW: 2300) // 10A ×1.25=12.5 → 16A
+        XCTAssertEqual(a.breakerRatingA, 16)
+        XCTAssertEqual(a.curve, .B)
+        XCTAssertTrue(a.needsRCD)
+    }
+
+    func testRecommenderMotorCurveC() {
+        let a = Recommender.advise(kind: .motor, powerW: 4000, phase: .three) // ≈5.77A×1.25 → 10A
+        XCTAssertEqual(a.curve, .C)
+        XCTAssertEqual(a.breakerRatingA, 10)
+        XCTAssertFalse(a.needsRCD)
+    }
+
+    func testRecommenderAluminumNeedsThickerCable() {
+        let cu = Recommender.advise(kind: .boiler, powerW: 5000, cable: .copper)
+        let al = Recommender.advise(kind: .boiler, powerW: 5000, cable: .aluminum)
+        XCTAssertGreaterThanOrEqual(al.csaMm2, cu.csaMm2, "ალუმინს უფრო მსხვილი კვეთა სჭირდება")
+    }
+
+    func testBoardAdviceFlagsMissingProtection() {
+        var board = Board(phase: .single)
+        board.add(ComponentFactory.supply(id: "S"))
+        board.add(ComponentFactory.socket(id: "SO"))
+        let recs = Recommender.boardAdvice(board)
+        XCTAssertTrue(recs.contains { $0.message.contains("მთავარი") })
+        XCTAssertTrue(recs.contains { $0.message.contains("RCD") })
+    }
+
     // MARK: - 13. სადენის ფერები (IEC)
 
     func testWireColors() {
