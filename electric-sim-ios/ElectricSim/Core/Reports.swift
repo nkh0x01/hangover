@@ -30,7 +30,7 @@ public struct LoadReport: Sendable {
 
     /// ფაზური დისბალანსი 0…1 (0 = იდეალური). მხოლოდ 3 ფაზაზე საინტერესოა.
     public var imbalance: Double {
-        let vals = [perPhase[.L1] ?? 0, perPhase[.L2] ?? 0, perPhase[.L3] ?? 0]
+        let vals: [Double] = [perPhase[.L1] ?? 0, perPhase[.L2] ?? 0, perPhase[.L3] ?? 0]
         guard let mx = vals.max(), mx > 0, let mn = vals.min() else { return 0 }
         return (mx - mn) / mx
     }

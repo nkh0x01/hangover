@@ -106,7 +106,8 @@ struct ReportsView: View {
     }
 
     private func phaseBalanceCard(_ rep: LoadReport) -> some View {
-        let maxA = max([rep.perPhase[.L1] ?? 0, rep.perPhase[.L2] ?? 0, rep.perPhase[.L3] ?? 0].max() ?? 0.1, 0.1)
+        let phaseVals: [Double] = [rep.perPhase[.L1] ?? 0, rep.perPhase[.L2] ?? 0, rep.perPhase[.L3] ?? 0]
+        let maxA = max(phaseVals.max() ?? 0.1, 0.1)
         return VStack(alignment: .leading, spacing: 8) {
             Text("ფაზების ბალანსი — დისბალანსი \(Int(rep.imbalance * 100))%")
                 .font(.subheadline.bold())
