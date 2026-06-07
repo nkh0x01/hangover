@@ -372,6 +372,7 @@ struct WorkbenchView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
+                .accessibilityIdentifier("check")
 
                 Button { model.powerOn(game: game) } label: {
                     Label("ჩართე ძაბვა", systemImage: "bolt.fill")
@@ -379,6 +380,7 @@ struct WorkbenchView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.yellow)
+                .accessibilityIdentifier("power-on")
             }.padding(.horizontal)
         }
         .padding(.vertical, 10)

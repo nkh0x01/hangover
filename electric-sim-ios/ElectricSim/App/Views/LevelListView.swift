@@ -88,6 +88,7 @@ struct LevelListView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button { showAbout = true } label: { Image(systemName: "gearshape") }
+                    .accessibilityIdentifier("about")
             }
         }
         .safeAreaInset(edge: .bottom) { AdBannerView() }
