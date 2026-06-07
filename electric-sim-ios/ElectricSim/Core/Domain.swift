@@ -128,18 +128,43 @@ public enum ComponentKind: String, Codable, CaseIterable, Sendable {
     case smartRelay   // ჭკვიანი რელე
     case smartDimmer  // ჭკვიანი დიმერი
     case smartMeter   // ჭკვიანი მრიცხველი
+    // დამატებითი დაცვა/კომუტაცია
+    case fuse             // დამცველი (предохранитель)
+    case terminalBlock    // კლემების ბლოკი (კონექტორი)
+    case emergencyStop    // ავარიული გაჩერება
+    case selectorSwitch   // გადამრთველი (selector)
+    case indicatorLight   // სასიგნალო ნათურა
+    case currentTransformer // დენის ტრანსფორმატორი (გაზომვა)
+    case transformer      // ტრანსფორმატორი
+    case vfd              // სიხშირის გარდამქმნელი (motor drive)
+    // კვების წყაროები
+    case generator        // გენერატორი (3 ფაზა)
+    case solarPanel       // მზის პანელი (ინვერტორით)
+    case ups              // უწყვეტი კვება (UPS)
+    case inverter         // ინვერტორი
+    case battery          // აკუმულატორი
 
     /// კონექტორია? (ყველა ფეხი ერთ კვანძში ერთიანდება)
-    public var isConnector: Bool { self == .busbar || self == .wago }
+    public var isConnector: Bool { self == .busbar || self == .wago || self == .terminalBlock }
 
     /// 3-ფაზიანი დატვირთვაა?
     public var isThreePhaseLoad: Bool { self == .motor || self == .socket3ph }
+
+    /// კვების წყაროა? (ქსელში ასხამს L/N/PE-ს)
+    public var isSource: Bool {
+        switch self {
+        case .supply, .generator, .solarPanel, .ups, .inverter, .battery:
+            return true
+        default:
+            return false
+        }
+    }
 
     /// დატვირთვაა?
     public var isLoad: Bool {
         switch self {
         case .lamp, .dimmer, .socket, .boiler, .oven, .heater, .airConditioner,
-             .motor, .socket3ph:
+             .motor, .socket3ph, .indicatorLight:
             return true
         default:
             return false
@@ -150,7 +175,8 @@ public enum ComponentKind: String, Codable, CaseIterable, Sendable {
     public var isSeriesDevice: Bool {
         switch self {
         case .mainSwitch, .mcb, .mpcb, .rcbo, .rcd, .contactor, .relay, .lightSwitch,
-             .smartSwitch, .smartRelay, .smartDimmer, .smartMeter:
+             .smartSwitch, .smartRelay, .smartDimmer, .smartMeter,
+             .fuse, .emergencyStop, .selectorSwitch, .currentTransformer, .transformer, .vfd:
             return true
         default:
             return false
@@ -158,7 +184,7 @@ public enum ComponentKind: String, Codable, CaseIterable, Sendable {
     }
 
     /// დამცავი ავტომატია (ampacity/ნომინალის შემოწმებისთვის)?
-    public var isBreaker: Bool { self == .mcb || self == .mpcb || self == .rcbo }
+    public var isBreaker: Bool { self == .mcb || self == .mpcb || self == .rcbo || self == .fuse }
 }
 
 // MARK: - Port (ფეხი / terminal)
@@ -400,6 +426,19 @@ public enum ComponentFactory {
     public static func mpcb(id: String, ratingA: Double, curve: BreakerCurve = .D) -> Component {
         seriesDevice(id: id, kind: .mpcb, name: "MPCB \(Int(ratingA))A",
                      conductors: [.L1, .L2, .L3], ratingA: ratingA, curve: curve)
+    }
+
+    /// კვების წყარო (გენერატორი/მზე/UPS/ინვერტორი/აკუმულატორი) — supply-ის მსგავსი output.
+    public static func source(id: String, kind: ComponentKind, name: String,
+                              phase: Phase = .single) -> Component {
+        var ports: [Port] = []
+        let hots: [Conductor] = phase == .single ? [.L] : [.L1, .L2, .L3]
+        for c in hots {
+            ports.append(Port(id: pid(id, c.rawValue), conductor: c, side: .output, name: c.rawValue))
+        }
+        ports.append(Port(id: pid(id, "N"), conductor: .N, side: .output, name: "N"))
+        ports.append(Port(id: pid(id, "PE"), conductor: .PE, side: .output, name: "PE"))
+        return Component(id: id, kind: kind, name: name, poles: phase == .single ? 1 : 3, ports: ports)
     }
 }
 

@@ -56,14 +56,17 @@ public struct CircuitSolver {
 
         func net(_ portID: String) -> String { uf.find(portID) }
 
-        // --- 2. კვების ქსელები ---
-        guard let supply = board.supply else {
+        // --- 2. კვების ქსელები (ერთი ან მეტი წყარო) ---
+        let sources = board.components.filter { $0.kind.isSource }
+        guard !sources.isEmpty else {
             issues.append(Issue(code: .noSupply))
             return SimulationResult(issues: issues, loadStates: [], energized: false)
         }
-        var supplyNet: [Conductor: String] = [:]
-        for port in supply.ports where port.side == .output {
-            supplyNet[port.conductor] = net(port.id)
+        var sourceSeeds: [(Conductor, String)] = []
+        for src in sources {
+            for port in src.ports where port.side == .output {
+                sourceSeeds.append((port.conductor, net(port.id)))
+            }
         }
 
         // --- 3. მიმდევრობითი მოწყობილობების კიდეები (closed) ---
@@ -81,7 +84,7 @@ public struct CircuitSolver {
 
         // --- 4. იარლიყების გავრცელება (ორმხრივად, fixpoint) ---
         var labels: [String: Set<Conductor>] = [:]
-        for (c, n) in supplyNet { labels[n, default: []].insert(c) }
+        for (c, n) in sourceSeeds { labels[n, default: []].insert(c) }
         var changed = true
         while changed {
             changed = false
@@ -119,8 +122,8 @@ public struct CircuitSolver {
         var parentNet: [String: String] = [:]         // net -> ზემოთა net
         var queue: [String] = []
         var visited: Set<String> = []
-        for c in [Conductor.L, .L1, .L2, .L3] {
-            if let n = supplyNet[c] { queue.append(n); visited.insert(n) }
+        for (c, n) in sourceSeeds where c.isHot {
+            if !visited.contains(n) { queue.append(n); visited.insert(n) }
         }
         while !queue.isEmpty {
             let cur = queue.removeFirst()

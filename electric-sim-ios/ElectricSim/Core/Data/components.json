@@ -261,5 +261,18 @@
     "powerW": 18,
     "requiresPE": false,
     "priceGEL": 20
-  }
+  },
+  { "id": "fuse_16", "kind": "fuse", "name": "დამცველი 16A", "ratingA": 16, "poles": 1, "priceGEL": 6 },
+  { "id": "terminal_block", "kind": "terminalBlock", "name": "კლემების ბლოკი", "poles": 6, "priceGEL": 5 },
+  { "id": "estop", "kind": "emergencyStop", "name": "ავარიული გაჩერება", "poles": 3, "priceGEL": 22 },
+  { "id": "selector", "kind": "selectorSwitch", "name": "გადამრთველი", "poles": 1, "priceGEL": 18 },
+  { "id": "indicator", "kind": "indicatorLight", "name": "სასიგნალო ნათურა", "powerW": 2, "requiresPE": false, "priceGEL": 6 },
+  { "id": "ct", "kind": "currentTransformer", "name": "დენის ტრანსფ.", "poles": 1, "priceGEL": 25 },
+  { "id": "transformer", "kind": "transformer", "name": "ტრანსფორმატორი", "poles": 3, "priceGEL": 400 },
+  { "id": "vfd", "kind": "vfd", "name": "VFD სიხშ. გარდამქმნელი", "poles": 3, "priceGEL": 650 },
+  { "id": "generator", "kind": "generator", "name": "გენერატორი 3-ფაზა", "priceGEL": 3500 },
+  { "id": "solar", "kind": "solarPanel", "name": "მზის პანელი", "priceGEL": 250 },
+  { "id": "ups", "kind": "ups", "name": "UPS უწყვეტი კვება", "priceGEL": 700 },
+  { "id": "inverter", "kind": "inverter", "name": "ინვერტორი", "priceGEL": 900 },
+  { "id": "battery", "kind": "battery", "name": "აკუმულატორი", "priceGEL": 500 }
 ]

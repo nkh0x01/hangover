@@ -155,10 +155,12 @@ extension CircuitSolver {
         }
         func net(_ id: String) -> String { uf.find(id) }
 
-        // საერთო შემომავალი (სტანდარტული რიგი)
+        // საერთო შემომავალი (წყაროები → მთავარი → SPD → RCD)
         var incomer: [SLDNode] = []
-        let order: [ComponentKind] = [.supply, .mainSwitch, .spd, .rcd]
-        for kind in order {
+        for c in board.components where c.kind.isSource {
+            incomer.append(node(for: c))
+        }
+        for kind in [ComponentKind.mainSwitch, .spd, .rcd] {
             for c in board.components where c.kind == kind {
                 incomer.append(node(for: c))
             }
@@ -230,6 +232,19 @@ extension ComponentKind {
         case .smartRelay: return "Smart რელე"
         case .smartDimmer: return "Smart დიმერი"
         case .smartMeter: return "Smart მრიცხ."
+        case .fuse: return "დამცველი"
+        case .terminalBlock: return "კლემები"
+        case .emergencyStop: return "ავარიული გაჩერება"
+        case .selectorSwitch: return "გადამრთველი"
+        case .indicatorLight: return "სასიგნალო ნათურა"
+        case .currentTransformer: return "დენის ტრანსფ."
+        case .transformer: return "ტრანსფორმატორი"
+        case .vfd: return "VFD"
+        case .generator: return "გენერატორი"
+        case .solarPanel: return "მზის პანელი"
+        case .ups: return "UPS"
+        case .inverter: return "ინვერტორი"
+        case .battery: return "აკუმულატორი"
         }
     }
 }

@@ -67,6 +67,19 @@ extension ComponentKind {
         case .smartRelay: return "wifi.circle.fill"
         case .smartDimmer: return "slider.horizontal.below.sun.max"
         case .smartMeter: return "gauge.with.needle.fill"
+        case .fuse:       return "bolt.horizontal.circle.fill"
+        case .terminalBlock: return "rectangle.split.3x1.fill"
+        case .emergencyStop: return "stop.circle.fill"
+        case .selectorSwitch: return "switch.2"
+        case .indicatorLight: return "lightbulb.fill"
+        case .currentTransformer: return "circle.dashed"
+        case .transformer: return "bolt.square.fill"
+        case .vfd:        return "waveform.path"
+        case .generator:  return "bolt.fill"
+        case .solarPanel: return "sun.max.fill"
+        case .ups:        return "battery.100.bolt"
+        case .inverter:   return "arrow.left.arrow.right"
+        case .battery:    return "battery.100"
         }
     }
 
@@ -97,6 +110,19 @@ extension ComponentKind {
         case .smartRelay: return "Smart რელე"
         case .smartDimmer: return "Smart დიმერი"
         case .smartMeter: return "Smart მრიცხ."
+        case .fuse:       return "დამცველი"
+        case .terminalBlock: return "კლემები"
+        case .emergencyStop: return "ავარიული"
+        case .selectorSwitch: return "გადამრთ."
+        case .indicatorLight: return "სიგნ. ნათ."
+        case .currentTransformer: return "დენის ტრ."
+        case .transformer: return "ტრანსფ."
+        case .vfd:        return "VFD"
+        case .generator:  return "გენერატ."
+        case .solarPanel: return "მზის პან."
+        case .ups:        return "UPS"
+        case .inverter:   return "ინვერტ."
+        case .battery:    return "აკუმ."
         }
     }
 }

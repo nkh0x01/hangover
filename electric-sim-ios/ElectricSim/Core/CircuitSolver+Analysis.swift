@@ -31,8 +31,8 @@ extension CircuitSolver {
         func net(_ id: String) -> String { uf.find(id) }
 
         var labels: [String: Set<Conductor>] = [:]
-        if let supply = board.supply {
-            for p in supply.ports where p.side == .output {
+        for src in board.components where src.kind.isSource {
+            for p in src.ports where p.side == .output {
                 labels[net(p.id), default: []].insert(p.conductor)
             }
         }

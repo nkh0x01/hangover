@@ -98,6 +98,19 @@ public enum BOMBuilder {
         case .motor: return 800
         case .smartSwitch, .smartRelay, .smartDimmer: return 45
         case .smartMeter: return 90
+        case .fuse: return 6
+        case .terminalBlock: return 5
+        case .emergencyStop: return 22
+        case .selectorSwitch: return 18
+        case .indicatorLight: return 6
+        case .currentTransformer: return 25
+        case .transformer: return 400
+        case .vfd: return 650
+        case .generator: return 3500
+        case .solarPanel: return 250
+        case .ups: return 700
+        case .inverter: return 900
+        case .battery: return 500
         case .supply: return 0
         }
     }
@@ -148,7 +161,7 @@ extension CircuitSolver {
             }
         }
         var supplyNets = Set<String>()
-        if let s = board.supply {
+        for s in board.components where s.kind.isSource {
             for p in s.ports where p.side == .output && p.conductor.isHot { supplyNets.insert(net(p.id)) }
         }
         var parentDevice: [String: Component] = [:]

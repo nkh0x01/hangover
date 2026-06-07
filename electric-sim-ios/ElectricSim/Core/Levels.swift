@@ -57,14 +57,15 @@ public struct ComponentTemplate: Codable, Identifiable, Sendable {
             return ComponentFactory.motor(id: instanceID, powerW: powerW ?? 4000)
         case .mpcb:
             return ComponentFactory.mpcb(id: instanceID, ratingA: ratingA ?? 16, curve: curve ?? .D)
-        case .contactor, .relay, .lightSwitch, .smartSwitch, .smartRelay, .smartDimmer, .smartMeter:
+        case .contactor, .relay, .lightSwitch, .smartSwitch, .smartRelay, .smartDimmer, .smartMeter,
+             .fuse, .emergencyStop, .selectorSwitch, .currentTransformer, .transformer, .vfd:
             let conductors: [Conductor] = (poles ?? 1) >= 3 ? [.L1, .L2, .L3] : [.L]
             return ComponentFactory.seriesDevice(id: instanceID, kind: kind, name: name,
                                                  conductors: conductors, ratingA: ratingA)
-        case .wago:
-            return ComponentFactory.connector(id: instanceID, kind: .wago, name: name,
+        case .wago, .terminalBlock:
+            return ComponentFactory.connector(id: instanceID, kind: kind, name: name,
                                               conductor: .L, slots: poles ?? 5)
-        case .dimmer, .boiler, .oven, .heater, .airConditioner:
+        case .dimmer, .boiler, .oven, .heater, .airConditioner, .indicatorLight:
             return ComponentFactory.appliance(id: instanceID, kind: kind, name: name,
                                               powerW: powerW ?? 2000,
                                               requiresPE: requiresPE ?? true,
@@ -73,6 +74,10 @@ public struct ComponentTemplate: Codable, Identifiable, Sendable {
             return ComponentFactory.appliance(id: instanceID, kind: .socket3ph, name: name,
                                               powerW: powerW ?? 6000,
                                               requiresPE: true, threePhase: true, leakageMa: leakageMa)
+        case .generator:
+            return ComponentFactory.source(id: instanceID, kind: .generator, name: name, phase: .three)
+        case .solarPanel, .ups, .inverter, .battery:
+            return ComponentFactory.source(id: instanceID, kind: kind, name: name, phase: .single)
         }
     }
 }

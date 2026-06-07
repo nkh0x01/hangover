@@ -624,6 +624,69 @@ final class CircuitSolverTests: XCTestCase {
         XCTAssertFalse(bom.items.contains { $0.name.contains("კვება") })
     }
 
+    // MARK: - მრავალი წყარო + ახალი კომპონენტები
+
+    func testBatterySourcePowersLamp() {
+        var b = Board(phase: .single)
+        b.add(ComponentFactory.source(id: "BAT", kind: .battery, name: "battery", phase: .single))
+        b.add(ComponentFactory.mainSwitch(id: "MS"))
+        b.add(ComponentFactory.mcb(id: "B", ratingA: 10))
+        b.add(ComponentFactory.lamp(id: "LAMP"))
+        b.connect("BAT.L", "MS.Lin", csaMm2: 1.5, color: .brown)
+        b.connect("MS.Lout", "B.in", csaMm2: 1.5, color: .brown)
+        b.connect("B.out", "LAMP.L", csaMm2: 1.5, color: .brown)
+        b.connect("BAT.N", "MS.Nin", csaMm2: 1.5, color: .blue)
+        b.connect("MS.Nout", "LAMP.N", csaMm2: 1.5, color: .blue)
+        b.connect("BAT.PE", "LAMP.PE", csaMm2: 1.5, color: .yellowGreen)
+        let r = solver.solve(b, energize: true)
+        XCTAssertTrue(r.passed, "ბატარეა (წყარო) უნდა კვებავდეს: \(r.errors.map(\.code))")
+        XCTAssertTrue(r.state(for: "LAMP")!.isPowered)
+    }
+
+    func testGeneratorPowersMotor() {
+        var b = Board(phase: .three)
+        b.add(ComponentFactory.source(id: "GEN", kind: .generator, name: "gen", phase: .three))
+        b.add(ComponentFactory.mainSwitch(id: "M", phase: .three))
+        b.add(ComponentFactory.mcb(id: "B", ratingA: 16, curve: .C))
+        b.add(ComponentFactory.motor(id: "MOT", powerW: 4000))
+        for c in ["L1", "L2", "L3"] { b.connect("GEN.\(c)", "M.\(c)in", csaMm2: 2.5, color: .brown) }
+        b.connect("M.L1out", "B.in", csaMm2: 2.5, color: .brown)
+        b.connect("B.out", "MOT.L1", csaMm2: 2.5, color: .brown)
+        b.connect("M.L2out", "MOT.L2", csaMm2: 2.5, color: .black)
+        b.connect("M.L3out", "MOT.L3", csaMm2: 2.5, color: .grey)
+        b.connect("GEN.PE", "MOT.PE", csaMm2: 2.5, color: .yellowGreen)
+        let r = solver.solve(b, energize: true)
+        XCTAssertTrue(r.state(for: "MOT")!.isPowered, "გენერატორი უნდა ამუშავებდეს მოტორს")
+    }
+
+    func testFuseActsAsBreaker() {
+        var b = Board(phase: .single)
+        b.add(ComponentFactory.supply(id: "S"))
+        b.add(ComponentFactory.mainSwitch(id: "MS"))
+        b.add(ComponentFactory.seriesDevice(id: "F", kind: .fuse, name: "fuse",
+                                            conductors: [.L], ratingA: 20))
+        b.add(ComponentFactory.lamp(id: "LAMP"))
+        b.connect("S.L", "MS.Lin", csaMm2: 1.5, color: .brown)
+        b.connect("MS.Lout", "F.Lin", csaMm2: 1.5, color: .brown)
+        b.connect("F.Lout", "LAMP.L", csaMm2: 1.5, color: .brown)
+        b.connect("S.N", "MS.Nin", csaMm2: 1.5, color: .blue)
+        b.connect("MS.Nout", "LAMP.N", csaMm2: 1.5, color: .blue)
+        b.connect("S.PE", "LAMP.PE", csaMm2: 1.5, color: .yellowGreen)
+        // 20A დამცველი 1.5mm²-ზე (max 16A) → ampacity შეცდომა (fuse=isBreaker)
+        let r = solver.solve(b)
+        XCTAssertTrue(r.errors.contains { $0.code == .breakerExceedsCable })
+    }
+
+    func testNewKindsLoad() throws {
+        let t = try GameData.loadTemplates()
+        for id in ["fuse_16", "terminal_block", "estop", "vfd", "generator", "battery", "inverter"] {
+            XCTAssertNotNil(t[id], "უნდა არსებობდეს: \(id)")
+        }
+        XCTAssertTrue(t["terminal_block"]!.makeComponent(instanceID: "x").kind.isConnector)
+        XCTAssertTrue(t["generator"]!.makeComponent(instanceID: "g").kind.isSource)
+        XCTAssertTrue(t["fuse_16"]!.makeComponent(instanceID: "f").kind.isBreaker)
+    }
+
     // MARK: - 13. სადენის ფერები (IEC)
 
     func testWireColors() {

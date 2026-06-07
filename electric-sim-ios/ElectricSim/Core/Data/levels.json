@@ -7,12 +7,27 @@
     "hint": "კვებიდან: L → მთავარი ამომრთველი → ავტომატი B10 → ნათურის L. N → მთავარი ამომრთველი → ნათურის N. PE → ნათურის PE. გამოიყენე 1.5mm² კაბელი განათებაზე.",
     "phase": "single",
     "palette": [
-      { "templateId": "main_2p", "max": 1 },
-      { "templateId": "mcb_b10", "max": 1, "csaOptions": [1.5, 2.5] },
-      { "templateId": "lamp_60", "max": 1 }
+      {
+        "templateId": "main_2p",
+        "max": 1
+      },
+      {
+        "templateId": "mcb_b10",
+        "max": 1,
+        "csaOptions": [
+          1.5,
+          2.5
+        ]
+      },
+      {
+        "templateId": "lamp_60",
+        "max": 1
+      }
     ],
     "goal": {
-      "poweredLoads": { "lamp": 1 },
+      "poweredLoads": {
+        "lamp": 1
+      },
       "description": "ნათურა უნდა აანთდეს, შეცდომებისა და გაგდების გარეშე."
     }
   },
@@ -24,13 +39,32 @@
     "hint": "L → მთავარი → RCD → ავტომატი B16 → როზეტი. N → მთავარი → RCD → როზეტი. PE პირდაპირ მიწის ზოლიდან როზეტამდე. RCD-ის გარეშე როზეტი დაუშვებელია.",
     "phase": "single",
     "palette": [
-      { "templateId": "main_2p", "max": 1 },
-      { "templateId": "rcd_30", "max": 1 },
-      { "templateId": "mcb_b16", "max": 1, "csaOptions": [1.5, 2.5, 4] },
-      { "templateId": "socket_16", "max": 1 }
+      {
+        "templateId": "main_2p",
+        "max": 1
+      },
+      {
+        "templateId": "rcd_30",
+        "max": 1
+      },
+      {
+        "templateId": "mcb_b16",
+        "max": 1,
+        "csaOptions": [
+          1.5,
+          2.5,
+          4
+        ]
+      },
+      {
+        "templateId": "socket_16",
+        "max": 1
+      }
     ],
     "goal": {
-      "poweredLoads": { "socket": 1 },
+      "poweredLoads": {
+        "socket": 1
+      },
       "description": "როზეტი უნდა იკვებებოდეს RCD-ის დაცვით, ampacity-ს დაცვით."
     }
   },
@@ -42,17 +76,52 @@
     "hint": "სტანდარტული თანმიმდევრობა: მთავარი → SPD → RCD → ავტომატები (busbar-ით) → ხაზები. განათება 1.5mm², როზეტი 2.5mm².",
     "phase": "single",
     "palette": [
-      { "templateId": "main_2p", "max": 1 },
-      { "templateId": "spd", "max": 1 },
-      { "templateId": "rcd_30", "max": 1 },
-      { "templateId": "busbar_l", "max": 1 },
-      { "templateId": "mcb_b10", "max": 1, "csaOptions": [1.5, 2.5] },
-      { "templateId": "mcb_b16", "max": 1, "csaOptions": [2.5, 4] },
-      { "templateId": "lamp_60", "max": 1 },
-      { "templateId": "socket_16", "max": 1 }
+      {
+        "templateId": "main_2p",
+        "max": 1
+      },
+      {
+        "templateId": "spd",
+        "max": 1
+      },
+      {
+        "templateId": "rcd_30",
+        "max": 1
+      },
+      {
+        "templateId": "busbar_l",
+        "max": 1
+      },
+      {
+        "templateId": "mcb_b10",
+        "max": 1,
+        "csaOptions": [
+          1.5,
+          2.5
+        ]
+      },
+      {
+        "templateId": "mcb_b16",
+        "max": 1,
+        "csaOptions": [
+          2.5,
+          4
+        ]
+      },
+      {
+        "templateId": "lamp_60",
+        "max": 1
+      },
+      {
+        "templateId": "socket_16",
+        "max": 1
+      }
     ],
     "goal": {
-      "poweredLoads": { "lamp": 1, "socket": 1 },
+      "poweredLoads": {
+        "lamp": 1,
+        "socket": 1
+      },
       "description": "ორივე ხაზი უნდა მუშაობდეს, RCD-ითა და სწორი კაბელებით."
     }
   },
@@ -67,21 +136,90 @@
     "palette": [],
     "prebuilt": {
       "components": [
-        { "templateId": "supply_1ph", "id": "supply" },
-        { "templateId": "main_2p", "id": "main" },
-        { "templateId": "mcb_b10", "id": "brk" },
-        { "templateId": "lamp_60", "id": "lamp" }
+        {
+          "templateId": "supply_1ph",
+          "id": "supply"
+        },
+        {
+          "templateId": "main_2p",
+          "id": "main"
+        },
+        {
+          "templateId": "mcb_b10",
+          "id": "brk"
+        },
+        {
+          "templateId": "lamp_60",
+          "id": "lamp"
+        }
       ],
       "wires": [
-        { "from": { "c": "supply", "p": "L" }, "to": { "c": "main", "p": "Lin" }, "csa": 1.5, "color": "brown" },
-        { "from": { "c": "main", "p": "Lout" }, "to": { "c": "brk", "p": "in" }, "csa": 1.5, "color": "brown" },
-        { "from": { "c": "brk", "p": "out" }, "to": { "c": "lamp", "p": "L" }, "csa": 1.5, "color": "brown" },
-        { "from": { "c": "supply", "p": "N" }, "to": { "c": "main", "p": "Nin" }, "csa": 1.5, "color": "blue" },
-        { "from": { "c": "supply", "p": "PE" }, "to": { "c": "lamp", "p": "PE" }, "csa": 1.5, "color": "yellowGreen" }
+        {
+          "from": {
+            "c": "supply",
+            "p": "L"
+          },
+          "to": {
+            "c": "main",
+            "p": "Lin"
+          },
+          "csa": 1.5,
+          "color": "brown"
+        },
+        {
+          "from": {
+            "c": "main",
+            "p": "Lout"
+          },
+          "to": {
+            "c": "brk",
+            "p": "in"
+          },
+          "csa": 1.5,
+          "color": "brown"
+        },
+        {
+          "from": {
+            "c": "brk",
+            "p": "out"
+          },
+          "to": {
+            "c": "lamp",
+            "p": "L"
+          },
+          "csa": 1.5,
+          "color": "brown"
+        },
+        {
+          "from": {
+            "c": "supply",
+            "p": "N"
+          },
+          "to": {
+            "c": "main",
+            "p": "Nin"
+          },
+          "csa": 1.5,
+          "color": "blue"
+        },
+        {
+          "from": {
+            "c": "supply",
+            "p": "PE"
+          },
+          "to": {
+            "c": "lamp",
+            "p": "PE"
+          },
+          "csa": 1.5,
+          "color": "yellowGreen"
+        }
       ]
     },
     "goal": {
-      "poweredLoads": { "lamp": 1 },
+      "poweredLoads": {
+        "lamp": 1
+      },
       "description": "გამოტოვებული ნულის სადენის დამატების შემდეგ ნათურა აანთდება."
     }
   },
@@ -96,23 +234,114 @@
     "palette": [],
     "prebuilt": {
       "components": [
-        { "templateId": "supply_1ph", "id": "supply" },
-        { "templateId": "main_2p", "id": "main" },
-        { "templateId": "mcb_b10", "id": "brk" },
-        { "templateId": "lamp_60", "id": "lamp" }
+        {
+          "templateId": "supply_1ph",
+          "id": "supply"
+        },
+        {
+          "templateId": "main_2p",
+          "id": "main"
+        },
+        {
+          "templateId": "mcb_b10",
+          "id": "brk"
+        },
+        {
+          "templateId": "lamp_60",
+          "id": "lamp"
+        }
       ],
       "wires": [
-        { "from": { "c": "supply", "p": "L" }, "to": { "c": "main", "p": "Lin" }, "csa": 1.5, "color": "brown" },
-        { "from": { "c": "main", "p": "Lout" }, "to": { "c": "brk", "p": "in" }, "csa": 1.5, "color": "brown" },
-        { "from": { "c": "brk", "p": "out" }, "to": { "c": "lamp", "p": "L" }, "csa": 1.5, "color": "brown" },
-        { "from": { "c": "supply", "p": "N" }, "to": { "c": "main", "p": "Nin" }, "csa": 1.5, "color": "blue" },
-        { "from": { "c": "main", "p": "Nout" }, "to": { "c": "lamp", "p": "N" }, "csa": 1.5, "color": "blue" },
-        { "from": { "c": "supply", "p": "PE" }, "to": { "c": "lamp", "p": "PE" }, "csa": 1.5, "color": "yellowGreen" },
-        { "from": { "c": "lamp", "p": "L" }, "to": { "c": "lamp", "p": "N" }, "csa": 1.5, "color": "brown" }
+        {
+          "from": {
+            "c": "supply",
+            "p": "L"
+          },
+          "to": {
+            "c": "main",
+            "p": "Lin"
+          },
+          "csa": 1.5,
+          "color": "brown"
+        },
+        {
+          "from": {
+            "c": "main",
+            "p": "Lout"
+          },
+          "to": {
+            "c": "brk",
+            "p": "in"
+          },
+          "csa": 1.5,
+          "color": "brown"
+        },
+        {
+          "from": {
+            "c": "brk",
+            "p": "out"
+          },
+          "to": {
+            "c": "lamp",
+            "p": "L"
+          },
+          "csa": 1.5,
+          "color": "brown"
+        },
+        {
+          "from": {
+            "c": "supply",
+            "p": "N"
+          },
+          "to": {
+            "c": "main",
+            "p": "Nin"
+          },
+          "csa": 1.5,
+          "color": "blue"
+        },
+        {
+          "from": {
+            "c": "main",
+            "p": "Nout"
+          },
+          "to": {
+            "c": "lamp",
+            "p": "N"
+          },
+          "csa": 1.5,
+          "color": "blue"
+        },
+        {
+          "from": {
+            "c": "supply",
+            "p": "PE"
+          },
+          "to": {
+            "c": "lamp",
+            "p": "PE"
+          },
+          "csa": 1.5,
+          "color": "yellowGreen"
+        },
+        {
+          "from": {
+            "c": "lamp",
+            "p": "L"
+          },
+          "to": {
+            "c": "lamp",
+            "p": "N"
+          },
+          "csa": 1.5,
+          "color": "brown"
+        }
       ]
     },
     "goal": {
-      "poweredLoads": { "lamp": 1 },
+      "poweredLoads": {
+        "lamp": 1
+      },
       "description": "ზედმეტი (L–N) სადენის წაშლის შემდეგ ნათურა აანთდება გაგდების გარეშე."
     }
   },
@@ -125,29 +354,141 @@
     "phase": "single",
     "mode": "faultFind",
     "palette": [
-      { "templateId": "socket_16", "max": 1, "csaOptions": [2.5] }
+      {
+        "templateId": "socket_16",
+        "max": 1,
+        "csaOptions": [
+          2.5
+        ]
+      }
     ],
     "prebuilt": {
       "components": [
-        { "templateId": "supply_1ph", "id": "supply" },
-        { "templateId": "main_2p", "id": "main" },
-        { "templateId": "rcd_30", "id": "rcd" },
-        { "templateId": "mcb_b16", "id": "brk" },
-        { "templateId": "socket_16", "id": "soc", "leakageMa": 80 }
+        {
+          "templateId": "supply_1ph",
+          "id": "supply"
+        },
+        {
+          "templateId": "main_2p",
+          "id": "main"
+        },
+        {
+          "templateId": "rcd_30",
+          "id": "rcd"
+        },
+        {
+          "templateId": "mcb_b16",
+          "id": "brk"
+        },
+        {
+          "templateId": "socket_16",
+          "id": "soc",
+          "leakageMa": 80
+        }
       ],
       "wires": [
-        { "from": { "c": "supply", "p": "L" }, "to": { "c": "main", "p": "Lin" }, "csa": 2.5, "color": "brown" },
-        { "from": { "c": "main", "p": "Lout" }, "to": { "c": "rcd", "p": "Lin" }, "csa": 2.5, "color": "brown" },
-        { "from": { "c": "rcd", "p": "Lout" }, "to": { "c": "brk", "p": "in" }, "csa": 2.5, "color": "brown" },
-        { "from": { "c": "brk", "p": "out" }, "to": { "c": "soc", "p": "L" }, "csa": 2.5, "color": "brown" },
-        { "from": { "c": "supply", "p": "N" }, "to": { "c": "main", "p": "Nin" }, "csa": 2.5, "color": "blue" },
-        { "from": { "c": "main", "p": "Nout" }, "to": { "c": "rcd", "p": "Nin" }, "csa": 2.5, "color": "blue" },
-        { "from": { "c": "rcd", "p": "Nout" }, "to": { "c": "soc", "p": "N" }, "csa": 2.5, "color": "blue" },
-        { "from": { "c": "supply", "p": "PE" }, "to": { "c": "soc", "p": "PE" }, "csa": 2.5, "color": "yellowGreen" }
+        {
+          "from": {
+            "c": "supply",
+            "p": "L"
+          },
+          "to": {
+            "c": "main",
+            "p": "Lin"
+          },
+          "csa": 2.5,
+          "color": "brown"
+        },
+        {
+          "from": {
+            "c": "main",
+            "p": "Lout"
+          },
+          "to": {
+            "c": "rcd",
+            "p": "Lin"
+          },
+          "csa": 2.5,
+          "color": "brown"
+        },
+        {
+          "from": {
+            "c": "rcd",
+            "p": "Lout"
+          },
+          "to": {
+            "c": "brk",
+            "p": "in"
+          },
+          "csa": 2.5,
+          "color": "brown"
+        },
+        {
+          "from": {
+            "c": "brk",
+            "p": "out"
+          },
+          "to": {
+            "c": "soc",
+            "p": "L"
+          },
+          "csa": 2.5,
+          "color": "brown"
+        },
+        {
+          "from": {
+            "c": "supply",
+            "p": "N"
+          },
+          "to": {
+            "c": "main",
+            "p": "Nin"
+          },
+          "csa": 2.5,
+          "color": "blue"
+        },
+        {
+          "from": {
+            "c": "main",
+            "p": "Nout"
+          },
+          "to": {
+            "c": "rcd",
+            "p": "Nin"
+          },
+          "csa": 2.5,
+          "color": "blue"
+        },
+        {
+          "from": {
+            "c": "rcd",
+            "p": "Nout"
+          },
+          "to": {
+            "c": "soc",
+            "p": "N"
+          },
+          "csa": 2.5,
+          "color": "blue"
+        },
+        {
+          "from": {
+            "c": "supply",
+            "p": "PE"
+          },
+          "to": {
+            "c": "soc",
+            "p": "PE"
+          },
+          "csa": 2.5,
+          "color": "yellowGreen"
+        }
       ]
     },
     "goal": {
-      "poweredLoads": { "socket": 1 },
+      "poweredLoads": {
+        "socket": 1
+      },
       "description": "გაუმართავი როზეტის გამოცვლის შემდეგ ხაზი მუშაობს RCD-ის გაგდების გარეშე."
     }
   },
@@ -159,12 +500,27 @@
     "hint": "L1 (ყავისფერი) → ნათურა 1, L2 (შავი) → ნათურა 2, L3 (ნაცრისფერი) → ნათურა 3. ნული საერთოა მთავარიდან. ყველა ნათურა ერთ ფაზაზე → დისბალანსი.",
     "phase": "three",
     "palette": [
-      { "templateId": "main_4p", "max": 1 },
-      { "templateId": "mcb_b16", "max": 3, "csaOptions": [1.5, 2.5] },
-      { "templateId": "lamp_60", "max": 3 }
+      {
+        "templateId": "main_4p",
+        "max": 1
+      },
+      {
+        "templateId": "mcb_b16",
+        "max": 3,
+        "csaOptions": [
+          1.5,
+          2.5
+        ]
+      },
+      {
+        "templateId": "lamp_60",
+        "max": 3
+      }
     ],
     "goal": {
-      "poweredLoads": { "lamp": 3 },
+      "poweredLoads": {
+        "lamp": 3
+      },
       "description": "სამივე ნათურა უნდა აანთდეს და ფაზები დაბალანსებული იყოს.",
       "requireBalanced": true
     }
@@ -177,12 +533,27 @@
     "hint": "მოტორი ინდუქციურია — გამოიყენე C მახასიათებლის ავტომატი (C16). სამივე ფაზა უნდა მიუვიდეს მოტორს, PE სავალდებულოა. 2.5mm² კაბელი საკმარისია.",
     "phase": "three",
     "palette": [
-      { "templateId": "main_4p", "max": 1 },
-      { "templateId": "mcb_c16", "max": 3, "csaOptions": [2.5, 4] },
-      { "templateId": "motor_3ph", "max": 1 }
+      {
+        "templateId": "main_4p",
+        "max": 1
+      },
+      {
+        "templateId": "mcb_c16",
+        "max": 3,
+        "csaOptions": [
+          2.5,
+          4
+        ]
+      },
+      {
+        "templateId": "motor_3ph",
+        "max": 1
+      }
     ],
     "goal": {
-      "poweredLoads": { "motor": 1 },
+      "poweredLoads": {
+        "motor": 1
+      },
       "description": "მოტორი უნდა ამუშავდეს სამივე ფაზაზე, C-ავტომატითა და მიწით."
     }
   },
@@ -195,34 +566,188 @@
     "phase": "single",
     "mode": "sandbox",
     "palette": [
-      { "templateId": "main_2p", "max": 1 },
-      { "templateId": "spd", "max": 1 },
-      { "templateId": "rcd_30", "max": 2 },
-      { "templateId": "rcbo_b16_30", "max": 2 },
-      { "templateId": "busbar_l", "max": 1 },
-      { "templateId": "mcb_b10", "max": 4, "csaOptions": [1.5, 2.5, 4, 6, 10] },
-      { "templateId": "mcb_b16", "max": 4, "csaOptions": [1.5, 2.5, 4, 6, 10] },
-      { "templateId": "mcb_b20", "max": 4, "csaOptions": [1.5, 2.5, 4, 6, 10] },
-      { "templateId": "mcb_c32", "max": 4, "csaOptions": [1.5, 2.5, 4, 6, 10] },
-      { "templateId": "mcb_d20", "max": 2, "csaOptions": [2.5, 4, 6, 10] },
-      { "templateId": "contactor_1p", "max": 2 },
-      { "templateId": "relay_1p", "max": 2 },
-      { "templateId": "light_switch", "max": 3 },
-      { "templateId": "wago_5", "max": 3 },
-      { "templateId": "lamp_60", "max": 6 },
-      { "templateId": "led_lamp", "max": 6 },
-      { "templateId": "led_panel", "max": 4 },
-      { "templateId": "led_strip", "max": 4 },
-      { "templateId": "dimmer_lamp", "max": 3 },
-      { "templateId": "socket_16", "max": 6 },
-      { "templateId": "boiler_2000", "max": 2 },
-      { "templateId": "oven_3500", "max": 2 },
-      { "templateId": "heater_2000", "max": 2 },
-      { "templateId": "ac_1500", "max": 2 },
-      { "templateId": "smart_switch", "max": 3 },
-      { "templateId": "smart_relay", "max": 3 },
-      { "templateId": "smart_dimmer", "max": 3 },
-      { "templateId": "smart_meter", "max": 1 }
+      {
+        "templateId": "main_2p",
+        "max": 1
+      },
+      {
+        "templateId": "spd",
+        "max": 1
+      },
+      {
+        "templateId": "rcd_30",
+        "max": 2
+      },
+      {
+        "templateId": "rcbo_b16_30",
+        "max": 2
+      },
+      {
+        "templateId": "busbar_l",
+        "max": 1
+      },
+      {
+        "templateId": "mcb_b10",
+        "max": 4,
+        "csaOptions": [
+          1.5,
+          2.5,
+          4,
+          6,
+          10
+        ]
+      },
+      {
+        "templateId": "mcb_b16",
+        "max": 4,
+        "csaOptions": [
+          1.5,
+          2.5,
+          4,
+          6,
+          10
+        ]
+      },
+      {
+        "templateId": "mcb_b20",
+        "max": 4,
+        "csaOptions": [
+          1.5,
+          2.5,
+          4,
+          6,
+          10
+        ]
+      },
+      {
+        "templateId": "mcb_c32",
+        "max": 4,
+        "csaOptions": [
+          1.5,
+          2.5,
+          4,
+          6,
+          10
+        ]
+      },
+      {
+        "templateId": "mcb_d20",
+        "max": 2,
+        "csaOptions": [
+          2.5,
+          4,
+          6,
+          10
+        ]
+      },
+      {
+        "templateId": "contactor_1p",
+        "max": 2
+      },
+      {
+        "templateId": "relay_1p",
+        "max": 2
+      },
+      {
+        "templateId": "light_switch",
+        "max": 3
+      },
+      {
+        "templateId": "wago_5",
+        "max": 3
+      },
+      {
+        "templateId": "lamp_60",
+        "max": 6
+      },
+      {
+        "templateId": "led_lamp",
+        "max": 6
+      },
+      {
+        "templateId": "led_panel",
+        "max": 4
+      },
+      {
+        "templateId": "led_strip",
+        "max": 4
+      },
+      {
+        "templateId": "dimmer_lamp",
+        "max": 3
+      },
+      {
+        "templateId": "socket_16",
+        "max": 6
+      },
+      {
+        "templateId": "boiler_2000",
+        "max": 2
+      },
+      {
+        "templateId": "oven_3500",
+        "max": 2
+      },
+      {
+        "templateId": "heater_2000",
+        "max": 2
+      },
+      {
+        "templateId": "ac_1500",
+        "max": 2
+      },
+      {
+        "templateId": "smart_switch",
+        "max": 3
+      },
+      {
+        "templateId": "smart_relay",
+        "max": 3
+      },
+      {
+        "templateId": "smart_dimmer",
+        "max": 3
+      },
+      {
+        "templateId": "smart_meter",
+        "max": 1
+      },
+      {
+        "templateId": "fuse_16",
+        "max": 2
+      },
+      {
+        "templateId": "terminal_block",
+        "max": 2
+      },
+      {
+        "templateId": "selector",
+        "max": 2
+      },
+      {
+        "templateId": "indicator",
+        "max": 2
+      },
+      {
+        "templateId": "ct",
+        "max": 2
+      },
+      {
+        "templateId": "solar",
+        "max": 2
+      },
+      {
+        "templateId": "ups",
+        "max": 2
+      },
+      {
+        "templateId": "inverter",
+        "max": 2
+      },
+      {
+        "templateId": "battery",
+        "max": 2
+      }
     ],
     "goal": {
       "poweredLoads": {},
@@ -238,17 +763,80 @@
     "phase": "three",
     "mode": "sandbox",
     "palette": [
-      { "templateId": "main_4p", "max": 1 },
-      { "templateId": "busbar_l", "max": 1 },
-      { "templateId": "mcb_b16", "max": 6, "csaOptions": [1.5, 2.5, 4, 6, 10] },
-      { "templateId": "mcb_c16", "max": 6, "csaOptions": [1.5, 2.5, 4, 6, 10] },
-      { "templateId": "mpcb_16", "max": 2 },
-      { "templateId": "contactor_3p", "max": 2 },
-      { "templateId": "lamp_60", "max": 6 },
-      { "templateId": "socket_16", "max": 6 },
-      { "templateId": "socket3ph_16", "max": 2 },
-      { "templateId": "motor_3ph", "max": 2 },
-      { "templateId": "smart_meter", "max": 1 }
+      {
+        "templateId": "main_4p",
+        "max": 1
+      },
+      {
+        "templateId": "busbar_l",
+        "max": 1
+      },
+      {
+        "templateId": "mcb_b16",
+        "max": 6,
+        "csaOptions": [
+          1.5,
+          2.5,
+          4,
+          6,
+          10
+        ]
+      },
+      {
+        "templateId": "mcb_c16",
+        "max": 6,
+        "csaOptions": [
+          1.5,
+          2.5,
+          4,
+          6,
+          10
+        ]
+      },
+      {
+        "templateId": "mpcb_16",
+        "max": 2
+      },
+      {
+        "templateId": "contactor_3p",
+        "max": 2
+      },
+      {
+        "templateId": "lamp_60",
+        "max": 6
+      },
+      {
+        "templateId": "socket_16",
+        "max": 6
+      },
+      {
+        "templateId": "socket3ph_16",
+        "max": 2
+      },
+      {
+        "templateId": "motor_3ph",
+        "max": 2
+      },
+      {
+        "templateId": "smart_meter",
+        "max": 1
+      },
+      {
+        "templateId": "estop",
+        "max": 2
+      },
+      {
+        "templateId": "transformer",
+        "max": 2
+      },
+      {
+        "templateId": "vfd",
+        "max": 2
+      },
+      {
+        "templateId": "generator",
+        "max": 2
+      }
     ],
     "goal": {
       "poweredLoads": {},
