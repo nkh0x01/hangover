@@ -91,10 +91,10 @@ final class GameState: ObservableObject {
     }
 
     func markCompleted(_ level: Level) {
-        guard !completedLevelIDs.contains(level.id) else { return }
-        completedLevelIDs.insert(level.id)
+        let isNew = completedLevelIDs.insert(level.id).inserted
+        // ყოველთვის ვწერთ — პროგრესი შენახული უნდა იყოს „შემდეგი დონე"-ზეც და მენიუში დაბრუნებაზეც.
         UserDefaults.standard.set(Array(completedLevelIDs), forKey: progressKey)
-        evaluateCompletionAchievements(level)
+        if isNew { evaluateCompletionAchievements(level) }
     }
 
     func resetProgress() {

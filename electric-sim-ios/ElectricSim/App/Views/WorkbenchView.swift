@@ -252,8 +252,19 @@ struct PortFrameKey: PreferenceKey {
     }
 }
 
+/// კომპონენტის ბარათის ჩარჩო "board" სივრცეში — გადაადგილების hit-test-ისთვის.
+struct CardFrameKey: PreferenceKey {
+    static let defaultValue: [String: CGRect] = [:]
+    static func reduce(value: inout [String: CGRect], nextValue: () -> [String: CGRect]) {
+        value.merge(nextValue()) { $1 }
+    }
+}
+
 /// "board" — საერთო კოორდინატთა სივრცე drag-ისა და ფეხების პოზიციებისთვის.
 let kBoardSpace = "board"
+
+/// ფარზე ერთიანი drag-ის რეჟიმი.
+enum BoardDragMode { case none, wire, move, pan }
 
 // MARK: - Workbench view
 
@@ -265,10 +276,14 @@ struct WorkbenchView: View {
     @State private var showHint = false
     @State private var showReports = false
     @State private var showPaywall = false
-    // drag-to-wire
+    // ფარის ჟესტები (board სივრცე)
     @State private var portPoints: [String: CGPoint] = [:]
+    @State private var componentFrames: [String: CGRect] = [:]
+    @State private var dragMode: BoardDragMode = .none
     @State private var dragFrom: String?
+    @State private var moveID: String?
     @State private var dragCurrent: CGPoint = .zero
+    @State private var isZooming = false
 
     /// უფასოში ბაზისური ნაკრები (main switch, MCB, RCD, ნათურა, როზეტი + კაბელი).
     private func isPaletteLocked(_ e: PaletteEntry) -> Bool {
@@ -280,44 +295,76 @@ struct WorkbenchView: View {
     @State private var zoom: CGFloat = 1.0
     @GestureState private var pinch: CGFloat = 1.0
     @State private var pan: CGSize = .zero
-    @GestureState private var drag: CGSize = .zero
+    @GestureState private var panLive: CGSize = .zero
 
     init(level: Level, path: Binding<[String]>) {
         _path = path
         _model = StateObject(wrappedValue: WorkbenchModel(level: level, templates: [:]))
     }
 
-    // MARK: drag-to-wire handlers (board სივრცეში)
-    private func portDragChanged(_ id: String, _ loc: CGPoint) {
-        guard model.tool == .wire else { return }
-        dragFrom = id
-        dragCurrent = loc
+    // MARK: კოორდინატები (screen/container → board, scale/offset-ის გათვალისწინებით)
+    private func toBoard(_ p: CGPoint) -> CGPoint {
+        let z = max(zoom, 0.01)
+        return CGPoint(x: (p.x - pan.width) / z, y: (p.y - pan.height) / z)
     }
-    private func portDragEnded(_ id: String, _ loc: CGPoint) {
-        defer { dragFrom = nil }
-        guard model.tool == .wire else { return }
-        if let target = nearestPort(to: loc, excluding: id) {
-            model.connectPorts(id, target)   // snap to target terminal
-        }
-        // ცარიელ ადგილზე გაშვება → გაუქმება (target == nil)
-    }
-    private func nearestPort(to p: CGPoint, excluding: String) -> String? {
+    private func nearestPort(to p: CGPoint, excluding: String?) -> String? {
         var best: String?; var bestD = CGFloat.greatestFiniteMagnitude
         for (pid, pt) in portPoints where pid != excluding {
             let d = hypot(pt.x - p.x, pt.y - p.y)
             if d < bestD { bestD = d; best = pid }
         }
-        return bestD <= 36 ? best : nil   // snap threshold
+        return bestD <= 36 ? best : nil   // snap threshold (board units)
+    }
+    private func componentAt(_ p: CGPoint) -> String? {
+        componentFrames.first(where: { $0.value.contains(p) })?.key
     }
 
-    // MARK: component move
-    private func handleMove(_ id: String, _ tx: CGFloat) {
-        let cardStride: CGFloat = 140      // ~ბარათის სიგანე + დაშორება
-        let shift = Int((tx / cardStride).rounded())
-        guard shift != 0 else { return }
-        let ids: Set<String> = (model.selection.contains(id) && !model.selection.isEmpty)
-            ? model.selection : [id]
-        model.moveComponents(ids, by: shift)
+    // MARK: ფარის ერთიანი drag — wire / move / pan (mode იწყობა საწყისი წერტილით).
+    private var boardDrag: some Gesture {
+        DragGesture(minimumDistance: 6)
+            .updating($panLive) { v, st, _ in if dragMode == .pan { st = v.translation } }
+            .onChanged { v in
+                if dragMode == .none {
+                    if isZooming { return }   // pinch-ის დროს pan არ ვიწყოთ
+                    let b = toBoard(v.startLocation)
+                    if model.tool == .wire, let p = nearestPort(to: b, excluding: nil) {
+                        dragMode = .wire; dragFrom = p              // ფეხზე → სადენი
+                    } else if let cid = componentAt(b) {
+                        dragMode = .move; moveID = cid              // კომპონენტზე → გადატანა
+                    } else {
+                        dragMode = .pan                            // ცარიელზე → პანი
+                    }
+                }
+                if dragMode == .wire { dragCurrent = toBoard(v.location) }
+            }
+            .onEnded { v in
+                switch dragMode {
+                case .wire:
+                    if let from = dragFrom,
+                       let t = nearestPort(to: toBoard(v.location), excluding: from) {
+                        model.connectPorts(from, t)                // snap target / არადა cancel
+                    }
+                case .move:
+                    if let id = moveID {
+                        let shift = Int((v.translation.width / (140 * max(zoom, 0.01))).rounded())
+                        let ids: Set<String> = (model.selection.contains(id) && !model.selection.isEmpty)
+                            ? model.selection : [id]
+                        model.moveComponents(ids, by: shift)
+                    }
+                case .pan:
+                    pan.width += v.translation.width; pan.height += v.translation.height
+                case .none: break
+                }
+                dragMode = .none; dragFrom = nil; moveID = nil
+            }
+    }
+
+    // MARK: pinch zoom (2 თითი) — drag-თან simultaneous
+    private var boardZoom: some Gesture {
+        MagnificationGesture()
+            .updating($pinch) { v, st, _ in st = v }
+            .onChanged { _ in isZooming = true }
+            .onEnded { v in zoom = min(max(zoom * v, 0.3), 3.0); isZooming = false }
     }
 
     // MARK: next level
@@ -328,12 +375,17 @@ struct WorkbenchView: View {
         return n < camp.count ? camp[n].id : nil
     }
     private func goNext() {
+        if model.levelPassed { game.markCompleted(model.level) }   // პროგრესი შენახული
         model.showResult = false
         guard let nid = nextLevelID, let next = game.level(byID: nid) else { path = []; return }
         if game.isProLocked(next, isPro: store.isPro) { showPaywall = true; return }
         if path.isEmpty { path = [nid] } else { path[path.count - 1] = nid }
     }
-    private func backToMenu() { model.showResult = false; path = [] }
+    private func backToMenu() {
+        if model.levelPassed { game.markCompleted(model.level) }   // პროგრესი შენახული
+        model.showResult = false
+        path = []
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -406,24 +458,14 @@ struct WorkbenchView: View {
             Color(.systemBackground)
             boardContent
                 .scaleEffect(zoom * pinch, anchor: .topLeading)
-                .offset(x: pan.width + drag.width, y: pan.height + drag.height)
+                .offset(x: pan.width + panLive.width, y: pan.height + panLive.height)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .contentShape(Rectangle())
         .clipped()
-        .gesture(
-            DragGesture(minimumDistance: 8)
-                .updating($drag) { value, state, _ in state = value.translation }
-                .onEnded { value in
-                    pan.width += value.translation.width
-                    pan.height += value.translation.height
-                }
-        )
-        .simultaneousGesture(
-            MagnificationGesture()
-                .updating($pinch) { value, state, _ in state = value }
-                .onEnded { value in zoom = min(max(zoom * value, 0.3), 3.0) }
-        )
+        // ერთიანი drag (wire/move/pan) + pinch zoom — ორივე simultaneous, არ ეჯახება.
+        .simultaneousGesture(boardDrag)
+        .simultaneousGesture(boardZoom)
         .overlay(alignment: .bottomTrailing) { zoomControls }
     }
 
@@ -437,10 +479,7 @@ struct WorkbenchView: View {
                     isSelected: model.selection.contains(comp.id),
                     isLive: { model.isLive($0) },
                     onTapPort: { model.tapPort($0) },
-                    onPortDragChanged: { portDragChanged($0, $1) },
-                    onPortDragEnded: { portDragEnded($0, $1) },
                     onLongPress: { model.toggleSelect(comp.id) },
-                    onMoveEnded: { handleMove(comp.id, $0) },
                     onDelete: comp.id == "supply" ? nil : { model.removeComponent(comp.id) }
                 )
             }
@@ -449,6 +488,7 @@ struct WorkbenchView: View {
         .coordinateSpace(name: kBoardSpace)
         .overlay { wireOverlay }
         .onPreferenceChange(PortFrameKey.self) { portPoints = $0 }
+        .onPreferenceChange(CardFrameKey.self) { componentFrames = $0 }
     }
 
     private var wireOverlay: some View {
@@ -617,10 +657,7 @@ struct ComponentCardView: View {
     let isSelected: Bool
     let isLive: (String) -> Bool
     let onTapPort: (String) -> Void
-    let onPortDragChanged: (String, CGPoint) -> Void
-    let onPortDragEnded: (String, CGPoint) -> Void
     let onLongPress: () -> Void
-    let onMoveEnded: (CGFloat) -> Void
     let onDelete: (() -> Void)?
 
     private var inputs: [Port] { component.ports.filter { $0.side == .input } }
@@ -672,12 +709,13 @@ struct ComponentCardView: View {
         .background(RoundedRectangle(cornerRadius: 12).fill(Color(.tertiarySystemBackground)))
         .overlay(RoundedRectangle(cornerRadius: 12)
             .stroke(isSelected ? Color.brand : Color.gray.opacity(0.3), lineWidth: isSelected ? 2 : 1))
-        // გრძელი დაჭერა — მონიშვნა (group move); გადათრევა — რიგის შეცვლა.
-        .simultaneousGesture(LongPressGesture(minimumDuration: 0.4).onEnded { _ in onLongPress() })
-        .gesture(
-            DragGesture(minimumDistance: 24)
-                .onEnded { onMoveEnded($0.translation.width) }
-        )
+        // ბარათის ჩარჩო board-სივრცეში (გადაადგილების hit-test).
+        .background(GeometryReader { g in
+            Color.clear.preference(key: CardFrameKey.self,
+                                   value: [component.id: g.frame(in: .named(kBoardSpace))])
+        })
+        // გრძელი დაჭერა — მონიშვნა (group move). გადათრევას ამუშავებს ფარის ერთიანი ჟესტი.
+        .onLongPressGesture(minimumDuration: 0.4) { onLongPress() }
     }
 
     private func portColumn(_ ports: [Port], label: String?) -> some View {
@@ -690,13 +728,6 @@ struct ComponentCardView: View {
                 }
                 .contentShape(Rectangle())
                 .onTapGesture { onTapPort(port.id) }
-                // drag-to-wire: იწყება ფეხიდან, სჯობნის ბარათის გადათრევას
-                // (ჰენდლერი WorkbenchView-ში ამოწმებს wire ხელსაწყოს).
-                .highPriorityGesture(
-                    DragGesture(coordinateSpace: .named(kBoardSpace))
-                        .onChanged { onPortDragChanged(port.id, $0.location) }
-                        .onEnded { onPortDragEnded(port.id, $0.location) }
-                )
             }
         }
     }
