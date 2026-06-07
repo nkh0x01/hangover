@@ -316,7 +316,35 @@ struct WorkbenchView: View {
         return bestD <= 36 ? best : nil   // snap threshold (board units)
     }
     private func componentAt(_ p: CGPoint) -> String? {
-        componentFrames.first(where: { $0.value.contains(p) })?.key
+        // 1) ზუსტი ბარათის ჩარჩო (CardFrameKey), თუ preference უკვე გავრცელდა.
+        if let hit = componentFrames.first(where: { $0.value.contains(p) })?.key {
+            return hit
+        }
+        // 2) Fallback — ფეხების პოზიციებიდან აგებული რეგიონი. portPoints სანდოა
+        //    (იმავე "board" სივრცეშია, რასაც სადენის დახაზვა იყენებს — და ის მუშაობს).
+        return componentByPortBounds(p)
+    }
+
+    /// კომპონენტის სხეულის რეგიონი მისი ფეხების bounding-box-იდან, ზევით გაფართოებული
+    /// (header/სურათი ფეხებზე მაღლაა). ეს არ არის დამოკიდებული CardFrameKey-ზე.
+    private func componentByPortBounds(_ p: CGPoint) -> String? {
+        var bestID: String?
+        var bestDist = CGFloat.greatestFiniteMagnitude
+        for comp in model.board.components {
+            let pts = comp.ports.compactMap { portPoints[$0.id] }
+            guard !pts.isEmpty else { continue }
+            let xs = pts.map(\.x), ys = pts.map(\.y)
+            let minX = xs.min()!, maxX = xs.max()!
+            let minY = ys.min()!, maxY = ys.max()!
+            // header/სხეული ფეხებზე ზემოთ → ზევით მეტი მარჟა.
+            let region = CGRect(x: minX - 28, y: minY - 92,
+                                width: (maxX - minX) + 56, height: (maxY - minY) + 120)
+            if region.contains(p) {
+                let d = hypot(region.midX - p.x, region.midY - p.y)
+                if d < bestDist { bestDist = d; bestID = comp.id }
+            }
+        }
+        return bestID
     }
 
     // MARK: ფარის ერთიანი drag — wire / move / pan (mode იწყობა საწყისი წერტილით).
@@ -330,10 +358,15 @@ struct WorkbenchView: View {
                     if model.tool == .wire, let p = nearestPort(to: b, excluding: nil) {
                         dragMode = .wire; dragFrom = p              // ფეხზე → სადენი
                     } else if let cid = componentAt(b) {
-                        dragMode = .move; moveID = cid              // კომპონენტზე → გადატანა
+                        dragMode = .move; moveID = cid              // კომპონენტის სხეულზე → გადატანა
                     } else {
                         dragMode = .pan                            // ცარიელზე → პანი
                     }
+                    #if DEBUG
+                    print("[boardDrag] mode=\(dragMode) start(board)=\(b) "
+                        + "cardFrames=\(componentFrames.count) ports=\(portPoints.count) "
+                        + "moveID=\(moveID ?? "-")")
+                    #endif
                 }
                 if dragMode == .wire { dragCurrent = toBoard(v.location) }
             }
