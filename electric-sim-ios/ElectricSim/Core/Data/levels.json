@@ -204,8 +204,22 @@
       { "templateId": "mcb_b16", "max": 4, "csaOptions": [1.5, 2.5, 4, 6, 10] },
       { "templateId": "mcb_b20", "max": 4, "csaOptions": [1.5, 2.5, 4, 6, 10] },
       { "templateId": "mcb_c32", "max": 4, "csaOptions": [1.5, 2.5, 4, 6, 10] },
+      { "templateId": "mcb_d20", "max": 2, "csaOptions": [2.5, 4, 6, 10] },
+      { "templateId": "contactor_1p", "max": 2 },
+      { "templateId": "relay_1p", "max": 2 },
+      { "templateId": "light_switch", "max": 3 },
+      { "templateId": "wago_5", "max": 3 },
       { "templateId": "lamp_60", "max": 6 },
-      { "templateId": "socket_16", "max": 6 }
+      { "templateId": "dimmer_lamp", "max": 3 },
+      { "templateId": "socket_16", "max": 6 },
+      { "templateId": "boiler_2000", "max": 2 },
+      { "templateId": "oven_3500", "max": 2 },
+      { "templateId": "heater_2000", "max": 2 },
+      { "templateId": "ac_1500", "max": 2 },
+      { "templateId": "smart_switch", "max": 3 },
+      { "templateId": "smart_relay", "max": 3 },
+      { "templateId": "smart_dimmer", "max": 3 },
+      { "templateId": "smart_meter", "max": 1 }
     ],
     "goal": {
       "poweredLoads": {},
@@ -225,9 +239,13 @@
       { "templateId": "busbar_l", "max": 1 },
       { "templateId": "mcb_b16", "max": 6, "csaOptions": [1.5, 2.5, 4, 6, 10] },
       { "templateId": "mcb_c16", "max": 6, "csaOptions": [1.5, 2.5, 4, 6, 10] },
+      { "templateId": "mpcb_16", "max": 2 },
+      { "templateId": "contactor_3p", "max": 2 },
       { "templateId": "lamp_60", "max": 6 },
       { "templateId": "socket_16", "max": 6 },
-      { "templateId": "motor_3ph", "max": 2 }
+      { "templateId": "socket3ph_16", "max": 2 },
+      { "templateId": "motor_3ph", "max": 2 },
+      { "templateId": "smart_meter", "max": 1 }
     ],
     "goal": {
       "poweredLoads": {},

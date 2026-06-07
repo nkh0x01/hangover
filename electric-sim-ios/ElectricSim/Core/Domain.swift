@@ -80,32 +80,85 @@ public enum WireColor: String, Codable, CaseIterable, Sendable {
 public enum BreakerCurve: String, Codable, CaseIterable, Sendable {
     case B // საყოფაცხოვრებო, 3–5×In
     case C // ინდუქციური/მოტორი, 5–10×In
+    case D // მაღალი დამრტყმელი დენი, 10–20×In (ტრანსფორმატორები, ძრავები)
+}
+
+// MARK: - Cable type (გამტარის მასალა)
+
+public enum CableType: String, Codable, CaseIterable, Sendable {
+    case copper     // სპილენძი
+    case aluminum   // ალუმინი (≈0.78× დასაშვები დენი იმავე კვეთაზე)
+
+    public var ampacityFactor: Double { self == .copper ? 1.0 : 0.78 }
+
+    public var georgianName: String {
+        self == .copper ? "სპილენძი" : "ალუმინი"
+    }
 }
 
 // MARK: - Component kind
 
 public enum ComponentKind: String, Codable, CaseIterable, Sendable {
-    case supply      // შემომავალი კვება (PEN → PE + N)
-    case mainSwitch  // მთავარი ამომრთველი
-    case spd         // ზეძაბვის დამცავი
-    case rcd         // დიფ. ამომრთველი (30mA)
-    case rcbo        // RCBO (MCB + RCD ერთ მოდულში)
-    case mcb         // ავტომატური ამომრთველი
-    case busbar      // სავარცხელი ზოლი / ნულის ან მიწის ზოლი (კონექტორი)
-    case lamp        // განათება
-    case socket      // როზეტი
-    case motor       // მოტორი (3 ფაზა)
+    // კვება/დაცვა/კომუტაცია
+    case supply       // შემომავალი კვება (PEN → PE + N)
+    case mainSwitch   // მთავარი ამომრთველი
+    case spd          // ზეძაბვის დამცავი
+    case rcd          // დიფ. ამომრთველი (30mA)
+    case rcbo         // RCBO (MCB + RCD ერთ მოდულში)
+    case mcb          // ავტომატური ამომრთველი
+    case mpcb         // მოტორის დამცავი ამომრთველი
+    case contactor    // კონტაქტორი
+    case relay        // რელე
+    case lightSwitch  // გამთიშველი/ჩამრთველი
+    case busbar       // სავარცხელი/ნულის/მიწის ზოლი (კონექტორი)
+    case wago         // Wago / კლემა (კონექტორი)
+    // დატვირთვები (1 ფაზა)
+    case lamp         // განათება
+    case dimmer       // დიმერით განათება
+    case socket       // როზეტი
+    case boiler       // ბოილერი
+    case oven         // ღუმელი
+    case heater       // გამახურებელი
+    case airConditioner // კონდიციონერი
+    // დატვირთვები (3 ფაზა)
+    case motor        // 3-ფაზიანი მოტორი
+    case socket3ph    // 3-ფაზიანი როზეტი
+    // Smart home მოდულები
+    case smartSwitch  // ჭკვიანი ამომრთველი (relay)
+    case smartRelay   // ჭკვიანი რელე
+    case smartDimmer  // ჭკვიანი დიმერი
+    case smartMeter   // ჭკვიანი მრიცხველი
 
     /// კონექტორია? (ყველა ფეხი ერთ კვანძში ერთიანდება)
-    public var isConnector: Bool { self == .busbar }
+    public var isConnector: Bool { self == .busbar || self == .wago }
+
+    /// 3-ფაზიანი დატვირთვაა?
+    public var isThreePhaseLoad: Bool { self == .motor || self == .socket3ph }
 
     /// დატვირთვაა?
-    public var isLoad: Bool { self == .lamp || self == .socket || self == .motor }
-
-    /// მიმდევრობითი (series) დამცავი მოწყობილობაა, რომელიც დენს ატარებს?
-    public var isSeriesDevice: Bool {
-        self == .mainSwitch || self == .mcb || self == .rcbo || self == .rcd
+    public var isLoad: Bool {
+        switch self {
+        case .lamp, .dimmer, .socket, .boiler, .oven, .heater, .airConditioner,
+             .motor, .socket3ph:
+            return true
+        default:
+            return false
+        }
     }
+
+    /// მიმდევრობითი (series) მოწყობილობაა, რომელიც დენს ატარებს?
+    public var isSeriesDevice: Bool {
+        switch self {
+        case .mainSwitch, .mcb, .mpcb, .rcbo, .rcd, .contactor, .relay, .lightSwitch,
+             .smartSwitch, .smartRelay, .smartDimmer, .smartMeter:
+            return true
+        default:
+            return false
+        }
+    }
+
+    /// დამცავი ავტომატია (ampacity/ნომინალის შემოწმებისთვის)?
+    public var isBreaker: Bool { self == .mcb || self == .mpcb || self == .rcbo }
 }
 
 // MARK: - Port (ფეხი / terminal)
@@ -302,6 +355,49 @@ public enum ComponentFactory {
         return Component(id: id, kind: .socket, name: "როზეტი",
                          poles: 1, powerW: powerW, requiresPE: true, leakageMa: leakageMa, ports: ports)
     }
+
+    // MARK: გენერიკული ფაბრიკები (ახალი კომპონენტებისთვის)
+
+    /// მიმდევრობითი კომუტაცია/დაცვა (კონტაქტორი, რელე, გამთიშველი, smart…).
+    public static func seriesDevice(id: String, kind: ComponentKind, name: String,
+                                    conductors: [Conductor],
+                                    ratingA: Double? = nil, curve: BreakerCurve? = nil,
+                                    mAtrip: Double? = nil) -> Component {
+        var ports: [Port] = []
+        for c in conductors {
+            ports.append(Port(id: pid(id, "\(c.rawValue)in"), conductor: c, side: .input, name: "\(c.rawValue) IN"))
+            ports.append(Port(id: pid(id, "\(c.rawValue)out"), conductor: c, side: .output, name: "\(c.rawValue) OUT"))
+        }
+        return Component(id: id, kind: kind, name: name, poles: conductors.count,
+                         ratingA: ratingA, curve: curve, mAtrip: mAtrip, ports: ports)
+    }
+
+    /// გენერიკული დატვირთვა (ბოილერი, ღუმელი, კონდიციონერი, 3-ფაზ. როზეტი…).
+    public static func appliance(id: String, kind: ComponentKind, name: String,
+                                 powerW: Double, requiresPE: Bool = true,
+                                 threePhase: Bool = false, leakageMa: Double? = nil) -> Component {
+        let conductors: [Conductor] = threePhase ? [.L1, .L2, .L3, .N, .PE] : [.L, .N, .PE]
+        let ports = conductors.map {
+            Port(id: pid(id, $0.rawValue), conductor: $0, side: .single, name: $0.rawValue)
+        }
+        return Component(id: id, kind: kind, name: name, poles: threePhase ? 3 : 1,
+                         powerW: powerW, requiresPE: requiresPE, leakageMa: leakageMa, ports: ports)
+    }
+
+    /// კონექტორი (Wago/კლემა) მოცემული გამტარისთვის.
+    public static func connector(id: String, kind: ComponentKind, name: String,
+                                 conductor: Conductor, slots: Int) -> Component {
+        let ports = (0..<slots).map {
+            Port(id: pid(id, "\($0)"), conductor: conductor, side: .single, name: "\(conductor.rawValue)\($0)")
+        }
+        return Component(id: id, kind: kind, name: name, poles: slots, ports: ports)
+    }
+
+    /// მოტორის დამცავი ამომრთველი (MPCB), 3-პოლუსიანი.
+    public static func mpcb(id: String, ratingA: Double, curve: BreakerCurve = .D) -> Component {
+        seriesDevice(id: id, kind: .mpcb, name: "MPCB \(Int(ratingA))A",
+                     conductors: [.L1, .L2, .L3], ratingA: ratingA, curve: curve)
+    }
 }
 
 // MARK: - Wire
@@ -312,15 +408,28 @@ public struct Wire: Identifiable, Hashable, Codable, Sendable {
     public var toPortID: String
     public var csaMm2: Double
     public var color: WireColor
+    public var cableType: CableType
 
     public init(id: String = UUID().uuidString,
                 from: String, to: String,
-                csaMm2: Double, color: WireColor) {
+                csaMm2: Double, color: WireColor, cableType: CableType = .copper) {
         self.id = id
         self.fromPortID = from
         self.toPortID = to
         self.csaMm2 = csaMm2
         self.color = color
+        self.cableType = cableType
+    }
+
+    // backward-compatible decode (cableType default copper თუ აკლია)
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        fromPortID = try c.decode(String.self, forKey: .fromPortID)
+        toPortID = try c.decode(String.self, forKey: .toPortID)
+        csaMm2 = try c.decode(Double.self, forKey: .csaMm2)
+        color = try c.decode(WireColor.self, forKey: .color)
+        cableType = try c.decodeIfPresent(CableType.self, forKey: .cableType) ?? .copper
     }
 }
 
@@ -347,8 +456,9 @@ public struct Board: Codable, Sendable {
 
     public mutating func add(_ component: Component) { components.append(component) }
 
-    public mutating func connect(_ a: String, _ b: String, csaMm2: Double, color: WireColor) {
-        wires.append(Wire(from: a, to: b, csaMm2: csaMm2, color: color))
+    public mutating func connect(_ a: String, _ b: String, csaMm2: Double,
+                                 color: WireColor, cableType: CableType = .copper) {
+        wires.append(Wire(from: a, to: b, csaMm2: csaMm2, color: color, cableType: cableType))
     }
 
     public func component(withPort portID: String) -> Component? {
@@ -382,5 +492,10 @@ public enum Ampacity {
             result = row.maxA
         }
         return result
+    }
+
+    /// კაბელის მასალის გათვალისწინებით (ალუმინი დერეიტდება).
+    public static func maxBreaker(forCsa csa: Double, cable: CableType) -> Double {
+        maxBreaker(forCsa: csa) * cable.ampacityFactor
     }
 }

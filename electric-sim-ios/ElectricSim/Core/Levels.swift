@@ -48,6 +48,24 @@ public struct ComponentTemplate: Codable, Identifiable, Sendable {
             return ComponentFactory.socket(id: instanceID, powerW: powerW ?? 2300, leakageMa: leakageMa)
         case .motor:
             return ComponentFactory.motor(id: instanceID, powerW: powerW ?? 4000)
+        case .mpcb:
+            return ComponentFactory.mpcb(id: instanceID, ratingA: ratingA ?? 16, curve: curve ?? .D)
+        case .contactor, .relay, .lightSwitch, .smartSwitch, .smartRelay, .smartDimmer, .smartMeter:
+            let conductors: [Conductor] = (poles ?? 1) >= 3 ? [.L1, .L2, .L3] : [.L]
+            return ComponentFactory.seriesDevice(id: instanceID, kind: kind, name: name,
+                                                 conductors: conductors, ratingA: ratingA)
+        case .wago:
+            return ComponentFactory.connector(id: instanceID, kind: .wago, name: name,
+                                              conductor: .L, slots: poles ?? 5)
+        case .dimmer, .boiler, .oven, .heater, .airConditioner:
+            return ComponentFactory.appliance(id: instanceID, kind: kind, name: name,
+                                              powerW: powerW ?? 2000,
+                                              requiresPE: requiresPE ?? true,
+                                              threePhase: false, leakageMa: leakageMa)
+        case .socket3ph:
+            return ComponentFactory.appliance(id: instanceID, kind: .socket3ph, name: name,
+                                              powerW: powerW ?? 6000,
+                                              requiresPE: true, threePhase: true, leakageMa: leakageMa)
         }
     }
 }

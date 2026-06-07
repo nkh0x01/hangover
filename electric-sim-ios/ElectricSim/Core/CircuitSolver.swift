@@ -155,8 +155,8 @@ public struct CircuitSolver {
         var phaseCurrent: [Conductor: Double] = [.L1: 0, .L2: 0, .L3: 0]
         let loads = board.components.filter { $0.kind.isLoad }
         for load in loads {
-            // 3-ფაზიანი მოტორი — ცალკე დამუშავება (L1/L2/L3 + PE)
-            if load.kind == .motor {
+            // 3-ფაზიანი დატვირთვა (მოტორი / 3-ფაზ. როზეტი) — L1/L2/L3 + PE
+            if load.kind.isThreePhaseLoad {
                 let phases: [Conductor] = [.L1, .L2, .L3]
                 var allPresent = true
                 var seen = Set<Conductor>()
@@ -177,9 +177,14 @@ public struct CircuitSolver {
 
                 let l1Net = load.port(conductor: .L1).map { net($0.id) }
                 let chain = l1Net.map { deviceChain(forHotNet: $0) } ?? []
-                let breaker = chain.first { $0.kind == .mcb || $0.kind == .rcbo }
+                let breaker = chain.first { $0.kind.isBreaker }
+                let rcdInPath = chain.contains { $0.kind == .rcd || $0.kind == .rcbo }
                 if complete && breaker == nil {
                     issues.append(Issue(code: .noBreaker, componentIDs: [load.id]))
+                }
+                // 3-ფაზიანი როზეტი → RCD სავალდებულო
+                if load.kind == .socket3ph && complete && !rcdInPath {
+                    issues.append(Issue(code: .socketWithoutRCD, componentIDs: [load.id]))
                 }
 
                 // სამფაზიანი დენი: I = P / (√3 · U_LL)
@@ -188,8 +193,8 @@ public struct CircuitSolver {
                 if complete {
                     if let rating = breaker?.ratingA, let l1Net = l1Net {
                         let seg = board.wires.filter { net($0.fromPortID) == l1Net || net($0.toPortID) == l1Net }
-                        if let minCsa = seg.map({ $0.csaMm2 }).min(),
-                           rating > Ampacity.maxBreaker(forCsa: minCsa) + 0.001 {
+                        if let allowed = seg.map({ Ampacity.maxBreaker(forCsa: $0.csaMm2, cable: $0.cableType) }).min(),
+                           rating > allowed + 0.001 {
                             issues.append(Issue(code: .breakerExceedsCable, componentIDs: [load.id]))
                         }
                     }
@@ -249,7 +254,7 @@ public struct CircuitSolver {
 
             // 7d. მკვებავი ჯაჭვი / ავტომატი / RCD
             let chain = deviceChain(forHotNet: lineNet)
-            let breaker = chain.first { $0.kind == .mcb || $0.kind == .rcbo }
+            let breaker = chain.first { $0.kind.isBreaker }
             let rcdInPath = chain.contains { $0.kind == .rcd || $0.kind == .rcbo }
 
             if lineHasHot && breaker == nil {
@@ -266,12 +271,10 @@ public struct CircuitSolver {
                 let segWires = board.wires.filter {
                     net($0.fromPortID) == lineNet || net($0.toPortID) == lineNet
                 }
-                if let minCsa = segWires.map({ $0.csaMm2 }).min() {
-                    let allowed = Ampacity.maxBreaker(forCsa: minCsa)
-                    if rating > allowed + 0.001 {
-                        issues.append(Issue(code: .breakerExceedsCable,
-                                            componentIDs: [breaker.id, load.id]))
-                    }
+                if let allowed = segWires.map({ Ampacity.maxBreaker(forCsa: $0.csaMm2, cable: $0.cableType) }).min(),
+                   rating > allowed + 0.001 {
+                    issues.append(Issue(code: .breakerExceedsCable,
+                                        componentIDs: [breaker.id, load.id]))
                 }
             }
 

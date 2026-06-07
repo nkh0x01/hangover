@@ -37,6 +37,21 @@ extension ComponentKind {
         case .lamp:       return "lightbulb.fill"
         case .socket:     return "poweroutlet.type.f.fill"
         case .motor:      return "fanblades.fill"
+        case .mpcb:       return "shield.lefthalf.filled.badge.checkmark"
+        case .contactor:  return "rectangle.connected.to.line.below"
+        case .relay:      return "switch.2"
+        case .lightSwitch: return "lightswitch.on"
+        case .wago:       return "point.3.connected.trianglepath.dotted"
+        case .dimmer:     return "lightbulb.led.fill"
+        case .boiler:     return "drop.fill"
+        case .oven:       return "oven.fill"
+        case .heater:     return "heater.vertical.fill"
+        case .airConditioner: return "air.conditioner.horizontal.fill"
+        case .socket3ph:  return "poweroutlet.type.h.fill"
+        case .smartSwitch: return "switch.programmable.fill"
+        case .smartRelay: return "wifi.circle.fill"
+        case .smartDimmer: return "slider.horizontal.below.sun.max"
+        case .smartMeter: return "gauge.with.needle.fill"
         }
     }
 
@@ -52,6 +67,21 @@ extension ComponentKind {
         case .lamp:       return "ნათურა"
         case .socket:     return "როზეტი"
         case .motor:      return "მოტორი"
+        case .mpcb:       return "MPCB"
+        case .contactor:  return "კონტაქტორი"
+        case .relay:      return "რელე"
+        case .lightSwitch: return "გამთიშველი"
+        case .wago:       return "Wago"
+        case .dimmer:     return "დიმერი"
+        case .boiler:     return "ბოილერი"
+        case .oven:       return "ღუმელი"
+        case .heater:     return "გამახურებელი"
+        case .airConditioner: return "კონდიციონერი"
+        case .socket3ph:  return "3-ფაზ. როზეტი"
+        case .smartSwitch: return "Smart ამომრთ."
+        case .smartRelay: return "Smart რელე"
+        case .smartDimmer: return "Smart დიმერი"
+        case .smartMeter: return "Smart მრიცხ."
         }
     }
 }

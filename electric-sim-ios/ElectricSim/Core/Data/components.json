@@ -95,5 +95,116 @@
     "name": "3-ფაზიანი მოტორი 4kW",
     "powerW": 4000,
     "requiresPE": true
+  },
+  {
+    "id": "mcb_d20",
+    "kind": "mcb",
+    "name": "ავტომატი D20 (ძრავა/ტრანსფ.)",
+    "ratingA": 20,
+    "curve": "D"
+  },
+  {
+    "id": "mpcb_16",
+    "kind": "mpcb",
+    "name": "MPCB მოტორის დამცავი 16A",
+    "ratingA": 16,
+    "curve": "D",
+    "poles": 3
+  },
+  {
+    "id": "contactor_1p",
+    "kind": "contactor",
+    "name": "კონტაქტორი 1P",
+    "poles": 1
+  },
+  {
+    "id": "contactor_3p",
+    "kind": "contactor",
+    "name": "კონტაქტორი 3P",
+    "poles": 3
+  },
+  {
+    "id": "relay_1p",
+    "kind": "relay",
+    "name": "რელე",
+    "poles": 1
+  },
+  {
+    "id": "light_switch",
+    "kind": "lightSwitch",
+    "name": "გამთიშველი",
+    "poles": 1
+  },
+  {
+    "id": "wago_5",
+    "kind": "wago",
+    "name": "Wago კლემა (5)",
+    "poles": 5
+  },
+  {
+    "id": "boiler_2000",
+    "kind": "boiler",
+    "name": "ბოილერი 2kW",
+    "powerW": 2000,
+    "requiresPE": true
+  },
+  {
+    "id": "oven_3500",
+    "kind": "oven",
+    "name": "ღუმელი 3.5kW",
+    "powerW": 3500,
+    "requiresPE": true
+  },
+  {
+    "id": "heater_2000",
+    "kind": "heater",
+    "name": "გამახურებელი 2kW",
+    "powerW": 2000,
+    "requiresPE": true
+  },
+  {
+    "id": "ac_1500",
+    "kind": "airConditioner",
+    "name": "კონდიციონერი 1.5kW",
+    "powerW": 1500,
+    "requiresPE": true
+  },
+  {
+    "id": "dimmer_lamp",
+    "kind": "dimmer",
+    "name": "დიმერით განათება",
+    "powerW": 100,
+    "requiresPE": true
+  },
+  {
+    "id": "socket3ph_16",
+    "kind": "socket3ph",
+    "name": "3-ფაზიანი როზეტი 16A",
+    "powerW": 6000,
+    "requiresPE": true
+  },
+  {
+    "id": "smart_switch",
+    "kind": "smartSwitch",
+    "name": "Smart ამომრთველი",
+    "poles": 1
+  },
+  {
+    "id": "smart_relay",
+    "kind": "smartRelay",
+    "name": "Smart რელე",
+    "poles": 1
+  },
+  {
+    "id": "smart_dimmer",
+    "kind": "smartDimmer",
+    "name": "Smart დიმერი",
+    "poles": 1
+  },
+  {
+    "id": "smart_meter",
+    "kind": "smartMeter",
+    "name": "Smart მრიცხველი",
+    "poles": 1
   }
 ]

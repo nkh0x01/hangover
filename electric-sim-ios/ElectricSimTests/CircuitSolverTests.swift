@@ -400,6 +400,85 @@ final class CircuitSolverTests: XCTestCase {
         XCTAssertEqual(decoded.map(\.id), levels.map(\.id))
     }
 
+    // MARK: - კომპონენტების ბიბლიოთეკის გაფართოება
+
+    /// ალუმინის კაბელი დერეიტდება: B16 2.5mm² ალუმინზე (20×0.78≈15.6A) → შეცდომა.
+    func testAluminumCableDerating() {
+        let lamp = ComponentFactory.lamp(id: "LAMP")
+        var board = makeLineBoard(load: lamp, breakerRating: 16, csa: 2.5)
+        // ფაზის სეგმენტის კაბელი ალუმინად ვაქციოთ
+        for i in board.wires.indices where board.wires[i].toPortID == "LAMP.L" {
+            board.wires[i].cableType = .aluminum
+        }
+        let result = solver.solve(board)
+        XCTAssertTrue(result.errors.contains { $0.code == .breakerExceedsCable },
+                      "ალუმინზე B16/2.5mm² უნდა იყოს გადაჭარბება")
+    }
+
+    /// კონტაქტორი დენს ატარებს — მის უკან ნათურა ანათებს.
+    func testContactorPassesCurrent() {
+        var board = Board(phase: .single)
+        board.add(ComponentFactory.supply(id: "S"))
+        board.add(ComponentFactory.mainSwitch(id: "MS"))
+        board.add(ComponentFactory.mcb(id: "B", ratingA: 10))
+        let contactor = ComponentFactory.seriesDevice(id: "K", kind: .contactor,
+                                                      name: "კონტაქტორი", conductors: [.L])
+        board.add(contactor)
+        board.add(ComponentFactory.lamp(id: "LAMP"))
+        board.connect("S.L", "MS.Lin", csaMm2: 1.5, color: .brown)
+        board.connect("MS.Lout", "B.in", csaMm2: 1.5, color: .brown)
+        board.connect("B.out", "K.Lin", csaMm2: 1.5, color: .brown)
+        board.connect("K.Lout", "LAMP.L", csaMm2: 1.5, color: .brown)
+        board.connect("S.N", "MS.Nin", csaMm2: 1.5, color: .blue)
+        board.connect("MS.Nout", "LAMP.N", csaMm2: 1.5, color: .blue)
+        board.connect("S.PE", "LAMP.PE", csaMm2: 1.5, color: .yellowGreen)
+
+        let r = solver.solve(board, energize: true)
+        XCTAssertTrue(r.passed, "კონტაქტორის უკან წრედი უნდა მუშაობდეს: \(r.errors.map(\.code))")
+        XCTAssertTrue(r.state(for: "LAMP")!.isPowered)
+    }
+
+    /// ბოილერი (2kW≈8.7A) C16-ზე 2.5mm² → მუშაობს გაგდების გარეშე.
+    func testBoilerOnProperBreaker() {
+        let boiler = ComponentFactory.appliance(id: "BLR", kind: .boiler, name: "ბოილერი", powerW: 2000)
+        let board = makeLineBoard(load: boiler, breakerRating: 16, breakerCurve: .C, csa: 2.5)
+        let r = solver.solve(board, energize: true)
+        XCTAssertTrue(r.passed, "ბოილერი უნდა მუშაობდეს: \(r.errors.map(\.code))")
+        XCTAssertTrue(r.state(for: "BLR")!.isPowered)
+    }
+
+    /// 3-ფაზიანი როზეტი RCD-ის გარეშე → შეცდომა.
+    func testThreePhaseSocketRequiresRCD() {
+        var board = Board(phase: .three)
+        board.add(ComponentFactory.supply(id: "S", phase: .three))
+        board.add(ComponentFactory.mainSwitch(id: "M", phase: .three))
+        board.add(ComponentFactory.mcb(id: "B", ratingA: 16))
+        board.add(ComponentFactory.appliance(id: "SO3", kind: .socket3ph, name: "3-ფაზ. როზეტი",
+                                             powerW: 6000, threePhase: true))
+        for c in ["L1", "L2", "L3"] { board.connect("S.\(c)", "M.\(c)in", csaMm2: 4, color: .brown) }
+        board.connect("M.L1out", "B.in", csaMm2: 4, color: .brown)
+        board.connect("B.out", "SO3.L1", csaMm2: 4, color: .brown)
+        board.connect("M.L2out", "SO3.L2", csaMm2: 4, color: .black)
+        board.connect("M.L3out", "SO3.L3", csaMm2: 4, color: .grey)
+        board.connect("S.PE", "SO3.PE", csaMm2: 4, color: .yellowGreen)
+
+        let r = solver.solve(board, energize: true)
+        XCTAssertTrue(r.errors.contains { $0.code == .socketWithoutRCD },
+                      "3-ფაზიანი როზეტი RCD-ის გარეშე უნდა იძლეოდეს შეცდომას")
+    }
+
+    /// გაფართოებული ბიბლიოთეკა იტვირთება და ახალი kind-ები იქმნება.
+    func testExpandedLibraryLoads() throws {
+        let templates = try GameData.loadTemplates()
+        for id in ["mpcb_16", "contactor_3p", "wago_5", "boiler_2000", "socket3ph_16", "smart_relay", "mcb_d20"] {
+            XCTAssertNotNil(templates[id], "უნდა არსებობდეს შაბლონი: \(id)")
+        }
+        let wago = templates["wago_5"]!.makeComponent(instanceID: "w")
+        XCTAssertTrue(wago.kind.isConnector)
+        let mpcb = templates["mpcb_16"]!.makeComponent(instanceID: "m")
+        XCTAssertTrue(mpcb.kind.isBreaker && mpcb.kind.isSeriesDevice)
+    }
+
     // MARK: - 13. სადენის ფერები (IEC)
 
     func testWireColors() {
