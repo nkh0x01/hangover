@@ -39,6 +39,12 @@ extension Color {
     static let energized = Color(red: 1.0, green: 0.80, blue: 0.0)
 }
 
+// ShapeStyle-კონტექსტში (.foregroundStyle(.brand) / .fill(.brand) …) leading-dot-ისთვის.
+extension ShapeStyle where Self == Color {
+    static var brand: Color { Color.brand }
+    static var energized: Color { Color.energized }
+}
+
 extension ComponentKind {
     var sfSymbol: String {
         switch self {
