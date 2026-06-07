@@ -225,23 +225,61 @@ swift test
 
 ---
 
-## 💰 მონეტიზაცია და App Store
+## 💰 მონეტიზაცია (StoreKit 2) და Pro ტესტირება
 
-თამაში მზადაა გამოსაქვეყნებლად. მონეტიზაცია — **freemium**:
+მონეტიზაცია — **freemium**, ერთჯერადი (non-consumable) Pro განბლოკვა (გამოწერა **არა**):
 
-- **უფასო:** Phase 1–2 + სარეკლამო ბანერი (house ads — Gadget Georgia / Tsili.Ge).
-- **Pro (ერთჯერადი შესყიდვა, StoreKit 2):** Phase 3 (3 ფაზა + მოტორი) + რეკლამის გარეშე.
+- **უფასო:** პირველი **3 დონე** + მხოლოდ **1 ფაზა** + სარეკლამო ბანერი.
+- **Pro:** ყველა დონე, **3 ფაზა**, **დეფექტის ძებნა**, **sandbox**, რეკლამის გარეშე.
 
-კოდი: `App/Monetization.swift` (`EntitlementStore`, `AdManager`) და
-`App/Views/StoreViews.swift` (paywall, ბანერი, „შესახებ").
-Pro პროდუქტი: `pro_unlock`. ლოკალური ტესტი: `Products.storekit`.
+კოდი: `App/Monetization.swift` → **`EntitlementStore`** (load Product · `purchase()` ·
+`Transaction.updates` observe · `Transaction.currentEntitlements` launch-ზე → `isPro`).
+Pro პროდუქტის id: **`pro_unlock`**. „Restore Purchases" — paywall-სა და „შესახებ"-ში.
 
-App Store-ის მზაობა: ქართული მეტამონაცემები `fastlane/metadata/ka/`,
-`PrivacyInfo.xcprivacy`, `PRIVACY.md`, და სრული გზამკვლევი (IAP, AdMob, submission):
+### Pro-ს ტესტირება (3 გზა)
+1. **`.storekit` ფაილი (ლოკალურად, sandbox-ის გარეშე):**
+   Xcode → **Edit Scheme → Run → Options → StoreKit Configuration → `Products.storekit`** →
+   გაუშვი → paywall-ზე „განბლოკვა" იმუშავებს ტესტ-რეჟიმში.
+2. **DEBUG QA toggle:** „შესახებ" ეკრანზე (მხოლოდ DEBUG ბილდში) — **„Pro იძულებით ჩართვა"**
+   გადამრთველი (`EntitlementStore.debugSetPro`). სწრაფი QA-სთვის.
+3. **Sandbox tester (App Store Connect):** ASC → Users and Access → Sandbox →
+   შექმენი sandbox ანგარიში; მოწყობილობაზე Settings → App Store → Sandbox Account →
+   შედი; აპში ნამდვილი (ტესტ) შესყიდვა.
+
+## 🎮 Game Center (GameKit)
+
+- **ავტორიზაცია:** არ-მბლოკავი, გაშვებისას (`GameCenterManager.authenticate()`).
+- **ლიდერბორდები:** `lb_fastest_wiring` (სწრაფი სწორი დაკაბელება, წმ),
+  `lb_fewest_mistakes` (ყველაზე ცოტა შეცდომა).
+- **მიღწევები:** `ach_phase1…4` (თითო ფაზა), `ach_perfect_wiring` (0 შეცდომა),
+  `ach_faultfinder_fast` (დეფექტი ≤120წმ).
+- **Capability:** `ElectricSim.entitlements` (`com.apple.developer.game-center`).
+
+### App Store Connect — Game Center setup
+1. Apple Developer → Identifiers → App ID-ს ჩაურთე **Game Center**.
+2. Xcode → Target → Signing & Capabilities → **+ Capability → Game Center**.
+3. ASC → შენი აპი → **Features → Game Center**:
+   - დაამატე **Leaderboards** იდენტიფიკატორებით `lb_fastest_wiring`, `lb_fewest_mistakes`
+     (Single recurring; type: fastest wiring — Low to High დროზე; mistakes — Low to High).
+   - დაამატე **Achievements**: `ach_phase1`, `ach_phase2`, `ach_phase3`, `ach_phase4`,
+     `ach_perfect_wiring`, `ach_faultfinder_fast`.
+4. ID-ები კოდში: `App/GameCenterManager.swift` (`Leaderboard` / `Achievement`).
+
+## 🌐 ლოკალიზაცია
+
+`Localizable.strings` — **ka** (ნაგულისხმევი), **en** (შევსებული), **ru** (TODO).
+ფაილები: `App/Resources/{ka,en,ru}.lproj/Localizable.strings`.
+ქართული ტექსტები უცვლელია; გასაღების ჩასართავად UI-ში: `Text("key")` /
+`String(localized: "key")`. ru თარგმანი TODO-ა.
+
+## 📦 App Store მზაობა
+
+ქართული მეტამონაცემები `fastlane/metadata/ka/`, `PrivacyInfo.xcprivacy`, `PRIVACY.md`,
+bundle id **`ge.gadget.electricsim`**, და სრული გზამკვლევი:
 **[docs/PUBLISHING.md](docs/PUBLISHING.md)**.
 
 > 🇬🇪 შემქმნელი: **Gadget Georgia** ([gadget.ge](https://gadget.ge)).
-> დაფინანსების მხარდაჭერა: **[Tsili.Ge](https://tsili.ge)**.
+> სპონსორი: **[Tsili.ge](https://tsili.ge)**.
 
 ---
 
