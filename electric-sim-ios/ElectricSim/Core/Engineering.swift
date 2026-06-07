@@ -63,6 +63,66 @@ public struct BillOfMaterials: Sendable {
     public var totalGEL: Double { componentsGEL + cablePriceGEL }
 }
 
+public enum BOMBuilder {
+    /// კაბელის ფასი ₾/მ კვეთის მიხედვით (ალუმინი ≈0.7×).
+    public static func cablePricePerM(csaMm2: Double, cable: CableType) -> Double {
+        let base: Double
+        switch csaMm2 {
+        case ..<2.0: base = 1.5
+        case ..<3.0: base = 2.2
+        case ..<5.0: base = 3.5
+        case ..<8.0: base = 5.0
+        default:     base = 8.0
+        }
+        return base * (cable == .copper ? 1.0 : 0.7)
+    }
+
+    /// სარეზერვო ფასი თუ შაბლონს არ აქვს მითითებული.
+    public static func fallbackPrice(_ kind: ComponentKind) -> Double {
+        switch kind {
+        case .mainSwitch: return 25
+        case .spd: return 60
+        case .rcd: return 55
+        case .rcbo: return 45
+        case .mcb: return 12
+        case .mpcb: return 70
+        case .contactor: return 35
+        case .relay, .lightSwitch: return 10
+        case .busbar, .wago: return 8
+        case .lamp, .dimmer: return 15
+        case .socket, .socket3ph: return 12
+        case .boiler: return 350
+        case .oven: return 600
+        case .heater: return 120
+        case .airConditioner: return 900
+        case .motor: return 800
+        case .smartSwitch, .smartRelay, .smartDimmer: return 45
+        case .smartMeter: return 90
+        case .supply: return 0
+        }
+    }
+
+    public static func build(_ board: Board) -> BillOfMaterials {
+        var counts: [String: Int] = [:]
+        var price: [String: Double] = [:]
+        var kindOf: [String: ComponentKind] = [:]
+        for c in board.components where c.kind != .supply {
+            counts[c.name, default: 0] += 1
+            price[c.name] = c.priceGEL ?? fallbackPrice(c.kind)
+            kindOf[c.name] = c.kind
+        }
+        let items = counts.keys.sorted().map { name in
+            BOMItem(id: name, name: name, quantity: counts[name] ?? 0,
+                    unitPriceGEL: price[name] ?? 0)
+        }
+        let totalM = board.wires.reduce(0.0) { $0 + $1.lengthM }
+        let cableGEL = board.wires.reduce(0.0) {
+            $0 + $1.lengthM * cablePricePerM(csaMm2: $1.csaMm2, cable: $1.cableType)
+        }
+        return BillOfMaterials(items: items, cableTotalM: totalM, cablePriceGEL: cableGEL)
+    }
+}
+
 // MARK: - Protective chain + selectivity analysis
 
 extension CircuitSolver {

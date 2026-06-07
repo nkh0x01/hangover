@@ -198,6 +198,7 @@ public struct Component: Identifiable, Hashable, Codable, Sendable {
     public var requiresPE: Bool      // ესაჭიროება დამცავი მიწა?
     public var leakageMa: Double?    // დეფექტი: გაჟონვის დენი (mA)
     public var faultShortToN: Bool   // დეფექტი: შიდა მოკლე ჩართვა L→N
+    public var priceGEL: Double?     // ერთეულის ფასი (₾) — BOM-ისთვის
     public var ports: [Port]
 
     public init(id: String,
@@ -211,6 +212,7 @@ public struct Component: Identifiable, Hashable, Codable, Sendable {
                 requiresPE: Bool = false,
                 leakageMa: Double? = nil,
                 faultShortToN: Bool = false,
+                priceGEL: Double? = nil,
                 ports: [Port]) {
         self.id = id
         self.kind = kind
@@ -223,6 +225,7 @@ public struct Component: Identifiable, Hashable, Codable, Sendable {
         self.requiresPE = requiresPE
         self.leakageMa = leakageMa
         self.faultShortToN = faultShortToN
+        self.priceGEL = priceGEL
         self.ports = ports
     }
 
@@ -461,8 +464,10 @@ public struct Board: Codable, Sendable {
     public mutating func add(_ component: Component) { components.append(component) }
 
     public mutating func connect(_ a: String, _ b: String, csaMm2: Double,
-                                 color: WireColor, cableType: CableType = .copper) {
-        wires.append(Wire(from: a, to: b, csaMm2: csaMm2, color: color, cableType: cableType))
+                                 color: WireColor, cableType: CableType = .copper,
+                                 lengthM: Double = 0) {
+        wires.append(Wire(from: a, to: b, csaMm2: csaMm2, color: color,
+                          cableType: cableType, lengthM: lengthM))
     }
 
     public func component(withPort portID: String) -> Component? {

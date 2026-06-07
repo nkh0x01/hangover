@@ -28,7 +28,8 @@ struct ReportsView: View {
             Picker("", selection: $tab) {
                 Text("გრაფი").tag(0)
                 Text("ნახაზი").tag(1)
-                Text("რეკომენდაცია").tag(2)
+                Text("რჩევა").tag(2)
+                Text("ხარჯი").tag(3)
             }
             .pickerStyle(.segmented)
             .padding()
@@ -36,7 +37,8 @@ struct ReportsView: View {
             switch tab {
             case 0: loadGraph
             case 1: sldTab
-            default: recommendationsTab
+            case 2: recommendationsTab
+            default: bomTab
             }
         }
         .navigationTitle("ანგარიში")
@@ -193,6 +195,55 @@ struct ReportsView: View {
         }
         .padding(10)
         .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 10))
+    }
+
+    // MARK: - ხარჯთაღრიცხვა (BOM)
+
+    private var bomTab: some View {
+        let bom = BOMBuilder.build(board)
+        return ScrollView {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("მასალების ნუსხა და სავარაუდო ღირებულება")
+                    .font(.caption).foregroundStyle(.secondary)
+                ForEach(bom.items) { it in
+                    HStack {
+                        Text(it.name).font(.callout)
+                        Spacer()
+                        Text("\(it.quantity)× \(Int(it.unitPriceGEL))₾")
+                            .font(.caption).foregroundStyle(.secondary)
+                        Text("\(Int(it.totalGEL))₾").font(.callout.bold()).frame(width: 64, alignment: .trailing)
+                    }
+                    .padding(.vertical, 2)
+                    Divider()
+                }
+                if bom.cableTotalM > 0 {
+                    HStack {
+                        Text("კაბელი ~\(Int(bom.cableTotalM))მ").font(.callout)
+                        Spacer()
+                        Text("\(Int(bom.cablePriceGEL))₾").font(.callout.bold())
+                    }
+                    Divider()
+                }
+                HStack {
+                    Text("ჯამი").font(.headline)
+                    Spacer()
+                    Text("\(Int(bom.totalGEL)) ₾").font(.title3.bold()).foregroundStyle(.yellow)
+                }
+                .padding(.top, 4)
+
+                Link(destination: URL(string: "https://gadget.com.ge")!) {
+                    Label("შეუკვეთე კომპონენტები Gadget Georgia-ზე", systemImage: "cart.fill")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.yellow)
+                .padding(.top, 8)
+
+                Text("ფასები სავარაუდოა და შეიძლება განსხვავდებოდეს.")
+                    .font(.caption2).foregroundStyle(.secondary)
+            }
+            .padding()
+        }
     }
 
     // MARK: - ცალხაზოვანი ნახაზი

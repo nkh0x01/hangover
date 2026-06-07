@@ -21,9 +21,16 @@ public struct ComponentTemplate: Codable, Identifiable, Sendable {
     public var poles: Int?
     public var leakageMa: Double?
     public var faultShortToN: Bool?
+    public var priceGEL: Double?
 
     /// შაბლონიდან კონკრეტული კომპონენტის შექმნა უნიკალური id-ით.
     public func makeComponent(instanceID: String, phase: Phase = .single) -> Component {
+        var comp = makeBase(instanceID: instanceID, phase: phase)
+        comp.priceGEL = priceGEL
+        return comp
+    }
+
+    private func makeBase(instanceID: String, phase: Phase = .single) -> Component {
         switch kind {
         case .supply:
             return ComponentFactory.supply(id: instanceID, phase: phase)

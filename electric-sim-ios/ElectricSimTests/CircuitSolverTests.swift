@@ -601,6 +601,29 @@ final class CircuitSolverTests: XCTestCase {
         XCTAssertFalse(solver.selectivityIssues(build(aRating: 20, bRating: 16)).isEmpty)
     }
 
+    // MARK: - ხარჯთაღრიცხვა (BOM)
+
+    func testBillOfMaterials() throws {
+        let templates = try GameData.loadTemplates()
+        var board = Board(phase: .single)
+        board.add(ComponentFactory.supply(id: "S"))
+        board.add(templates["main_2p"]!.makeComponent(instanceID: "main_2p_1"))
+        board.add(templates["mcb_b10"]!.makeComponent(instanceID: "mcb_b10_1"))
+        board.add(templates["mcb_b10"]!.makeComponent(instanceID: "mcb_b10_2"))
+        board.connect("S.L", "main_2p_1.Lin", csaMm2: 1.5, color: .brown, lengthM: 10)
+
+        let bom = BOMBuilder.build(board)
+        // 2× B10 დაჯგუფებული ერთ ხაზში, რაოდენობა 2
+        let mcbItem = bom.items.first { $0.name.contains("B10") }
+        XCTAssertEqual(mcbItem?.quantity, 2)
+        XCTAssertEqual(mcbItem?.unitPriceGEL, 12)
+        XCTAssertEqual(mcbItem?.totalGEL, 24)
+        XCTAssertGreaterThan(bom.cablePriceGEL, 0)   // 10მ კაბელი
+        XCTAssertGreaterThan(bom.totalGEL, bom.componentsGEL - 0.001)
+        // supply არ ითვლება
+        XCTAssertFalse(bom.items.contains { $0.name.contains("კვება") })
+    }
+
     // MARK: - 13. სადენის ფერები (IEC)
 
     func testWireColors() {
