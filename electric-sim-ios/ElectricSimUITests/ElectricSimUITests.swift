@@ -60,14 +60,14 @@ final class ElectricSimUITests: XCTestCase {
                       "შემოწმების შემდეგ უნდა გამოჩნდეს შედეგის ფურცელი")
     }
 
-    /// „შესახებ“ ეკრანი იხსნება და ბრენდი (Gadget Georgia) ჩანს.
+    /// „შესახებ“ ეკრანი იხსნება და ბრენდი (gadget.ge) ჩანს.
     func testAboutScreenShowsBranding() {
         let app = launchApp()
         let about = app.buttons["about"]
         XCTAssertTrue(about.waitForExistence(timeout: 20))
         about.tap()
 
-        XCTAssertTrue(app.staticTexts["Gadget Georgia"].waitForExistence(timeout: 10),
-                      "„შესახებ“ ეკრანზე უნდა ეწეროს Gadget Georgia")
+        XCTAssertTrue(app.staticTexts["gadget.ge"].waitForExistence(timeout: 10),
+                      "„შესახებ“ ეკრანზე უნდა ეწეროს gadget.ge")
     }
 }

@@ -278,7 +278,7 @@ Pro პროდუქტის id: **`pro_unlock`**. „Restore Purchases" — 
 bundle id **`ge.gadget.electricsim`**, და სრული გზამკვლევი:
 **[docs/PUBLISHING.md](docs/PUBLISHING.md)**.
 
-> 🇬🇪 შემქმნელი: **Gadget Georgia** ([gadget.ge](https://gadget.ge)).
+> 🇬🇪 შემქმნელი: **gadget.ge** ([gadget.ge](https://gadget.ge)).
 > სპონსორი: **[Tsili.ge](https://tsili.ge)**.
 
 ---

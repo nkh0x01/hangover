@@ -6,7 +6,7 @@
 //    • უფასო: Phase 1–2 (გაკვეთილები + დეფექტის ძებნა) + სარეკლამო ბანერი.
 //    • Pro (ერთჯერადი შესყიდვა, StoreKit 2): Phase 3 (3 ფაზა + მოტორი) + რეკლამის გარეშე.
 //
-//  რეკლამა აბსტრაჰირებულია `AdManager`-ით — ამჟამად „house ads" (Gadget Georgia /
+//  რეკლამა აბსტრაჰირებულია `AdManager`-ით — ამჟამად „house ads" (gadget.ge /
 //  Tsili.Ge), მაგრამ ადვილად ჩანაცვლებადია AdMob-ით (იხ. docs/PUBLISHING.md).
 //
 
@@ -144,17 +144,11 @@ final class AdManager: ObservableObject {
     private var index = 0
 
     init() {
+        // ბანერი = სპონსორის კრედიტი (Tsili.ge), არა მაღაზიის რეკლამა.
         inventory = [
             HouseAd(
-                title: "Gadget Georgia",
-                subtitle: "ჭკვიანი ტექნიკა და მობილური აქსესუარები — gadget.ge",
-                cta: "ნახე მაღაზია",
-                symbol: "sparkles",
-                url: URL(string: "https://gadget.ge")
-            ),
-            HouseAd(
-                title: "მოგწონს თამაში? დააფინანსე Tsili.Ge-ზე",
-                subtitle: "შენი მხარდაჭერა ეხმარება ახალი დონეების შექმნას",
+                title: "სპონსორი: Tsili.ge",
+                subtitle: "მხარდაჭერე პროექტი — შენი წვლილი ქმნის ახალ დონეებს",
                 cta: "მხარდაჭერა",
                 symbol: "heart.fill",
                 url: URL(string: "https://tsili.ge")

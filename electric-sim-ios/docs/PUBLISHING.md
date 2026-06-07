@@ -1,7 +1,7 @@
 # App Store-ზე გამოქვეყნება და მონეტიზაცია
 
 ეს გზამკვლევი აღწერს, როგორ გამოაქვეყნო **ელექტრიკის სიმულატორი** App Store-ზე
-და როგორ მუშაობს მონეტიზაცია. ბრენდი: **Gadget Georgia**. დაფინანსება: **Tsili.Ge**.
+და როგორ მუშაობს მონეტიზაცია. ბრენდი: **gadget.ge**. დაფინანსება: **Tsili.Ge**.
 
 ---
 
@@ -19,14 +19,14 @@
 - **არ** გამოვიყენეთ წინასწარ გადახდადი (paid-upfront) მოდელი — ის ამცირებს მოცვას.
 - **არ** გამოვიყენეთ გამოწერა (subscription) — ზედმეტია ერთჯერადი კონტენტისთვის.
 - **Pro** — `NonConsumable` შესყიდვა StoreKit 2-ით (`EntitlementStore`).
-- **რეკლამა** — აბსტრაჰირებული `AdManager`-ით; ამჟამად „house ads" (Gadget Georgia,
+- **რეკლამა** — აბსტრაჰირებული `AdManager`-ით; ამჟამად „house ads" (gadget.ge,
   Tsili.Ge), რომელიც მონაცემებს არ აგროვებს.
 
 ---
 
 ## 🛒 In-App Purchase-ის გამართვა (App Store Connect)
 
-1. **Bundle ID:** `com.gadget.electricsim` (დარეგისტრირდეს Apple Developer-ში).
+1. **Bundle ID:** `ge.gadget.electricsim` (დარეგისტრირდეს Apple Developer-ში).
 2. App Store Connect → ახალი აპი → შეავსე ka ლოკალიზაცია.
 3. **In-App Purchases → +** → **Non-Consumable**:
    - Product ID: `pro_unlock`  ← ემთხვევა `EntitlementStore.proProductID`-ს
@@ -54,7 +54,7 @@
    (`name`, `subtitle`, `description`, `keywords`, `release_notes`…). ატვირთვა:
    ```bash
    cd electric-sim-ios
-   fastlane deliver --app_identifier com.gadget.electricsim
+   fastlane deliver --app_identifier ge.gadget.electricsim
    ```
    (ან ხელით App Store Connect-ში).
 6. **სკრინშოტები:** 6.7" და 5.5" iPhone + 12.9" iPad (App Store-ის მოთხოვნა).
@@ -89,7 +89,7 @@
 
 ## 🤝 ბრენდი და დაფინანსება
 
-- **Gadget Georgia** — შემქმნელი/გამომცემელი. ნახსენებია: „შესახებ" ეკრანი,
+- **gadget.ge** — შემქმნელი/გამომცემელი. ნახსენებია: „შესახებ" ეკრანი,
   სარეკლამო ბანერი, App Store-ის აღწერა, `PRIVACY.md`. ბმული: gadget.ge.
 - **Tsili.Ge** — დაფინანსების/მხარდაჭერის არხი. ნახსენებია: „შესახებ" ეკრანის
   „მხარდაჭერა" სექცია, სარეკლამო ბანერი, release notes. ბმული: tsili.ge.

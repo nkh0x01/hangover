@@ -3,7 +3,7 @@
 //  ElectricSim
 //
 //  მონეტიზაციის ინტერფეისი: სარეკლამო ბანერი, Pro-ს paywall, „შესახებ" ეკრანი.
-//  მთლიანად ქართულად. ბრენდი: Gadget Georgia. დაფინანსება: Tsili.Ge.
+//  მთლიანად ქართულად. ბრენდი: gadget.ge. დაფინანსება: Tsili.Ge.
 //
 
 import SwiftUI
@@ -39,7 +39,7 @@ struct AdBannerView: View {
                 .padding(.horizontal, 12).padding(.vertical, 8)
                 .background(Color(.secondarySystemBackground))
                 .overlay(alignment: .topLeading) {
-                    Text("რეკლამა")
+                    Text("სპონსორი")
                         .font(.system(size: 8))
                         .foregroundStyle(.secondary)
                         .padding(2)
@@ -195,7 +195,7 @@ struct AboutView: View {
 
                 Section("შემქმნელი") {
                     Link(destination: URL(string: "https://gadget.ge")!) {
-                        Label("Gadget Georgia", systemImage: "globe")
+                        Label("gadget.ge", systemImage: "globe")
                     }
                     Link(destination: URL(string: "mailto:info@gadget.ge")!) {
                         Label("info@gadget.ge", systemImage: "envelope")
@@ -210,7 +210,7 @@ struct AboutView: View {
                 } header: {
                     Text("მხარდაჭერა")
                 } footer: {
-                    Text("პროექტი ვითარდება Gadget Georgia-ს მიერ (gadget.ge). სპონსორი: Tsili.ge — შენი წვლილი ეხმარება ახალი დონეებისა და ფუნქციების შექმნას.")
+                    Text("პროექტი ვითარდება gadget.ge-ს მიერ (gadget.ge). სპონსორი: Tsili.ge — შენი წვლილი ეხმარება ახალი დონეებისა და ფუნქციების შექმნას.")
                 }
 
                 Section("სამართლებრივი") {

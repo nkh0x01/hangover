@@ -99,7 +99,7 @@ struct LevelListView: View {
                     }
                 }
             } footer: {
-                Text("შექმნილია Gadget Georgia-ს მიერ · gadget.ge")
+                Text("შექმნილია gadget.ge-ს მიერ")
             }
         }
         .navigationTitle("ელექტრიკის სიმულატორი")
