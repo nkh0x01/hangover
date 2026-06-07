@@ -19,6 +19,10 @@ public struct LoadLine: Identifiable, Sendable {
     public let currentA: Double      // ერთ ფაზაზე
     public let powerW: Double
     public let powered: Bool
+    public let csaMm2: Double         // ხაზის კაბელის კვეთა (0 თუ უცნობია)
+    public let lengthM: Double        // ხაზის სიგრძე (0 თუ უცნობია)
+    public let cableType: CableType
+    public let voltageDropPct: Double // ΔU%
 }
 
 public struct LoadReport: Sendable {
@@ -87,6 +91,19 @@ extension CircuitSolver {
         var perPhase: [Conductor: Double] = [.L: 0, .L1: 0, .L2: 0, .L3: 0]
         var totalPower = 0.0
 
+        // wire-only union-find — ხაზის კაბელის კვეთის/სიგრძის დასათვლელად.
+        let uf = UnionFind()
+        for c in board.components { for p in c.ports { uf.makeSet(p.id) } }
+        for w in board.wires { uf.union(w.fromPortID, w.toPortID) }
+        for c in board.components where c.kind.isConnector {
+            if let f = c.ports.first { for p in c.ports.dropFirst() { uf.union(f.id, p.id) } }
+        }
+        func lineSegments(of comp: Component) -> [Wire] {
+            let port = comp.port(conductor: comp.kind.isThreePhaseLoad ? .L1 : .L)
+            guard let net = port.map({ uf.find($0.id) }) else { return [] }
+            return board.wires.filter { uf.find($0.fromPortID) == net || uf.find($0.toPortID) == net }
+        }
+
         func hotPhase(of comp: Component) -> Conductor {
             for p in comp.ports where p.conductor.isHot {
                 if let hot = (labels[p.id] ?? []).first(where: { $0.isHot }) { return hot }
@@ -99,9 +116,17 @@ extension CircuitSolver {
             let phase = hotPhase(of: comp)
             let power = st.isPowered ? (comp.powerW ?? 0) : 0
             totalPower += power
+            let segs = lineSegments(of: comp)
+            let csa = segs.map { $0.csaMm2 }.min() ?? 0
+            let length = segs.reduce(0) { $0 + $1.lengthM }
+            let cable = segs.first?.cableType ?? .copper
+            let drop = VoltageDrop.percent(currentA: st.currentA, lengthM: length,
+                                           csaMm2: csa, cable: cable,
+                                           threePhase: comp.kind.isThreePhaseLoad)
             lines.append(LoadLine(id: comp.id, name: comp.name, kind: comp.kind,
                                   phase: phase, currentA: st.currentA, powerW: power,
-                                  powered: st.isPowered))
+                                  powered: st.isPowered, csaMm2: csa, lengthM: length,
+                                  cableType: cable, voltageDropPct: drop))
             if comp.kind.isThreePhaseLoad {
                 for p in [Conductor.L1, .L2, .L3] { perPhase[p, default: 0] += st.currentA }
             } else {

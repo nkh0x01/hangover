@@ -75,6 +75,15 @@ struct ReportsView: View {
                             }
                         }
                         .frame(height: 10)
+                        if line.voltageDropPct > 0 {
+                            let limit = VoltageDrop.limitPct(for: line.kind)
+                            let over = line.voltageDropPct > limit
+                            Text("ΔU \(line.voltageDropPct, specifier: "%.1f")% "
+                                 + "(\(Int(line.lengthM))მ, \(line.csaMm2, specifier: "%.1f")mm² \(line.cableType.georgianName))"
+                                 + (over ? " ⚠️ > \(Int(limit))%" : ""))
+                                .font(.caption2)
+                                .foregroundStyle(over ? .orange : .secondary)
+                        }
                     }
                 }
 
@@ -138,6 +147,7 @@ struct ReportsView: View {
 
     private var recommendationsTab: some View {
         let recs = Recommender.boardAdvice(board)
+        let selectivity = store.isPro ? solver.selectivityIssues(board) : []
         return ScrollView {
             VStack(alignment: .leading, spacing: 10) {
                 Text("მრჩეველი გირჩევს სწორ ავტომატს, კაბელსა და დაცვას თითო დატვირთვისთვის.")
@@ -145,21 +155,44 @@ struct ReportsView: View {
                 if recs.isEmpty {
                     Text("დაამატე კომპონენტები რეკომენდაციებისთვის.").foregroundStyle(.secondary)
                 }
-                ForEach(recs) { r in
-                    HStack(alignment: .top, spacing: 10) {
-                        Image(systemName: r.severity == .info ? "lightbulb.fill" : r.severity.icon)
-                            .foregroundStyle(r.severity == .info ? .yellow : r.severity.color)
-                        Text(r.message)
-                            .font(.callout)
-                            .fixedSize(horizontal: false, vertical: true)
-                        Spacer(minLength: 0)
+                ForEach(recs) { r in recRow(r) }
+
+                // სელექტიურობა — Pro
+                Text("სელექტიურობა").font(.headline).padding(.top, 6)
+                if store.isPro {
+                    if selectivity.isEmpty {
+                        Label("ავტომატების კოორდინაცია სწორია.", systemImage: "checkmark.seal.fill")
+                            .font(.callout).foregroundStyle(.green)
+                    } else {
+                        ForEach(selectivity) { r in recRow(r) }
                     }
-                    .padding(10)
-                    .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 10))
+                } else {
+                    Button { showPaywall = true } label: {
+                        HStack {
+                            Image(systemName: "lock.fill").foregroundStyle(.yellow)
+                            Text("ზედა/ქვედა ავტომატების სელექტიურობის შემოწმება — Pro")
+                                .font(.callout)
+                            Spacer()
+                        }
+                        .padding(10)
+                        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 10))
+                    }
+                    .buttonStyle(.plain)
                 }
             }
             .padding()
         }
+    }
+
+    private func recRow(_ r: Recommender.Recommendation) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: r.severity == .info ? "lightbulb.fill" : r.severity.icon)
+                .foregroundStyle(r.severity == .info ? .yellow : r.severity.color)
+            Text(r.message).font(.callout).fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+        .padding(10)
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 10))
     }
 
     // MARK: - ცალხაზოვანი ნახაზი

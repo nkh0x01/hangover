@@ -409,19 +409,22 @@ public struct Wire: Identifiable, Hashable, Codable, Sendable {
     public var csaMm2: Double
     public var color: WireColor
     public var cableType: CableType
+    public var lengthM: Double
 
     public init(id: String = UUID().uuidString,
                 from: String, to: String,
-                csaMm2: Double, color: WireColor, cableType: CableType = .copper) {
+                csaMm2: Double, color: WireColor,
+                cableType: CableType = .copper, lengthM: Double = 0) {
         self.id = id
         self.fromPortID = from
         self.toPortID = to
         self.csaMm2 = csaMm2
         self.color = color
         self.cableType = cableType
+        self.lengthM = lengthM
     }
 
-    // backward-compatible decode (cableType default copper თუ აკლია)
+    // backward-compatible decode (cableType/lengthM default-ებით თუ აკლია)
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(String.self, forKey: .id)
@@ -430,6 +433,7 @@ public struct Wire: Identifiable, Hashable, Codable, Sendable {
         csaMm2 = try c.decode(Double.self, forKey: .csaMm2)
         color = try c.decode(WireColor.self, forKey: .color)
         cableType = try c.decodeIfPresent(CableType.self, forKey: .cableType) ?? .copper
+        lengthM = try c.decodeIfPresent(Double.self, forKey: .lengthM) ?? 0
     }
 }
 

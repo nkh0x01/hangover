@@ -55,6 +55,8 @@ final class WorkbenchModel: ObservableObject {
     @Published var tool: Tool = .wire
     @Published var selectedPort: String?
     @Published var selectedCSA: Double
+    @Published var selectedCable: CableType = .copper
+    @Published var selectedLengthM: Double = 10
     @Published var result: SimulationResult?
     @Published var showResult = false
     @Published var levelPassed = false
@@ -149,7 +151,8 @@ final class WorkbenchModel: ObservableObject {
             ($0.fromPortID == to && $0.toPortID == from)
         }) { return }
         let conductor = board.port(from)?.conductor ?? board.port(to)?.conductor ?? .L
-        board.connect(from, to, csaMm2: selectedCSA, color: WireColor.standard(for: conductor))
+        board.connect(from, to, csaMm2: selectedCSA, color: WireColor.standard(for: conductor),
+                      cableType: selectedCable, lengthM: selectedLengthM)
         resetResult()
     }
 
@@ -375,6 +378,19 @@ struct WorkbenchView: View {
                 }
                 Button { model.removeLastWire() } label: { Image(systemName: "arrow.uturn.backward") }
                 Button(role: .destructive) { model.clearWires() } label: { Image(systemName: "trash") }
+            }.padding(.horizontal)
+
+            // კაბელის მასალა + სიგრძე (ΔU%-სთვის)
+            HStack(spacing: 12) {
+                Picker("მასალა", selection: $model.selectedCable) {
+                    Text("Cu").tag(CableType.copper)
+                    Text("Al").tag(CableType.aluminum)
+                }
+                .pickerStyle(.segmented)
+                .frame(width: 110)
+                Stepper("სიგრძე: \(Int(model.selectedLengthM))მ",
+                        value: $model.selectedLengthM, in: 0...100, step: 5)
+                    .font(.caption)
             }.padding(.horizontal)
 
             // მოქმედებები

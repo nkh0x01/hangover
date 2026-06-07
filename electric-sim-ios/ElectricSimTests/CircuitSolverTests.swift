@@ -545,6 +545,62 @@ final class CircuitSolverTests: XCTestCase {
         XCTAssertTrue(recs.contains { $0.message.contains("RCD") })
     }
 
+    // MARK: - ძაბვის ვარდნა + სელექტიურობა
+
+    func testVoltageDropFormula() {
+        // I=10A, L=20m, 2.5mm² Cu, 1-ფაზა → ΔU ≈ 1.22%
+        let p = VoltageDrop.percent(currentA: 10, lengthM: 20, csaMm2: 2.5,
+                                    cable: .copper, threePhase: false)
+        XCTAssertEqual(p, 1.217, accuracy: 0.02)
+        // ალუმინი იგივე პირობებში — მეტი ვარდნა
+        let al = VoltageDrop.percent(currentA: 10, lengthM: 20, csaMm2: 2.5,
+                                     cable: .aluminum, threePhase: false)
+        XCTAssertGreaterThan(al, p)
+        XCTAssertEqual(VoltageDrop.limitPct(for: .lamp), 3)
+        XCTAssertEqual(VoltageDrop.limitPct(for: .socket), 5)
+    }
+
+    func testLoadReportVoltageDrop() {
+        let lamp = ComponentFactory.lamp(id: "LAMP", powerW: 2000) // ~8.7A
+        var board = makeLineBoard(load: lamp, breakerRating: 16, csa: 1.5)
+        for i in board.wires.indices { board.wires[i].lengthM = 30 }
+        let rep = solver.loadReport(board)
+        XCTAssertGreaterThan(rep.lines.first!.voltageDropPct, 0)
+        XCTAssertEqual(rep.lines.first!.csaMm2, 1.5)
+        XCTAssertEqual(rep.lines.first!.lengthM, 30, accuracy: 0.1)
+    }
+
+    func testSelectivity() {
+        XCTAssertTrue(Selectivity.isSelective(upstream: 40, downstream: 16))
+        XCTAssertFalse(Selectivity.isSelective(upstream: 16, downstream: 16))
+        XCTAssertFalse(Selectivity.isSelective(upstream: 25, downstream: 20))
+    }
+
+    func testProtectiveChainAndSelectivityIssues() {
+        // supply → main → MCB(A) → MCB(B) → lamp  (ორი ავტომატი მიმდევრობით)
+        func build(aRating: Double, bRating: Double) -> Board {
+            var b = Board(phase: .single)
+            b.add(ComponentFactory.supply(id: "S"))
+            b.add(ComponentFactory.mainSwitch(id: "MS"))
+            b.add(ComponentFactory.mcb(id: "A", ratingA: aRating))
+            b.add(ComponentFactory.mcb(id: "B", ratingA: bRating))
+            b.add(ComponentFactory.lamp(id: "LAMP"))
+            b.connect("S.L", "MS.Lin", csaMm2: 4, color: .brown)
+            b.connect("MS.Lout", "A.in", csaMm2: 4, color: .brown)
+            b.connect("A.out", "B.in", csaMm2: 2.5, color: .brown)
+            b.connect("B.out", "LAMP.L", csaMm2: 1.5, color: .brown)
+            b.connect("S.N", "MS.Nin", csaMm2: 4, color: .blue)
+            b.connect("MS.Nout", "LAMP.N", csaMm2: 1.5, color: .blue)
+            b.connect("S.PE", "LAMP.PE", csaMm2: 1.5, color: .yellowGreen)
+            return b
+        }
+        let chain = solver.protectiveChain(build(aRating: 40, bRating: 16), loadID: "LAMP")
+        XCTAssertEqual(chain.map { $0.ratingA }, [16, 40], "branch→main რიგით")
+
+        XCTAssertTrue(solver.selectivityIssues(build(aRating: 40, bRating: 16)).isEmpty)
+        XCTAssertFalse(solver.selectivityIssues(build(aRating: 20, bRating: 16)).isEmpty)
+    }
+
     // MARK: - 13. სადენის ფერები (IEC)
 
     func testWireColors() {
