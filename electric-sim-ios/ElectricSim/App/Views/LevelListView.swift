@@ -9,13 +9,18 @@ import SwiftUI
 
 struct LevelListView: View {
     @EnvironmentObject var game: GameState
-    @EnvironmentObject var store: StoreManager
+    @EnvironmentObject var store: EntitlementStore
     @EnvironmentObject var ads: AdManager
     @State private var showPaywall = false
     @State private var showAbout = false
 
-    /// Pro-კონტენტი: 3-ფაზიანი დონეები საჭიროებს Pro-ს.
-    private func requiresPro(_ level: Level) -> Bool { level.phase == .three }
+    /// უფასო: პირველი 3 დონე + მხოლოდ 1 ფაზა. Pro: ყველა დონე, 3 ფაზა,
+    /// დეფექტის ძებნა (fault-finding), sandbox.
+    private func requiresPro(_ level: Level) -> Bool {
+        if level.resolvedMode == .sandbox { return true }
+        let isFree = level.resolvedMode == .build && level.phase == .single && level.index <= 3
+        return !isFree
+    }
 
     var body: some View {
         List {
@@ -30,7 +35,8 @@ struct LevelListView: View {
                             Image(systemName: "bolt.shield.fill").foregroundStyle(.yellow)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("განბლოკე ელექტრიკი Pro").font(.subheadline.bold())
-                                Text("3 ფაზა + მოტორი, რეკლამის გარეშე").font(.caption).foregroundStyle(.secondary)
+                                Text("ყველა დონე, 3 ფაზა, დეფექტის ძებნა, sandbox — რეკლამის გარეშე")
+                                    .font(.caption).foregroundStyle(.secondary)
                             }
                             Spacer()
                             Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
@@ -81,6 +87,19 @@ struct LevelListView: View {
                         Image(systemName: "trophy.fill").foregroundStyle(.yellow)
                     }
                 }
+            }
+
+            Section {
+                Link(destination: URL(string: "https://tsili.ge")!) {
+                    HStack {
+                        Image(systemName: "heart.fill").foregroundStyle(.pink)
+                        Text("სპონსორი: Tsili.ge").font(.subheadline)
+                        Spacer()
+                        Image(systemName: "arrow.up.right").font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+            } footer: {
+                Text("შექმნილია Gadget Georgia-ს მიერ · gadget.ge")
             }
         }
         .navigationTitle("ელექტრიკის სიმულატორი")

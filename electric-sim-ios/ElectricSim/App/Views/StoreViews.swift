@@ -11,14 +11,14 @@ import SwiftUI
 // MARK: - Ad banner (house ad; AdMob-ით ჩანაცვლებადი)
 
 struct AdBannerView: View {
-    @EnvironmentObject var store: StoreManager
+    @EnvironmentObject var store: EntitlementStore
     @EnvironmentObject var ads: AdManager
 
     var body: some View {
         if store.isPro {
             EmptyView() // Pro მომხმარებლებს რეკლამა არ ეჩვენებათ
         } else if let ad = ads.current {
-            Link(destination: ad.url ?? URL(string: "https://gadget.com.ge")!) {
+            Link(destination: ad.url ?? URL(string: "https://gadget.ge")!) {
                 HStack(spacing: 12) {
                     Image(systemName: ad.symbol)
                         .font(.title3)
@@ -53,7 +53,7 @@ struct AdBannerView: View {
 // MARK: - Paywall
 
 struct PaywallView: View {
-    @EnvironmentObject var store: StoreManager
+    @EnvironmentObject var store: EntitlementStore
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -138,7 +138,7 @@ struct PaywallView: View {
 // MARK: - About / Settings
 
 struct AboutView: View {
-    @EnvironmentObject var store: StoreManager
+    @EnvironmentObject var store: EntitlementStore
     @EnvironmentObject var game: GameState
     @Environment(\.dismiss) private var dismiss
     @State private var showPaywall = false
@@ -182,27 +182,27 @@ struct AboutView: View {
                 }
 
                 Section("შემქმნელი") {
-                    Link(destination: URL(string: "https://gadget.com.ge")!) {
+                    Link(destination: URL(string: "https://gadget.ge")!) {
                         Label("Gadget Georgia", systemImage: "globe")
                     }
-                    Link(destination: URL(string: "mailto:info@gadget.com.ge")!) {
-                        Label("info@gadget.com.ge", systemImage: "envelope")
+                    Link(destination: URL(string: "mailto:info@gadget.ge")!) {
+                        Label("info@gadget.ge", systemImage: "envelope")
                     }
                 }
 
                 Section {
                     Link(destination: URL(string: "https://tsili.ge")!) {
-                        Label("დააფინანსე Tsili.Ge-ზე", systemImage: "heart.fill")
+                        Label("სპონსორი: Tsili.ge", systemImage: "heart.fill")
                             .foregroundStyle(.pink)
                     }
                 } header: {
                     Text("მხარდაჭერა")
                 } footer: {
-                    Text("პროექტი ვითარდება Gadget Georgia-ს მიერ. დამატებითი დაფინანსების მოსაზიდად გამოიყენე Tsili.Ge — შენი წვლილი ეხმარება ახალი დონეებისა და ფუნქციების შექმნას.")
+                    Text("პროექტი ვითარდება Gadget Georgia-ს მიერ (gadget.ge). სპონსორი: Tsili.ge — შენი წვლილი ეხმარება ახალი დონეებისა და ფუნქციების შექმნას.")
                 }
 
                 Section("სამართლებრივი") {
-                    Link(destination: URL(string: "https://gadget.com.ge/privacy")!) {
+                    Link(destination: URL(string: "https://gadget.ge/privacy")!) {
                         Label("კონფიდენციალურობის პოლიტიკა", systemImage: "hand.raised.fill")
                     }
                 }
@@ -214,6 +214,15 @@ struct AboutView: View {
                         Label("პროგრესის განულება", systemImage: "arrow.counterclockwise")
                     }
                 }
+
+                #if DEBUG
+                Section("QA (DEBUG)") {
+                    Toggle("Pro იძულებით ჩართვა", isOn: Binding(
+                        get: { store.isPro },
+                        set: { store.debugSetPro($0) }
+                    ))
+                }
+                #endif
             }
             .navigationTitle("შესახებ")
             .navigationBarTitleDisplayMode(.inline)

@@ -18,7 +18,7 @@
           "locale" : "en_US"
         }
       ],
-      "productID" : "com.gadget.electricsim.pro",
+      "productID" : "pro_unlock",
       "referenceName" : "ElectricSim Pro Unlock",
       "type" : "NonConsumable"
     }

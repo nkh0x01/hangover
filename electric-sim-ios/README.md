@@ -232,15 +232,15 @@ swift test
 - **უფასო:** Phase 1–2 + სარეკლამო ბანერი (house ads — Gadget Georgia / Tsili.Ge).
 - **Pro (ერთჯერადი შესყიდვა, StoreKit 2):** Phase 3 (3 ფაზა + მოტორი) + რეკლამის გარეშე.
 
-კოდი: `App/Monetization.swift` (`StoreManager`, `AdManager`) და
+კოდი: `App/Monetization.swift` (`EntitlementStore`, `AdManager`) და
 `App/Views/StoreViews.swift` (paywall, ბანერი, „შესახებ").
-Pro პროდუქტი: `com.gadget.electricsim.pro`. ლოკალური ტესტი: `Products.storekit`.
+Pro პროდუქტი: `pro_unlock`. ლოკალური ტესტი: `Products.storekit`.
 
 App Store-ის მზაობა: ქართული მეტამონაცემები `fastlane/metadata/ka/`,
 `PrivacyInfo.xcprivacy`, `PRIVACY.md`, და სრული გზამკვლევი (IAP, AdMob, submission):
 **[docs/PUBLISHING.md](docs/PUBLISHING.md)**.
 
-> 🇬🇪 შემქმნელი: **Gadget Georgia** ([gadget.com.ge](https://gadget.com.ge)).
+> 🇬🇪 შემქმნელი: **Gadget Georgia** ([gadget.ge](https://gadget.ge)).
 > დაფინანსების მხარდაჭერა: **[Tsili.Ge](https://tsili.ge)**.
 
 ---

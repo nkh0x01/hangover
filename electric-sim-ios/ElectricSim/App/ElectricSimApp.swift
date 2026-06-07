@@ -11,7 +11,7 @@ import SwiftUI
 @main
 struct ElectricSimApp: App {
     @StateObject private var game = GameState()
-    @StateObject private var store = StoreManager()
+    @StateObject private var store = EntitlementStore()
     @StateObject private var ads = AdManager()
 
     var body: some Scene {

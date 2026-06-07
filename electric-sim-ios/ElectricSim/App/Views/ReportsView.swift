@@ -10,7 +10,7 @@ import SwiftUI
 import UIKit
 
 struct ReportsView: View {
-    @EnvironmentObject var store: StoreManager
+    @EnvironmentObject var store: EntitlementStore
     @EnvironmentObject var game: GameState
     let board: Board
 
@@ -238,7 +238,7 @@ struct ReportsView: View {
                 }
                 .padding(.top, 4)
 
-                Link(destination: URL(string: "https://gadget.com.ge")!) {
+                Link(destination: URL(string: "https://gadget.ge")!) {
                     Label("ჭკვიანი ტექნიკა და აქსესუარები — Gadget Georgia", systemImage: "sparkles")
                         .frame(maxWidth: .infinity)
                 }

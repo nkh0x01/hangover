@@ -215,7 +215,7 @@ struct PortAnchorKey: PreferenceKey {
 
 struct WorkbenchView: View {
     @EnvironmentObject var game: GameState
-    @EnvironmentObject var store: StoreManager
+    @EnvironmentObject var store: EntitlementStore
     @StateObject private var model: WorkbenchModel
     @State private var showHint = false
     @State private var showReports = false

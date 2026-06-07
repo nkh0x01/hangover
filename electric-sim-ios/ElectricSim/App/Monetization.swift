@@ -13,12 +13,12 @@
 import Foundation
 import StoreKit
 
-// MARK: - StoreManager (StoreKit 2)
+// MARK: - EntitlementStore (StoreKit 2)
 
 @MainActor
-final class StoreManager: ObservableObject {
+final class EntitlementStore: ObservableObject {
     /// Pro-განბლოკვის პროდუქტის იდენტიფიკატორი (App Store Connect-ში იგივე უნდა იყოს).
-    static let proProductID = "com.gadget.electricsim.pro"
+    static let proProductID = "pro_unlock"
 
     @Published private(set) var proProduct: Product?
     @Published private(set) var isPro: Bool
@@ -114,6 +114,11 @@ final class StoreManager: ObservableObject {
         isPro = value
         UserDefaults.standard.set(value, forKey: proKey)
     }
+
+    #if DEBUG
+    /// QA-სთვის: Pro-ს იძულებითი ჩართვა/გამორთვა (მხოლოდ DEBUG ბილდში).
+    func debugSetPro(_ value: Bool) { setPro(value) }
+    #endif
 }
 
 // MARK: - House ad model
@@ -142,10 +147,10 @@ final class AdManager: ObservableObject {
         inventory = [
             HouseAd(
                 title: "Gadget Georgia",
-                subtitle: "ჭკვიანი ტექნიკა და მობილური აქსესუარები — gadget.com.ge",
+                subtitle: "ჭკვიანი ტექნიკა და მობილური აქსესუარები — gadget.ge",
                 cta: "ნახე მაღაზია",
                 symbol: "sparkles",
-                url: URL(string: "https://gadget.com.ge")
+                url: URL(string: "https://gadget.ge")
             ),
             HouseAd(
                 title: "მოგწონს თამაში? დააფინანსე Tsili.Ge-ზე",
