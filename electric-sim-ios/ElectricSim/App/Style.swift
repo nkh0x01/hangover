@@ -24,6 +24,13 @@ extension Conductor {
     var swiftUIColor: Color { WireColor.standard(for: self).swiftUIColor }
 }
 
+extension Color {
+    /// მთავარი ბრენდის აქცენტი (ლურჯი) — ნავიგაცია/ღილაკები/აქცენტები.
+    static let brand = Color(red: 0.16, green: 0.50, blue: 0.96)
+    /// „ცოცხალი / ანთებული" — მხოლოდ ენერგიის/ნათების მნიშვნელობით (ყვითელი).
+    static let energized = Color(red: 1.0, green: 0.80, blue: 0.0)
+}
+
 extension ComponentKind {
     var sfSymbol: String {
         switch self {

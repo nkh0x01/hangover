@@ -237,5 +237,29 @@
     "name": "Smart მრიცხველი",
     "poles": 1,
     "priceGEL": 90
+  },
+  {
+    "id": "led_lamp",
+    "kind": "lamp",
+    "name": "LED ნათურა 9W",
+    "powerW": 9,
+    "requiresPE": false,
+    "priceGEL": 8
+  },
+  {
+    "id": "led_panel",
+    "kind": "lamp",
+    "name": "LED პანელი 36W",
+    "powerW": 36,
+    "requiresPE": true,
+    "priceGEL": 30
+  },
+  {
+    "id": "led_strip",
+    "kind": "dimmer",
+    "name": "LED ლენტი 18W",
+    "powerW": 18,
+    "requiresPE": false,
+    "priceGEL": 20
   }
 ]

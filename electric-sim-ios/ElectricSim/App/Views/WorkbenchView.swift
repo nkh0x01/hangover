@@ -219,6 +219,8 @@ struct WorkbenchView: View {
     @StateObject private var model: WorkbenchModel
     @State private var showHint = false
     @State private var showReports = false
+    @State private var zoom: CGFloat = 1.0
+    @GestureState private var pinch: CGFloat = 1.0
 
     init(level: Level) {
         _model = StateObject(wrappedValue: WorkbenchModel(level: level, templates: [:]))
@@ -315,9 +317,33 @@ struct WorkbenchView: View {
                     }
                 }
             }
+            .scaleEffect(zoom * pinch, anchor: .topLeading)
+            .gesture(
+                MagnificationGesture()
+                    .updating($pinch) { value, state, _ in state = value }
+                    .onEnded { value in zoom = min(max(zoom * value, 0.4), 3.0) }
+            )
         }
         .frame(maxHeight: .infinity)
         .background(Color(.systemBackground))
+        .overlay(alignment: .bottomTrailing) { zoomControls }
+    }
+
+    private var zoomControls: some View {
+        VStack(spacing: 6) {
+            Button { zoom = min(zoom + 0.2, 3.0) } label: { zoomIcon("plus.magnifyingglass") }
+            Button { zoom = max(zoom - 0.2, 0.4) } label: { zoomIcon("minus.magnifyingglass") }
+            Button { zoom = 1.0 } label: { zoomIcon("1.magnifyingglass") }
+        }
+        .padding(8)
+    }
+
+    private func zoomIcon(_ name: String) -> some View {
+        Image(systemName: name)
+            .font(.title3)
+            .frame(width: 38, height: 38)
+            .background(.ultraThinMaterial, in: Circle())
+            .overlay(Circle().stroke(Color.gray.opacity(0.25)))
     }
 
     private var controls: some View {

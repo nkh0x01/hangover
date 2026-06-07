@@ -31,6 +31,6 @@ struct RootView: View {
         NavigationStack {
             LevelListView()
         }
-        .tint(.yellow)
+        .tint(.brand)
     }
 }
