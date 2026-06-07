@@ -11,16 +11,9 @@ struct LevelListView: View {
     @EnvironmentObject var game: GameState
     @EnvironmentObject var store: EntitlementStore
     @EnvironmentObject var ads: AdManager
+    @Binding var path: [String]
     @State private var showPaywall = false
     @State private var showAbout = false
-
-    /// უფასო: პირველი 3 დონე + მხოლოდ 1 ფაზა. Pro: ყველა დონე, 3 ფაზა,
-    /// დეფექტის ძებნა (fault-finding), sandbox.
-    private func requiresPro(_ level: Level) -> Bool {
-        if level.resolvedMode == .sandbox { return true }
-        let isFree = level.resolvedMode == .build && level.phase == .single && level.index <= 3
-        return !isFree
-    }
 
     var body: some View {
         List {
@@ -56,12 +49,11 @@ struct LevelListView: View {
             if !game.customLevels.isEmpty {
                 Section("ჩემი დონეები") {
                     ForEach(game.customLevels) { level in
-                        NavigationLink {
-                            WorkbenchView(level: level)
-                        } label: {
+                        Button { path.append(level.id) } label: {
                             LevelRowContent(level: level, completed: game.isCompleted(level),
                                             unlocked: true, proLocked: false)
                         }
+                        .buttonStyle(.plain)
                     }
                     .onDelete { idx in
                         idx.map { game.customLevels[$0].id }.forEach(game.deleteCustomLevel)
@@ -134,23 +126,16 @@ struct LevelListView: View {
     @ViewBuilder
     private func levelRow(_ level: Level) -> some View {
         let unlocked = game.isUnlocked(level)
-        let locked = requiresPro(level) && !store.isPro
+        let locked = game.isProLocked(level, isPro: store.isPro)
 
-        if locked {
-            Button { showPaywall = true } label: {
-                LevelRowContent(level: level, completed: game.isCompleted(level),
-                                unlocked: unlocked, proLocked: true)
-            }
-            .disabled(!unlocked)
-        } else {
-            NavigationLink {
-                WorkbenchView(level: level)
-            } label: {
-                LevelRowContent(level: level, completed: game.isCompleted(level),
-                                unlocked: unlocked, proLocked: false)
-            }
-            .disabled(!unlocked)
+        Button {
+            if locked { showPaywall = true } else { path.append(level.id) }
+        } label: {
+            LevelRowContent(level: level, completed: game.isCompleted(level),
+                            unlocked: unlocked, proLocked: locked)
         }
+        .buttonStyle(.plain)
+        .disabled(!unlocked)
     }
 }
 

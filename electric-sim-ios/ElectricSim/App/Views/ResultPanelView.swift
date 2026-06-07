@@ -11,6 +11,9 @@ struct ResultPanelView: View {
     let result: SimulationResult
     let passed: Bool
     let level: Level
+    var hasNext: Bool = false
+    var onNext: (() -> Void)?
+    var onBackToMenu: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -50,6 +53,23 @@ struct ResultPanelView: View {
                                 Spacer()
                             }
                         }
+                    }
+                }
+
+                if passed {
+                    Section {
+                        Button {
+                            if hasNext { onNext?() } else { onBackToMenu?() }
+                        } label: {
+                            Label(hasNext ? "next_level" : "back_to_menu",
+                                  systemImage: hasNext ? "arrow.right.circle.fill" : "house.fill")
+                                .frame(maxWidth: .infinity)
+                                .font(.headline)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.brand)
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
                     }
                 }
 

@@ -60,6 +60,20 @@ final class GameState: ObservableObject {
 
     func template(_ id: String) -> ComponentTemplate? { templates[id] }
 
+    /// დონის პოვნა id-ით (ჩაშენებული + custom) — ნავიგაციისთვის.
+    func level(byID id: String) -> Level? {
+        levels.first { $0.id == id } ?? customLevels.first { $0.id == id }
+    }
+
+    /// Pro-ჩაკეტილია? უფასო = პირველი 3 დონე (1 ფაზა). custom = თავისუფალი.
+    func isProLocked(_ level: Level, isPro: Bool) -> Bool {
+        if isPro { return false }
+        if level.resolvedMode == .sandbox { return true }
+        if customLevels.contains(where: { $0.id == level.id }) { return false }
+        let free = level.resolvedMode == .build && level.phase == .single && level.index <= 3
+        return !free
+    }
+
     // MARK: - პროგრესია
 
     /// პროგრესიის (numbered) დონეები — sandbox-ის გარეშე.

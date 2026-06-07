@@ -103,8 +103,9 @@ struct ReportsView: View {
     }
 
     private func voltageDropLabel(_ line: LoadLine, over: Bool, limit: Double) -> String {
-        var s = String(format: "ΔU %.1f%% (%dმ, %.1fmm² %@)",
-                       line.voltageDropPct, Int(line.lengthM), line.csaMm2, line.cableType.georgianName)
+        var s = String(format: "ΔU %.1f%% (%dმ, %.1fmm² %@, %@)",
+                       line.voltageDropPct, Int(line.lengthM), line.csaMm2,
+                       line.cableType.georgianName, line.conductorType.georgianName)
         if over { s += String(format: " ⚠️ > %d%%", Int(limit)) }
         return s
     }

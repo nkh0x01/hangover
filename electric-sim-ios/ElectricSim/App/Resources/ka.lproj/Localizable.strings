@@ -34,3 +34,10 @@
 "paywall_locked_badge" = "Pro";
 "paywall_restore_ok" = "Pro აღდგენილია";
 "paywall_restore_none" = "აღსადგენი შენაძენი ვერ მოიძებნა";
+
+/* Mechanics fixes */
+"next_level" = "შემდეგი დონე →";
+"back_to_menu" = "მენიუში დაბრუნება";
+"cable_type_solid" = "ხისტი";
+"cable_type_stranded" = "მრავალწვერა";
+"cable_section_label" = "კვეთა";

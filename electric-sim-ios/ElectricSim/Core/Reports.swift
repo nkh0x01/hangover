@@ -22,6 +22,7 @@ public struct LoadLine: Identifiable, Sendable {
     public let csaMm2: Double         // ხაზის კაბელის კვეთა (0 თუ უცნობია)
     public let lengthM: Double        // ხაზის სიგრძე (0 თუ უცნობია)
     public let cableType: CableType
+    public let conductorType: ConductorType
     public let voltageDropPct: Double // ΔU%
 }
 
@@ -120,13 +121,14 @@ extension CircuitSolver {
             let csa = segs.map { $0.csaMm2 }.min() ?? 0
             let length = segs.reduce(0) { $0 + $1.lengthM }
             let cable = segs.first?.cableType ?? .copper
+            let conductor = segs.first?.conductorType ?? .solid
             let drop = VoltageDrop.percent(currentA: st.currentA, lengthM: length,
                                            csaMm2: csa, cable: cable,
                                            threePhase: comp.kind.isThreePhaseLoad)
             lines.append(LoadLine(id: comp.id, name: comp.name, kind: comp.kind,
                                   phase: phase, currentA: st.currentA, powerW: power,
                                   powered: st.isPowered, csaMm2: csa, lengthM: length,
-                                  cableType: cable, voltageDropPct: drop))
+                                  cableType: cable, conductorType: conductor, voltageDropPct: drop))
             if comp.kind.isThreePhaseLoad {
                 for p in [Conductor.L1, .L2, .L3] { perPhase[p, default: 0] += st.currentA }
             } else {

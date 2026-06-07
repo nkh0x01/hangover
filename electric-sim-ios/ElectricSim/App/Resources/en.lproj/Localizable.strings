@@ -34,3 +34,10 @@
 "paywall_locked_badge" = "Pro";
 "paywall_restore_ok" = "Pro restored";
 "paywall_restore_none" = "No purchases to restore";
+
+/* Mechanics fixes */
+"next_level" = "Next level →";
+"back_to_menu" = "Back to menu";
+"cable_type_solid" = "Solid";
+"cable_type_stranded" = "Stranded";
+"cable_section_label" = "Section";

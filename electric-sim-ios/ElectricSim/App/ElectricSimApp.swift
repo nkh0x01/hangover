@@ -26,10 +26,16 @@ struct ElectricSimApp: App {
 
 struct RootView: View {
     @EnvironmentObject var game: GameState
+    @State private var path: [String] = []   // ნავიგაცია დონის id-ებით
 
     var body: some View {
-        NavigationStack {
-            LevelListView()
+        NavigationStack(path: $path) {
+            LevelListView(path: $path)
+                .navigationDestination(for: String.self) { id in
+                    if let level = game.level(byID: id) {
+                        WorkbenchView(level: level, path: $path)
+                    }
+                }
         }
         .tint(.brand)
         .onAppear { GameCenterManager.shared.authenticate() }   // არ-მბლოკავი

@@ -56,7 +56,10 @@ final class WorkbenchModel: ObservableObject {
     @Published var selectedPort: String?
     @Published var selectedCSA: Double
     @Published var selectedCable: CableType = .copper
+    @Published var selectedConductorType: ConductorType = .solid
     @Published var selectedLengthM: Double = 10
+    @Published var selection: Set<String> = []       // მონიშნული კომპონენტები (group move)
+    @Published var selectMode = false
     @Published var result: SimulationResult?
     @Published var showResult = false
     @Published var levelPassed = false
@@ -149,6 +152,9 @@ final class WorkbenchModel: ObservableObject {
         }
     }
 
+    /// საჯარო — drag-ით ხაზვისთვის (terminal → terminal).
+    func connectPorts(_ from: String, _ to: String) { addWire(from: from, to: to) }
+
     private func addWire(from: String, to: String) {
         guard from != to else { return }
         if board.wires.contains(where: {
@@ -157,7 +163,32 @@ final class WorkbenchModel: ObservableObject {
         }) { return }
         let conductor = board.port(from)?.conductor ?? board.port(to)?.conductor ?? .L
         board.connect(from, to, csaMm2: selectedCSA, color: WireColor.standard(for: conductor),
-                      cableType: selectedCable, lengthM: selectedLengthM)
+                      cableType: selectedCable, conductorType: selectedConductorType,
+                      lengthM: selectedLengthM)
+        resetResult()
+    }
+
+    // MARK: კომპონენტების მონიშვნა და გადაადგილება (DIN rail reorder)
+
+    func toggleSelect(_ id: String) {
+        guard id != "supply" else { return }
+        if selection.contains(id) { selection.remove(id) } else { selection.insert(id) }
+        selectMode = !selection.isEmpty
+    }
+
+    func clearSelection() { selection.removeAll(); selectMode = false }
+
+    /// გადააადგილებს კომპონენტ(ებ)-ს რიგში `shift` პოზიციით (busbar-ის ვიზუალური რიგი).
+    func moveComponents(_ ids: Set<String>, by shift: Int) {
+        guard shift != 0, !ids.isEmpty else { return }
+        var comps = board.components
+        let moving = comps.filter { ids.contains($0.id) }
+        guard !moving.isEmpty,
+              let firstIdx = comps.firstIndex(where: { ids.contains($0.id) }) else { return }
+        comps.removeAll { ids.contains($0.id) }
+        let target = max(0, min(comps.count, firstIdx + shift))
+        comps.insert(contentsOf: moving, at: target)
+        board.components = comps
         resetResult()
     }
 
@@ -212,15 +243,17 @@ final class WorkbenchModel: ObservableObject {
     }
 }
 
-// MARK: - Anchor preference for wiring
+// MARK: - Port frame preference (ფეხების კოორდინატები "board" სივრცეში)
 
-struct PortAnchorKey: PreferenceKey {
-    static let defaultValue: [String: Anchor<CGPoint>] = [:]
-    static func reduce(value: inout [String: Anchor<CGPoint>],
-                       nextValue: () -> [String: Anchor<CGPoint>]) {
+struct PortFrameKey: PreferenceKey {
+    static let defaultValue: [String: CGPoint] = [:]
+    static func reduce(value: inout [String: CGPoint], nextValue: () -> [String: CGPoint]) {
         value.merge(nextValue()) { $1 }
     }
 }
+
+/// "board" — საერთო კოორდინატთა სივრცე drag-ისა და ფეხების პოზიციებისთვის.
+let kBoardSpace = "board"
 
 // MARK: - Workbench view
 
@@ -228,9 +261,14 @@ struct WorkbenchView: View {
     @EnvironmentObject var game: GameState
     @EnvironmentObject var store: EntitlementStore
     @StateObject private var model: WorkbenchModel
+    @Binding var path: [String]
     @State private var showHint = false
     @State private var showReports = false
     @State private var showPaywall = false
+    // drag-to-wire
+    @State private var portPoints: [String: CGPoint] = [:]
+    @State private var dragFrom: String?
+    @State private var dragCurrent: CGPoint = .zero
 
     /// უფასოში ბაზისური ნაკრები (main switch, MCB, RCD, ნათურა, როზეტი + კაბელი).
     private func isPaletteLocked(_ e: PaletteEntry) -> Bool {
@@ -244,9 +282,58 @@ struct WorkbenchView: View {
     @State private var pan: CGSize = .zero
     @GestureState private var drag: CGSize = .zero
 
-    init(level: Level) {
+    init(level: Level, path: Binding<[String]>) {
+        _path = path
         _model = StateObject(wrappedValue: WorkbenchModel(level: level, templates: [:]))
     }
+
+    // MARK: drag-to-wire handlers (board სივრცეში)
+    private func portDragChanged(_ id: String, _ loc: CGPoint) {
+        guard model.tool == .wire else { return }
+        dragFrom = id
+        dragCurrent = loc
+    }
+    private func portDragEnded(_ id: String, _ loc: CGPoint) {
+        defer { dragFrom = nil }
+        guard model.tool == .wire else { return }
+        if let target = nearestPort(to: loc, excluding: id) {
+            model.connectPorts(id, target)   // snap to target terminal
+        }
+        // ცარიელ ადგილზე გაშვება → გაუქმება (target == nil)
+    }
+    private func nearestPort(to p: CGPoint, excluding: String) -> String? {
+        var best: String?; var bestD = CGFloat.greatestFiniteMagnitude
+        for (pid, pt) in portPoints where pid != excluding {
+            let d = hypot(pt.x - p.x, pt.y - p.y)
+            if d < bestD { bestD = d; best = pid }
+        }
+        return bestD <= 36 ? best : nil   // snap threshold
+    }
+
+    // MARK: component move
+    private func handleMove(_ id: String, _ tx: CGFloat) {
+        let cardStride: CGFloat = 140      // ~ბარათის სიგანე + დაშორება
+        let shift = Int((tx / cardStride).rounded())
+        guard shift != 0 else { return }
+        let ids: Set<String> = (model.selection.contains(id) && !model.selection.isEmpty)
+            ? model.selection : [id]
+        model.moveComponents(ids, by: shift)
+    }
+
+    // MARK: next level
+    private var nextLevelID: String? {
+        let camp = game.campaignLevels
+        guard let idx = camp.firstIndex(where: { $0.id == model.level.id }) else { return nil }
+        let n = idx + 1
+        return n < camp.count ? camp[n].id : nil
+    }
+    private func goNext() {
+        model.showResult = false
+        guard let nid = nextLevelID, let next = game.level(byID: nid) else { path = []; return }
+        if game.isProLocked(next, isPro: store.isPro) { showPaywall = true; return }
+        if path.isEmpty { path = [nid] } else { path[path.count - 1] = nid }
+    }
+    private func backToMenu() { model.showResult = false; path = [] }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -282,7 +369,10 @@ struct WorkbenchView: View {
         .onAppear { model.configure(game.templates) }
         .sheet(isPresented: $model.showResult) {
             if let r = model.result {
-                ResultPanelView(result: r, passed: model.levelPassed, level: model.level)
+                ResultPanelView(result: r, passed: model.levelPassed, level: model.level,
+                                hasNext: nextLevelID != nil,
+                                onNext: { goNext() },
+                                onBackToMenu: { backToMenu() })
             }
         }
         .sheet(isPresented: $model.showWires) {
@@ -344,27 +434,45 @@ struct WorkbenchView: View {
                     component: comp,
                     selectedPort: model.selectedPort,
                     loadState: model.result?.state(for: comp.id),
+                    isSelected: model.selection.contains(comp.id),
                     isLive: { model.isLive($0) },
                     onTapPort: { model.tapPort($0) },
+                    onPortDragChanged: { portDragChanged($0, $1) },
+                    onPortDragEnded: { portDragEnded($0, $1) },
+                    onLongPress: { model.toggleSelect(comp.id) },
+                    onMoveEnded: { handleMove(comp.id, $0) },
                     onDelete: comp.id == "supply" ? nil : { model.removeComponent(comp.id) }
                 )
             }
         }
         .padding(40)
-        .backgroundPreferenceValue(PortAnchorKey.self) { anchors in
-            GeometryReader { proxy in
-                ForEach(model.board.wires) { wire in
-                    if let a = anchors[wire.fromPortID], let b = anchors[wire.toPortID] {
-                        Path { p in
-                            p.move(to: proxy[a])
-                            p.addLine(to: proxy[b])
-                        }
-                        .stroke(wire.color.swiftUIColor,
-                                style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                    }
+        .coordinateSpace(name: kBoardSpace)
+        .overlay { wireOverlay }
+        .onPreferenceChange(PortFrameKey.self) { portPoints = $0 }
+    }
+
+    private var wireOverlay: some View {
+        ZStack {
+            ForEach(model.board.wires) { wire in
+                if let a = portPoints[wire.fromPortID], let b = portPoints[wire.toPortID] {
+                    Path { p in p.move(to: a); p.addLine(to: b) }
+                        .stroke(wire.color.swiftUIColor, style: wireStroke(wire.conductorType))
                 }
             }
+            if let from = dragFrom, let a = portPoints[from] {
+                Path { p in p.move(to: a); p.addLine(to: dragCurrent) }
+                    .stroke(Color.gray.opacity(0.7),
+                            style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [6, 4]))
+            }
         }
+        .allowsHitTesting(false)   // არ ბლოკავს ფეხების/ბარათების ჟესტებს
+    }
+
+    /// ხისტი = მუდმივი ხაზი; მრავალწვერა = ოდნავ სქელი + ზოლიანი (striped).
+    private func wireStroke(_ c: ConductorType) -> StrokeStyle {
+        c == .stranded
+        ? StrokeStyle(lineWidth: 5, lineCap: .round, dash: [5, 3])
+        : StrokeStyle(lineWidth: 4, lineCap: .round)
     }
 
     private var zoomControls: some View {
@@ -441,8 +549,8 @@ struct WorkbenchView: View {
 
             // კაბელის კვეთა
             HStack {
-                Text("კვეთა:").font(.caption)
-                Picker("კვეთა", selection: $model.selectedCSA) {
+                Text("cable_section_label").font(.caption)
+                Picker("cable_section_label", selection: $model.selectedCSA) {
                     ForEach(model.csaOptions, id: \.self) { csa in
                         Text("\(csa, specifier: "%.1f")mm²").tag(csa)
                     }
@@ -456,18 +564,26 @@ struct WorkbenchView: View {
                 Button(role: .destructive) { model.clearWires() } label: { Image(systemName: "trash") }
             }.padding(.horizontal)
 
-            // კაბელის მასალა + სიგრძე (ΔU%-სთვის)
-            HStack(spacing: 12) {
+            // კაბელის მასალა (Cu/Al) + ძარღვის ტიპი (ხისტი/მრავალწვერა)
+            HStack(spacing: 10) {
                 Picker("მასალა", selection: $model.selectedCable) {
                     Text("Cu").tag(CableType.copper)
                     Text("Al").tag(CableType.aluminum)
                 }
                 .pickerStyle(.segmented)
-                .frame(width: 110)
-                Stepper("სიგრძე: \(Int(model.selectedLengthM))მ",
-                        value: $model.selectedLengthM, in: 0...100, step: 5)
-                    .font(.caption)
+                .frame(width: 88)
+                Picker("ძარღვი", selection: $model.selectedConductorType) {
+                    Text("cable_type_solid").tag(ConductorType.solid)
+                    Text("cable_type_stranded").tag(ConductorType.stranded)
+                }
+                .pickerStyle(.segmented)
             }.padding(.horizontal)
+
+            // სიგრძე (ΔU%-სთვის)
+            Stepper("სიგრძე: \(Int(model.selectedLengthM))მ",
+                    value: $model.selectedLengthM, in: 0...100, step: 5)
+                .font(.caption)
+                .padding(.horizontal)
 
             // მოქმედებები
             HStack(spacing: 12) {
@@ -498,8 +614,13 @@ struct ComponentCardView: View {
     let component: Component
     let selectedPort: String?
     let loadState: LoadState?
+    let isSelected: Bool
     let isLive: (String) -> Bool
     let onTapPort: (String) -> Void
+    let onPortDragChanged: (String, CGPoint) -> Void
+    let onPortDragEnded: (String, CGPoint) -> Void
+    let onLongPress: () -> Void
+    let onMoveEnded: (CGFloat) -> Void
     let onDelete: (() -> Void)?
 
     private var inputs: [Port] { component.ports.filter { $0.side == .input } }
@@ -533,6 +654,13 @@ struct ComponentCardView: View {
                     .offset(x: 6, y: -6)
                 }
             }
+            .overlay(alignment: .topLeading) {
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(.brand).background(Circle().fill(.white))
+                        .offset(x: -6, y: -6)
+                }
+            }
 
             HStack(alignment: .top, spacing: 14) {
                 if !inputs.isEmpty { portColumn(inputs, label: "IN") }
@@ -542,7 +670,14 @@ struct ComponentCardView: View {
         }
         .padding(8)
         .background(RoundedRectangle(cornerRadius: 12).fill(Color(.tertiarySystemBackground)))
-        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.gray.opacity(0.3)))
+        .overlay(RoundedRectangle(cornerRadius: 12)
+            .stroke(isSelected ? Color.brand : Color.gray.opacity(0.3), lineWidth: isSelected ? 2 : 1))
+        // გრძელი დაჭერა — მონიშვნა (group move); გადათრევა — რიგის შეცვლა.
+        .simultaneousGesture(LongPressGesture(minimumDuration: 0.4).onEnded { _ in onLongPress() })
+        .gesture(
+            DragGesture(minimumDistance: 24)
+                .onEnded { onMoveEnded($0.translation.width) }
+        )
     }
 
     private func portColumn(_ ports: [Port], label: String?) -> some View {
@@ -555,6 +690,13 @@ struct ComponentCardView: View {
                 }
                 .contentShape(Rectangle())
                 .onTapGesture { onTapPort(port.id) }
+                // drag-to-wire: იწყება ფეხიდან, სჯობნის ბარათის გადათრევას
+                // (ჰენდლერი WorkbenchView-ში ამოწმებს wire ხელსაწყოს).
+                .highPriorityGesture(
+                    DragGesture(coordinateSpace: .named(kBoardSpace))
+                        .onChanged { onPortDragChanged(port.id, $0.location) }
+                        .onEnded { onPortDragEnded(port.id, $0.location) }
+                )
             }
         }
     }
@@ -572,7 +714,12 @@ struct ComponentCardView: View {
                     Circle().stroke(Color.yellow, lineWidth: 2).blur(radius: 2)
                 }
             }
-            .anchorPreference(key: PortAnchorKey.self, value: .center) { [port.id: $0] }
+            .background(GeometryReader { g in
+                Color.clear.preference(
+                    key: PortFrameKey.self,
+                    value: [port.id: CGPoint(x: g.frame(in: .named(kBoardSpace)).midX,
+                                             y: g.frame(in: .named(kBoardSpace)).midY)])
+            })
     }
 
     private var headerColor: Color {
@@ -614,7 +761,7 @@ struct WiresListView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("\(label(wire.fromPortID))  →  \(label(wire.toPortID))")
                                     .font(.caption)
-                                Text("\(wire.color.georgianName) · \(wire.csaMm2, specifier: "%.1f")mm²")
+                                Text("\(wire.color.georgianName) · \(wire.csaMm2, specifier: "%.1f")mm² · \(wire.conductorType.georgianName)")
                                     .font(.caption2).foregroundStyle(.secondary)
                             }
                             Spacer()

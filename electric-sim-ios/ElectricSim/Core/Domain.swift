@@ -96,6 +96,17 @@ public enum CableType: String, Codable, CaseIterable, Sendable {
     }
 }
 
+// MARK: - Conductor construction (ძარღვის ტიპი)
+
+public enum ConductorType: String, Codable, CaseIterable, Sendable {
+    case solid      // ხისტი (single solid core)
+    case stranded   // მრავალწვერა (flexible/stranded)
+
+    public var georgianName: String {
+        self == .solid ? "ხისტი" : "მრავალწვერა"
+    }
+}
+
 // MARK: - Component kind
 
 public enum ComponentKind: String, Codable, CaseIterable, Sendable {
@@ -451,22 +462,25 @@ public struct Wire: Identifiable, Hashable, Codable, Sendable {
     public var csaMm2: Double
     public var color: WireColor
     public var cableType: CableType
+    public var conductorType: ConductorType
     public var lengthM: Double
 
     public init(id: String = UUID().uuidString,
                 from: String, to: String,
                 csaMm2: Double, color: WireColor,
-                cableType: CableType = .copper, lengthM: Double = 0) {
+                cableType: CableType = .copper,
+                conductorType: ConductorType = .solid, lengthM: Double = 0) {
         self.id = id
         self.fromPortID = from
         self.toPortID = to
         self.csaMm2 = csaMm2
         self.color = color
         self.cableType = cableType
+        self.conductorType = conductorType
         self.lengthM = lengthM
     }
 
-    // backward-compatible decode (cableType/lengthM default-ებით თუ აკლია)
+    // backward-compatible decode (cableType/conductorType/lengthM default-ებით თუ აკლია)
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(String.self, forKey: .id)
@@ -475,6 +489,7 @@ public struct Wire: Identifiable, Hashable, Codable, Sendable {
         csaMm2 = try c.decode(Double.self, forKey: .csaMm2)
         color = try c.decode(WireColor.self, forKey: .color)
         cableType = try c.decodeIfPresent(CableType.self, forKey: .cableType) ?? .copper
+        conductorType = try c.decodeIfPresent(ConductorType.self, forKey: .conductorType) ?? .solid
         lengthM = try c.decodeIfPresent(Double.self, forKey: .lengthM) ?? 0
     }
 }
@@ -504,9 +519,9 @@ public struct Board: Codable, Sendable {
 
     public mutating func connect(_ a: String, _ b: String, csaMm2: Double,
                                  color: WireColor, cableType: CableType = .copper,
-                                 lengthM: Double = 0) {
+                                 conductorType: ConductorType = .solid, lengthM: Double = 0) {
         wires.append(Wire(from: a, to: b, csaMm2: csaMm2, color: color,
-                          cableType: cableType, lengthM: lengthM))
+                          cableType: cableType, conductorType: conductorType, lengthM: lengthM))
     }
 
     public func component(withPort portID: String) -> Component? {
