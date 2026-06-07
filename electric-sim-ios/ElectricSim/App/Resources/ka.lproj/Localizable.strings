@@ -1,0 +1,21 @@
+/* ელექტრიკის სიმულატორი — ქართული (ნაგულისხმევი / source) */
+"app.title" = "ელექტრიკის სიმულატორი";
+"section.levels" = "დონეები";
+"section.tools" = "ხელსაწყოები";
+"section.myLevels" = "ჩემი დონეები";
+"action.check" = "შემოწმება";
+"action.powerOn" = "ჩართე ძაბვა";
+"action.close" = "დახურვა";
+"action.restore" = "შესყიდვების აღდგენა";
+"about.title" = "შესახებ";
+"result.title" = "შედეგი";
+"report.title" = "ანგარიში";
+"tab.graph" = "გრაფი";
+"tab.diagram" = "ნახაზი";
+"tab.advice" = "რჩევა";
+"tab.cost" = "ხარჯი";
+"pro.unlock" = "განბლოკე ელექტრიკი Pro";
+"pro.restore" = "შესყიდვების აღდგენა";
+"sponsor" = "სპონსორი: Tsili.ge";
+"creator" = "შექმნილია Gadget Georgia-ს მიერ · gadget.ge";
+"achievements" = "მიღწევები";

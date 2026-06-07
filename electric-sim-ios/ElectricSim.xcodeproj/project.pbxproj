@@ -33,6 +33,7 @@
 		E1EC00000000000000000217 /* Recommender.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC00000000000000000117 /* Recommender.swift */; };
 		E1EC00000000000000000218 /* Engineering.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC00000000000000000118 /* Engineering.swift */; };
 		E1EC00000000000000000219 /* GameCenterManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC00000000000000000119 /* GameCenterManager.swift */; };
+		E1EC0000000000000000021B /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = E1EC0000000000000000031A /* Localizable.strings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -63,6 +64,9 @@
 		E1EC00000000000000000118 /* Engineering.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Engineering.swift; sourceTree = "<group>"; };
 		E1EC00000000000000000119 /* GameCenterManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameCenterManager.swift; sourceTree = "<group>"; };
 		E1EC0000000000000000011A /* ElectricSim.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ElectricSim.entitlements; sourceTree = "<group>"; };
+		E1EC0000000000000000011B /* ka */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ka; path = ka.lproj/Localizable.strings; sourceTree = "<group>"; };
+		E1EC0000000000000000011C /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		E1EC0000000000000000011D /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
 		E1EC00000000000000000101 /* ElectricSim.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ElectricSim.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E1EC00000000000000000120 /* ElectricSimUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElectricSimUITests.swift; sourceTree = "<group>"; };
 		E1EC00000000000000000121 /* ElectricSimUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ElectricSimUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -173,6 +177,7 @@
 				E1EC00000000000000000100 /* Info.plist */,
 				E1EC00000000000000000112 /* PrivacyInfo.xcprivacy */,
 				E1EC0000000000000000011A /* ElectricSim.entitlements */,
+				E1EC0000000000000000031A /* Localizable.strings */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -187,6 +192,19 @@
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
+
+/* Begin PBXVariantGroup section */
+		E1EC0000000000000000031A /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				E1EC0000000000000000011B /* ka */,
+				E1EC0000000000000000011C /* en */,
+				E1EC0000000000000000011D /* ru */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin PBXNativeTarget section */
 		E1EC00000000000000000400 /* ElectricSim */ = {
@@ -249,6 +267,7 @@
 			knownRegions = (
 				ka,
 				en,
+				ru,
 				Base,
 			);
 			mainGroup = E1EC00000000000000000300;
@@ -270,6 +289,7 @@
 				E1EC0000000000000000020D /* Assets.xcassets in Resources */,
 				E1EC0000000000000000020E /* components.json in Resources */,
 				E1EC0000000000000000020F /* levels.json in Resources */,
+				E1EC0000000000000000021B /* Localizable.strings in Resources */,
 				E1EC00000000000000000212 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

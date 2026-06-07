@@ -1,0 +1,21 @@
+/* Electricity Simulator — English */
+"app.title" = "Electricity Simulator";
+"section.levels" = "Levels";
+"section.tools" = "Tools";
+"section.myLevels" = "My Levels";
+"action.check" = "Check";
+"action.powerOn" = "Power On";
+"action.close" = "Close";
+"action.restore" = "Restore Purchases";
+"about.title" = "About";
+"result.title" = "Result";
+"report.title" = "Report";
+"tab.graph" = "Graph";
+"tab.diagram" = "Diagram";
+"tab.advice" = "Advice";
+"tab.cost" = "Cost";
+"pro.unlock" = "Unlock Electrician Pro";
+"pro.restore" = "Restore Purchases";
+"sponsor" = "Sponsor: Tsili.ge";
+"creator" = "Made by Gadget Georgia · gadget.ge";
+"achievements" = "Achievements";
