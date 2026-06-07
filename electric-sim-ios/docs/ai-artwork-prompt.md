@@ -1,56 +1,47 @@
-# AI-სურათების პრომპტი კომპონენტებისთვის
+# AI-სურათების პრომპტი კომპონენტებისთვის (რეალისტური)
 
-ამ ფაილის მიხედვით დააგენერირე კომპონენტების სურათები (Midjourney / DALL·E / SDXL და ა.შ.),
-შემდეგ ჩასვი `ElectricSim/App/Assets.xcassets`-ში **ზუსტი სახელებით** (იხ. ცხრილი).
-აპი ავტომატურად აჩვენებs ფოტოს, თუ ასეთი იმიჯ-სეტი არსებობს; თუ არა — SF Symbol-ს.
+თითო პრომპტი დააგენერირე AI-ით (Midjourney / DALL·E / SDXL და ა.შ.), შემდეგ ჩასვი
+`ElectricSim/App/Assets.xcassets/comp_<name>.imageset/`-ში იგივე სახელით (PNG).
+აპი ავტომატურად აჩვენებს ფოტოს. კვადრატი 1024×1024, ერთ batch-ში ერთი სტილით.
 
-## სტილის მთავარი პრომპტი (ყველა კომპონენტისთვის ერთნაირი)
+## მთავარი სტილი (suffix ყველასთვის)
+> ", photorealistic studio product photograph, isolated on pure white seamless
+> background, centered, front view at eye level, soft studio lighting, subtle
+> contact shadow, ultra-detailed, e-commerce catalog style, neutral unbranded,
+> square 1:1, 1024x1024, no text, no logos, no watermark."
 
-> **EN (image AI-სთვის):**
-> "Flat vector icon of a {COMPONENT}, modern minimalist style, front view, centered,
-> on a pure transparent background, soft long shadow, consistent thin outline,
-> blue (#2A7FF5) and grey palette with subtle yellow accents, electrical DIN-rail
-> component look, clean and professional, app icon style, 1:1 square, 1024x1024,
-> no text, no labels, no watermark."
+## სრული, კოპირებადი პრომპტები
 
-თითო კომპონენტისთვის `{COMPONENT}` შეცვალე ქვემოთ მოცემული აღწერით.
-**მნიშვნელოვანია:** ერთიანი სტილი, **გამჭვირვალე ფონი (PNG)**, კვადრატი 1024×1024,
-ცენტრში, წარწერების გარეშე.
+- **comp_mcb** — A single-pole miniature circuit breaker (MCB), white modular DIN-rail device with a black ON/OFF toggle switch
+- **comp_mpcb** — A motor protection circuit breaker, black modular DIN-rail device with a rotary current dial and test button
+- **comp_rcd** — A residual current device (RCD/RCCB), white two-module DIN-rail device with a blue test button and a toggle switch
+- **comp_rcbo** — An RCBO combined residual-current circuit breaker, narrow white DIN-rail module with a toggle and test button
+- **comp_mainSwitch** — A main isolator load-break switch, white DIN-rail device with a large black handle
+- **comp_spd** — A surge protection device (SPD), white DIN-rail module with a green and red status indicator window
+- **comp_contactor** — A modular contactor, white and grey DIN-rail contactor block
+- **comp_relay** — A modular plug-in relay with a clear plastic housing on a socket base
+- **comp_lightSwitch** — A modern European wall light switch, single white rocker on a square frame
+- **comp_busbar** — A copper pin/comb busbar used to connect circuit breakers on a DIN rail
+- **comp_wago** — A lever-type wire connector block, grey body with five orange levers
+- **comp_lamp** — A warm glowing incandescent light bulb
+- **comp_dimmer** — A rotary light dimmer with a control knob on a white wall plate
+- **comp_socket** — A European Schuko wall power socket (type F), white
+- **comp_socket3ph** — A red three-phase industrial CEE power socket
+- **comp_boiler** — A white wall-mounted electric water heater storage tank
+- **comp_oven** — A built-in electric oven with a stainless steel front and glass door
+- **comp_heater** — A white electric convector panel heater
+- **comp_airConditioner** — A white wall-mounted split air conditioner indoor unit
+- **comp_motor** — A blue three-phase industrial electric motor with a cooling fan housing
+- **comp_smartSwitch** — A smart wifi wall switch with a white glass touch panel
+- **comp_smartRelay** — A small smart wifi relay module with short wire leads
+- **comp_smartDimmer** — A smart wifi light dimmer module
+- **comp_smartMeter** — A smart electric energy meter with a digital LCD display, DIN-rail mounted
+- **comp_supply** — A main electrical service panel / energy meter box
 
-## კომპონენტები (აღწერა + ფაილის სახელი)
+თითო პრომპტი = „A {SUBJECT}" + ზემოთა suffix.
 
-| აღწერა `{COMPONENT}` (EN) | Asset სახელი (.imageset) |
-|---|---|
-| single-phase miniature circuit breaker (MCB), 1-pole, white DIN module with black toggle lever | `comp_mcb` |
-| motor protection circuit breaker (MPCB), 3-pole, rotary dial front | `comp_mpcb` |
-| residual current device (RCD), 2-pole, with test button | `comp_rcd` |
-| RCBO combined breaker, 1-pole module | `comp_rcbo` |
-| main isolator switch, large toggle, DIN module | `comp_mainSwitch` |
-| surge protection device (SPD), with status window | `comp_spd` |
-| modular contactor, DIN rail | `comp_contactor` |
-| modular relay with coil symbol | `comp_relay` |
-| wall light switch, single rocker | `comp_lightSwitch` |
-| copper comb busbar / phase rail | `comp_busbar` |
-| Wago lever connector, 5-port, orange levers | `comp_wago` |
-| incandescent light bulb glowing | `comp_lamp` |
-| dimmable light with dimmer knob | `comp_dimmer` |
-| European wall power socket (type F / Schuko) | `comp_socket` |
-| three-phase industrial socket (red CEE) | `comp_socket3ph` |
-| electric water heater / boiler tank | `comp_boiler` |
-| electric oven, front view | `comp_oven` |
-| electric convector heater | `comp_heater` |
-| air conditioner indoor unit | `comp_airConditioner` |
-| three-phase electric motor with fan | `comp_motor` |
-| smart wifi wall switch | `comp_smartSwitch` |
-| smart wifi relay module | `comp_smartRelay` |
-| smart wifi dimmer module | `comp_smartDimmer` |
-| smart energy meter with display | `comp_smartMeter` |
-| incoming power supply / meter box | `comp_supply` |
-
-## როგორ ჩავსვა Xcode-ში
-1. Xcode → `Assets.xcassets` → მარჯვენა click → **New Image Set**.
-2. სახელი დაარქვი ზუსტად ცხრილის მიხედვით (მაგ. `comp_mcb`).
-3. ჩააგდე PNG (1x/2x/3x ან ერთი ვექტორ-PDF „Single Scale"-ით).
-4. გაუშვი აპი — ბანქოებზე ფოტო ავტომატურად გამოჩნდება.
-
-> 💡 რჩევა: დააგენერირე ერთ batch-ში ერთი და იგივე სტილით, რომ ვიზუალი ერთგვაროვანი იყოს.
+## ჩასმა
+1. დააგენერირე PNG (გამჭვირვალე ან თეთრი ფონი).
+2. ჩაანაცვლე ფაილი `Assets.xcassets/comp_<name>.imageset/comp_<name>.png` (იგივე სახელით),
+   ან Xcode-ში წაშალე imageset და ხელახლა დაამატე იმავე სახელით.
+3. გაუშვი აპი — ბანქოებზე ფოტო ავტომატურად გამოჩნდება.
