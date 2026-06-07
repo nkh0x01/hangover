@@ -55,6 +55,12 @@ struct AdBannerView: View {
 struct PaywallView: View {
     @EnvironmentObject var store: EntitlementStore
     @Environment(\.dismiss) private var dismiss
+    @State private var restoreMessage: String?
+
+    /// ფასის სტრიქონი ღილაკზე — StoreKit Product.displayPrice (ფასი არსად არ არის hardcoded).
+    private var buyTitle: String {
+        String(format: String(localized: "paywall_buy"), store.displayPrice)
+    }
 
     var body: some View {
         NavigationStack {
@@ -62,21 +68,20 @@ struct PaywallView: View {
                 VStack(spacing: 20) {
                     Image(systemName: "bolt.shield.fill")
                         .font(.system(size: 56))
-                        .foregroundStyle(.yellow)
+                        .foregroundStyle(.brand)
                         .padding(.top, 12)
 
-                    Text("ელექტრიკი Pro")
-                        .font(.title.bold())
-                    Text("განბლოკე სრული კურსი და მოიშორე რეკლამა")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                    Text("paywall_title").font(.title.bold())
+                    Text("paywall_subtitle")
+                        .font(.subheadline).foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
 
                     VStack(alignment: .leading, spacing: 14) {
-                        benefit("bolt.fill", "3 ფაზის მოდული", "4-პოლუსიანი ფარი, ფაზების ბალანსი, 3-ფაზიანი მოტორი")
-                        benefit("rectangle.3.group.fill", "ყველა დონე", "სრული პროგრესია გახსნილი")
-                        benefit("nosign", "რეკლამის გარეშე", "ყურადღების გადამტანის გარეშე სწავლა")
-                        benefit("heart.fill", "დაუჭირე მხარი ქართულ პროექტს", "Gadget Georgia-ს განვითარება")
+                        bullet("rectangle.3.group.fill", "paywall_b1")
+                        bullet("bolt.fill", "paywall_b2")
+                        bullet("magnifyingglass", "paywall_b3")
+                        bullet("hammer.fill", "paywall_b4")
+                        bullet("square.grid.3x3.fill", "paywall_b5")
                     }
                     .padding()
                     .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 16))
@@ -85,27 +90,36 @@ struct PaywallView: View {
                         Task { await store.purchasePro() }
                     } label: {
                         HStack {
-                            if store.purchaseInFlight { ProgressView().tint(.black) }
-                            Text(store.isPro ? "უკვე გააქტიურებულია ✓"
-                                 : "განბლოკვა \(store.proProduct != nil ? "— " + store.displayPrice : "")")
-                                .bold()
+                            if store.purchaseInFlight { ProgressView().tint(.white) }
+                            Text(buyTitle).bold()
                         }
                         .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
-                    .tint(.yellow)
+                    .tint(.brand)
                     .disabled(store.isPro || store.purchaseInFlight)
 
-                    Button("შესყიდვების აღდგენა") {
-                        Task { await store.restorePurchases() }
+                    Button {
+                        Task {
+                            await store.restorePurchases()
+                            restoreMessage = store.isPro
+                                ? String(localized: "paywall_restore_ok")
+                                : String(localized: "paywall_restore_none")
+                        }
+                    } label: {
+                        Text("paywall_restore").font(.footnote)
                     }
-                    .font(.footnote)
 
+                    if let restoreMessage {
+                        Text(restoreMessage)
+                            .font(.caption2)
+                            .foregroundStyle(store.isPro ? .green : .secondary)
+                    }
                     if let err = store.lastError {
                         Text(err).font(.caption2).foregroundStyle(.red).multilineTextAlignment(.center)
                     }
 
-                    Text("ერთჯერადი შესყიდვა. გადახდა App Store-ის ანგარიშიდან. ფასი storefront-ის მიხედვით.")
+                    Text("paywall_footer")
                         .font(.system(size: 10))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -113,24 +127,22 @@ struct PaywallView: View {
                 }
                 .padding()
             }
-            .navigationTitle("Pro")
+            .navigationTitle("paywall_title")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("დახურვა") { dismiss() }
+                    Button("action.close") { dismiss() }
                 }
             }
             .onChange(of: store.isPro) { pro in if pro { dismiss() } }
         }
     }
 
-    private func benefit(_ symbol: String, _ title: String, _ subtitle: String) -> some View {
+    private func bullet(_ symbol: String, _ key: LocalizedStringKey) -> some View {
         HStack(alignment: .top, spacing: 12) {
-            Image(systemName: symbol).foregroundStyle(.yellow).frame(width: 26)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.subheadline.bold())
-                Text(subtitle).font(.caption).foregroundStyle(.secondary)
-            }
+            Image(systemName: symbol).foregroundStyle(.brand).frame(width: 26)
+            Text(key).font(.subheadline)
+            Spacer(minLength: 0)
         }
     }
 }

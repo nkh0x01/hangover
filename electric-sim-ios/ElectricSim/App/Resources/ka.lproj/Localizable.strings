@@ -19,3 +19,18 @@
 "sponsor" = "სპონსორი: Tsili.ge";
 "creator" = "შექმნილია Gadget Georgia-ს მიერ · gadget.ge";
 "achievements" = "მიღწევები";
+
+/* Paywall */
+"paywall_title" = "გახსენი Pro";
+"paywall_subtitle" = "ერთჯერადი გადახდა — გამოწერის გარეშე";
+"paywall_b1" = "ყველა დონე — 1 და 3 ფაზა";
+"paywall_b2" = "3-ფაზიანი ქსელები და დატვირთვის ბალანსი";
+"paywall_b3" = "დეფექტის ძებნა (fault-finding)";
+"paywall_b4" = "Sandbox — თავისუფალი აწყობა შეზღუდვების გარეშე";
+"paywall_b5" = "სრული კატალოგი: გენერატორი, მზე, UPS, VFD — 48 კომპონენტი";
+"paywall_buy" = "გახსენი Pro · %@";
+"paywall_restore" = "შენაძენის აღდგენა";
+"paywall_footer" = "ერთჯერადი გადახდა. გამოწერა არ არის.";
+"paywall_locked_badge" = "Pro";
+"paywall_restore_ok" = "Pro აღდგენილია";
+"paywall_restore_none" = "აღსადგენი შენაძენი ვერ მოიძებნა";

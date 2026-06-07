@@ -230,6 +230,15 @@ struct WorkbenchView: View {
     @StateObject private var model: WorkbenchModel
     @State private var showHint = false
     @State private var showReports = false
+    @State private var showPaywall = false
+
+    /// უფასოში ბაზისური ნაკრები (main switch, MCB, RCD, ნათურა, როზეტი + კაბელი).
+    private func isPaletteLocked(_ e: PaletteEntry) -> Bool {
+        guard !store.isPro else { return false }
+        let basic: Set<ComponentKind> = [.mainSwitch, .mcb, .rcd, .lamp, .socket]
+        guard let kind = model.templates[e.templateId]?.kind else { return false }
+        return !basic.contains(kind)
+    }
     @State private var zoom: CGFloat = 1.0
     @GestureState private var pinch: CGFloat = 1.0
     @State private var pan: CGSize = .zero
@@ -282,6 +291,7 @@ struct WorkbenchView: View {
         .alert("მინიშნება", isPresented: $showHint) {
             Button("გასაგებია", role: .cancel) {}
         } message: { Text(model.level.hint) }
+        .sheet(isPresented: $showPaywall) { PaywallView().environmentObject(store) }
     }
 
     private var briefBar: some View {
@@ -394,16 +404,28 @@ struct WorkbenchView: View {
 
             Text(model.tool.hint).font(.caption2).foregroundStyle(.secondary)
 
-            // კომპონენტების პალიტრა
+            // კომპონენტების პალიტრა (უფასოში — მხოლოდ ბაზისური ნაკრები)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     ForEach(model.level.palette) { e in
                         let t = model.templates[e.templateId]
-                        Button { model.add(e) } label: {
+                        let locked = isPaletteLocked(e)
+                        Button {
+                            if locked { showPaywall = true } else { model.add(e) }
+                        } label: {
                             VStack(spacing: 2) {
-                                Image(systemName: (t?.kind ?? .mcb).sfSymbol)
+                                Image(systemName: locked ? "lock.fill" : (t?.kind ?? .mcb).sfSymbol)
                                 Text(t?.name ?? e.templateId).font(.caption2).lineLimit(1)
-                                Text("\(model.placed(e.templateId))/\(e.max)").font(.caption2).foregroundStyle(.secondary)
+                                if locked {
+                                    Text("paywall_locked_badge")
+                                        .font(.system(size: 9, weight: .heavy))
+                                        .padding(.horizontal, 5).padding(.vertical, 1)
+                                        .background(Color.brand, in: Capsule())
+                                        .foregroundStyle(.white)
+                                } else {
+                                    Text("\(model.placed(e.templateId))/\(e.max)")
+                                        .font(.caption2).foregroundStyle(.secondary)
+                                }
                             }
                             .padding(8)
                             .frame(width: 96)
@@ -411,8 +433,8 @@ struct WorkbenchView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 10))
                         }
                         .buttonStyle(.plain)
-                        .disabled(!model.canAdd(e))
-                        .opacity(model.canAdd(e) ? 1 : 0.4)
+                        .disabled(!locked && !model.canAdd(e))
+                        .opacity(locked ? 0.85 : (model.canAdd(e) ? 1 : 0.4))
                     }
                 }.padding(.horizontal)
             }

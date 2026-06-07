@@ -19,3 +19,18 @@
 "sponsor" = "TODO";
 "creator" = "TODO";
 "achievements" = "TODO";
+
+/* Paywall (TODO) */
+"paywall_title" = "TODO";
+"paywall_subtitle" = "TODO";
+"paywall_b1" = "TODO";
+"paywall_b2" = "TODO";
+"paywall_b3" = "TODO";
+"paywall_b4" = "TODO";
+"paywall_b5" = "TODO";
+"paywall_buy" = "TODO %@";
+"paywall_restore" = "TODO";
+"paywall_footer" = "TODO";
+"paywall_locked_badge" = "Pro";
+"paywall_restore_ok" = "TODO";
+"paywall_restore_none" = "TODO";
