@@ -57,40 +57,11 @@ struct ReportsView: View {
         return ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 summaryCard(rep)
-
                 Text("დატვირთვები").font(.headline)
                 ForEach(rep.lines) { line in
-                    VStack(alignment: .leading, spacing: 3) {
-                        HStack {
-                            Circle().fill(line.phase.swiftUIColor).frame(width: 10, height: 10)
-                            Text(line.name).font(.subheadline)
-                            Spacer()
-                            Text(String(format: "%.2f A", line.currentA))
-                                .font(.caption.monospacedDigit())
-                                .foregroundStyle(line.powered ? .primary : .secondary)
-                        }
-                        GeometryReader { geo in
-                            ZStack(alignment: .leading) {
-                                Capsule().fill(Color(.systemGray5)).frame(height: 10)
-                                Capsule().fill(line.powered ? Color.yellow : Color(.systemGray3))
-                                    .frame(width: geo.size.width * line.currentA / maxA, height: 10)
-                            }
-                        }
-                        .frame(height: 10)
-                        if line.voltageDropPct > 0 {
-                            let limit = VoltageDrop.limitPct(for: line.kind)
-                            let over = line.voltageDropPct > limit
-                            Text("ΔU \(line.voltageDropPct, specifier: "%.1f")% "
-                                 + "(\(Int(line.lengthM))მ, \(line.csaMm2, specifier: "%.1f")mm² \(line.cableType.georgianName))"
-                                 + (over ? " ⚠️ > \(Int(limit))%" : ""))
-                                .font(.caption2)
-                                .foregroundStyle(over ? .orange : .secondary)
-                        }
-                    }
+                    loadLineRow(line, maxA: maxA)
                 }
-
                 if rep.phase == .three { phaseBalanceCard(rep) }
-
                 ShareLink(item: rep.csv()) {
                     Label("CSV ექსპორტი", systemImage: "square.and.arrow.up")
                         .frame(maxWidth: .infinity)
@@ -100,6 +71,42 @@ struct ReportsView: View {
             }
             .padding()
         }
+    }
+
+    @ViewBuilder
+    private func loadLineRow(_ line: LoadLine, maxA: Double) -> some View {
+        let limit = VoltageDrop.limitPct(for: line.kind)
+        let over = line.voltageDropPct > limit
+        VStack(alignment: .leading, spacing: 3) {
+            HStack {
+                Circle().fill(line.phase.swiftUIColor).frame(width: 10, height: 10)
+                Text(line.name).font(.subheadline)
+                Spacer()
+                Text(String(format: "%.2f A", line.currentA))
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(line.powered ? .primary : .secondary)
+            }
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Color(.systemGray5)).frame(height: 10)
+                    Capsule().fill(line.powered ? Color.yellow : Color(.systemGray3))
+                        .frame(width: geo.size.width * line.currentA / maxA, height: 10)
+                }
+            }
+            .frame(height: 10)
+            if line.voltageDropPct > 0 {
+                Text(voltageDropLabel(line, over: over, limit: limit))
+                    .font(.caption2)
+                    .foregroundStyle(over ? .orange : .secondary)
+            }
+        }
+    }
+
+    private func voltageDropLabel(_ line: LoadLine, over: Bool, limit: Double) -> String {
+        var s = String(format: "ΔU %.1f%% (%dმ, %.1fmm² %@)",
+                       line.voltageDropPct, Int(line.lengthM), line.csaMm2, line.cableType.georgianName)
+        if over { s += String(format: " ⚠️ > %d%%", Int(limit)) }
+        return s
     }
 
     private func summaryCard(_ rep: LoadReport) -> some View {
