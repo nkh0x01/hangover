@@ -19,9 +19,20 @@ final class GameState: ObservableObject {
     @Published var unlockedAchievements: Set<String> = []
     @Published var loadError: String?
 
+    @Published var sldExportCount: Int = 0
+
     private let progressKey = "completedLevelIDs.v1"
     private let customKey = "customLevels.v1"
     private let achKey = "achievements.v1"
+    private let sldKey = "sldExportCount.v1"
+
+    /// უფასო ვერსიაში — 1 ცალხაზოვანი ნახაზის ექსპორტი; Pro-ში ულიმიტო.
+    static let freeSLDExports = 1
+    func canExportSLD(isPro: Bool) -> Bool { isPro || sldExportCount < Self.freeSLDExports }
+    func recordSLDExport() {
+        sldExportCount += 1
+        UserDefaults.standard.set(sldExportCount, forKey: sldKey)
+    }
 
     init() {
         load()
@@ -44,6 +55,7 @@ final class GameState: ObservableObject {
            let decoded = try? JSONDecoder().decode([Level].self, from: data) {
             customLevels = decoded
         }
+        sldExportCount = UserDefaults.standard.integer(forKey: sldKey)
     }
 
     func template(_ id: String) -> ComponentTemplate? { templates[id] }

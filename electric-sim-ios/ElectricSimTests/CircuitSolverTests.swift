@@ -479,6 +479,33 @@ final class CircuitSolverTests: XCTestCase {
         XCTAssertTrue(mpcb.kind.isBreaker && mpcb.kind.isSeriesDevice)
     }
 
+    // MARK: - დატვირთვის გრაფი + ცალხაზოვანი ნახაზი
+
+    func testLoadReportAndSLD() {
+        let lamp = ComponentFactory.lamp(id: "LAMP", powerW: 60)
+        let board = makeLineBoard(load: lamp, breakerRating: 10, csa: 1.5)
+
+        let rep = solver.loadReport(board)
+        XCTAssertEqual(rep.lines.count, 1)
+        XCTAssertEqual(rep.totalPowerW, 60, accuracy: 0.1)
+        XCTAssertTrue(rep.lines.first!.powered)
+        XCTAssertEqual(rep.lines.first!.phase, .L)
+        XCTAssertEqual(rep.totalCurrentA, 60.0 / 230.0, accuracy: 0.01)
+
+        let csv = rep.csv()
+        XCTAssertTrue(csv.contains("current_A"))
+        XCTAssertTrue(csv.contains("LAMP"))
+        XCTAssertTrue(csv.contains("TOTAL"))
+
+        let sld = solver.singleLineDiagram(board)
+        XCTAssertEqual(sld.phase, .single)
+        XCTAssertTrue(sld.incomer.contains { $0.kind == .supply })
+        XCTAssertTrue(sld.incomer.contains { $0.kind == .mainSwitch })
+        XCTAssertEqual(sld.circuits.count, 1)
+        XCTAssertEqual(sld.circuits.first?.breaker?.kind, .mcb)
+        XCTAssertEqual(sld.circuits.first?.csaMm2, 1.5)
+    }
+
     // MARK: - 13. სადენის ფერები (IEC)
 
     func testWireColors() {

@@ -212,8 +212,10 @@ struct PortAnchorKey: PreferenceKey {
 
 struct WorkbenchView: View {
     @EnvironmentObject var game: GameState
+    @EnvironmentObject var store: StoreManager
     @StateObject private var model: WorkbenchModel
     @State private var showHint = false
+    @State private var showReports = false
 
     init(level: Level) {
         _model = StateObject(wrappedValue: WorkbenchModel(level: level, templates: [:]))
@@ -237,7 +239,17 @@ struct WorkbenchView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
+                Button { showReports = true } label: { Image(systemName: "chart.bar.doc.horizontal") }
+            }
+            ToolbarItem(placement: .navigationBarTrailing) {
                 Button { showHint = true } label: { Image(systemName: "questionmark.circle") }
+            }
+        }
+        .sheet(isPresented: $showReports) {
+            NavigationStack {
+                ReportsView(board: model.board)
+                    .environmentObject(store)
+                    .environmentObject(game)
             }
         }
         .onAppear { model.configure(game.templates) }
