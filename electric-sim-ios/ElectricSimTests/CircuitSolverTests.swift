@@ -706,7 +706,7 @@ final class CircuitSolverTests: XCTestCase {
         let templates = try GameData.loadTemplates()
         let levels = try GameData.loadLevels()
         let freeLevels = levels.filter { $0.resolvedTier == .free }
-        XCTAssertGreaterThanOrEqual(freeLevels.count, 2, "უფასო (Learn) დონეები უნდა არსებობდეს")
+        XCTAssertGreaterThanOrEqual(freeLevels.count, 5, "უფასო (Learn) ტიერი საკმარისად დიდი უნდა იყოს")
         for level in freeLevels {
             for entry in level.palette {
                 XCTAssertNotNil(templates[entry.templateId],
@@ -731,7 +731,8 @@ final class CircuitSolverTests: XCTestCase {
         let levels = try GameData.loadLevels()
         // უფასოა მხოლოდ Learn (tutorial) დონეები.
         let freeIDs = Set(levels.filter { $0.resolvedTier == .free }.map { $0.id })
-        XCTAssertEqual(freeIDs, ["lvl_tutorial", "lvl_socket_rcd"])
+        XCTAssertEqual(freeIDs, ["lvl_tutorial", "lvl_socket_rcd", "lvl_two_lamps",
+                                 "lvl_lamp_socket", "lvl_two_sockets", "lvl_lamp_two_sockets"])
         XCTAssertTrue(levels.contains { $0.resolvedCategory == .panelAssembly })
         for l in levels { XCTAssertTrue((1...5).contains(l.resolvedDifficulty)) }
         // გაფართოებული კონტენტი — Pro.
