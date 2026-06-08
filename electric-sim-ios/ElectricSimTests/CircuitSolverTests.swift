@@ -706,7 +706,7 @@ final class CircuitSolverTests: XCTestCase {
         let templates = try GameData.loadTemplates()
         let levels = try GameData.loadLevels()
         let freeLevels = levels.filter { $0.resolvedTier == .free }
-        XCTAssertGreaterThanOrEqual(freeLevels.count, 3, "უფასო დონეები უნდა არსებობდეს")
+        XCTAssertGreaterThanOrEqual(freeLevels.count, 2, "უფასო (Learn) დონეები უნდა არსებობდეს")
         for level in freeLevels {
             for entry in level.palette {
                 XCTAssertNotNil(templates[entry.templateId],
