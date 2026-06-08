@@ -34,6 +34,8 @@
 		E1EC00000000000000000218 /* Engineering.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC00000000000000000118 /* Engineering.swift */; };
 		E1EC000000000000000002A1 /* ComponentGating.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC000000000000000001A1 /* ComponentGating.swift */; };
 		E1EC000000000000000002A2 /* PanelAssembly.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC000000000000000001A2 /* PanelAssembly.swift */; };
+		E1EC000000000000000002A3 /* Career.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC000000000000000001A3 /* Career.swift */; };
+		E1EC000000000000000002A4 /* jobs.json in Resources */ = {isa = PBXBuildFile; fileRef = E1EC000000000000000001A4 /* jobs.json */; };
 		E1EC00000000000000000219 /* GameCenterManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC00000000000000000119 /* GameCenterManager.swift */; };
 		E1EC0000000000000000021B /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = E1EC0000000000000000031A /* Localizable.strings */; };
 /* End PBXBuildFile section */
@@ -66,6 +68,8 @@
 		E1EC00000000000000000118 /* Engineering.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Engineering.swift; sourceTree = "<group>"; };
 		E1EC000000000000000001A1 /* ComponentGating.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComponentGating.swift; sourceTree = "<group>"; };
 		E1EC000000000000000001A2 /* PanelAssembly.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelAssembly.swift; sourceTree = "<group>"; };
+		E1EC000000000000000001A3 /* Career.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Career.swift; sourceTree = "<group>"; };
+		E1EC000000000000000001A4 /* jobs.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = jobs.json; sourceTree = "<group>"; };
 		E1EC00000000000000000119 /* GameCenterManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameCenterManager.swift; sourceTree = "<group>"; };
 		E1EC0000000000000000011A /* ElectricSim.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ElectricSim.entitlements; sourceTree = "<group>"; };
 		E1EC0000000000000000011B /* ka */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ka; path = ka.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -134,6 +138,7 @@
 				E1EC00000000000000000118 /* Engineering.swift */,
 				E1EC000000000000000001A1 /* ComponentGating.swift */,
 				E1EC000000000000000001A2 /* PanelAssembly.swift */,
+				E1EC000000000000000001A3 /* Career.swift */,
 				E1EC00000000000000000303 /* Data */,
 			);
 			path = Core;
@@ -144,6 +149,7 @@
 			children = (
 				E1EC000000000000000000FE /* components.json */,
 				E1EC000000000000000000FF /* levels.json */,
+				E1EC000000000000000001A4 /* jobs.json */,
 			);
 			path = Data;
 			sourceTree = "<group>";
@@ -295,6 +301,7 @@
 				E1EC0000000000000000020D /* Assets.xcassets in Resources */,
 				E1EC0000000000000000020E /* components.json in Resources */,
 				E1EC0000000000000000020F /* levels.json in Resources */,
+				E1EC000000000000000002A4 /* jobs.json in Resources */,
 				E1EC0000000000000000021B /* Localizable.strings in Resources */,
 				E1EC00000000000000000212 /* PrivacyInfo.xcprivacy in Resources */,
 			);
@@ -329,6 +336,7 @@
 				E1EC00000000000000000218 /* Engineering.swift in Sources */,
 				E1EC000000000000000002A1 /* ComponentGating.swift in Sources */,
 				E1EC000000000000000002A2 /* PanelAssembly.swift in Sources */,
+				E1EC000000000000000002A3 /* Career.swift in Sources */,
 				E1EC00000000000000000219 /* GameCenterManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

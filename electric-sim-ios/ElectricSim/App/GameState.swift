@@ -21,6 +21,10 @@ final class GameState: ObservableObject {
 
     @Published var sldExportCount: Int = 0
 
+    /// Career Mode-ის მდგომარეობა — იტვირთება გაშვებისას (Phase 1: მონაცემები/პერსისტენცია).
+    let career = CareerState()
+    @Published var jobs: [Job] = []
+
     private let progressKey = "completedLevelIDs.v1"
     private let customKey = "customLevels.v1"
     private let achKey = "achievements.v1"
@@ -42,6 +46,7 @@ final class GameState: ObservableObject {
         do {
             templates = try GameData.loadTemplates()
             levels = try GameData.loadLevels()
+            jobs = try GameData.loadJobs()
         } catch {
             loadError = "მონაცემების ჩატვირთვა ვერ მოხერხდა: \(error)"
         }

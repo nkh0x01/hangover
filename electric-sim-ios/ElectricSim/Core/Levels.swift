@@ -306,4 +306,11 @@ public enum GameData {
         let levels = try JSONDecoder().decode([Level].self, from: data)
         return levels.sorted { $0.index < $1.index }
     }
+
+    /// Career Mode-ის სამუშაოები (jobs.json) — იგივე პატერნი, რაც loadLevels.
+    public static func loadJobs() throws -> [Job] {
+        let data = try loadJSON("jobs")
+        let jobs = try JSONDecoder().decode([Job].self, from: data)
+        return jobs.sorted { $0.difficulty < $1.difficulty }
+    }
 }
