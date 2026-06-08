@@ -14,6 +14,17 @@ import Foundation
 
 public enum ComponentGating {
 
+    /// უფასო (Learn) დონეების ბაზისური ნაკრები: მთავარი ამომრთველი, ავტომატი,
+    /// RCD, ნათურა, როზეტი (+ კაბელი). Learn დონეები ამ კომპონენტებით სრულდება.
+    public static let freeBasicKinds: Set<ComponentKind> = [
+        .mainSwitch, .mcb, .rcd, .lamp, .socket
+    ]
+
+    /// kind ბაზისურ (უფასო) ნაკრებშია?
+    public static func isBasicFree(_ kind: ComponentKind) -> Bool {
+        freeBasicKinds.contains(kind)
+    }
+
     /// უფასო მომხმარებლისთვის კომპონენტი ხელმისაწვდომია თუ არა (kind-ის მიხედვით).
     /// ამჟამად ყველა კომპონენტი ხელმისაწვდომია იმ დონის ფარგლებში, რომელიც
     /// მომხმარებელს უკვე გახსნილი აქვს (ფასიანობა დონის tier-ით განისაზღვრება).

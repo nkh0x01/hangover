@@ -729,14 +729,54 @@ final class CircuitSolverTests: XCTestCase {
     /// დონეები იტვირთება ახალი ველებით (category/tier/difficulty); უფასო ნაკრები ფიქსირებულია.
     func testLevelCategoriesAndTiers() throws {
         let levels = try GameData.loadLevels()
+        // უფასოა მხოლოდ Learn (tutorial) დონეები.
         let freeIDs = Set(levels.filter { $0.resolvedTier == .free }.map { $0.id })
-        XCTAssertEqual(freeIDs, ["lvl_tutorial", "lvl_socket_rcd", "lvl_full_board",
-                                 "lvl_fault_open", "lvl_panel_intro"])
+        XCTAssertEqual(freeIDs, ["lvl_tutorial", "lvl_socket_rcd"])
         XCTAssertTrue(levels.contains { $0.resolvedCategory == .panelAssembly })
         for l in levels { XCTAssertTrue((1...5).contains(l.resolvedDifficulty)) }
-        let intro = levels.first { $0.id == "lvl_panel_intro" }
-        XCTAssertEqual(intro?.resolvedTier, .free)
-        XCTAssertTrue(intro?.isPanelAssembly == true)
+        // გაფართოებული კონტენტი — Pro.
+        XCTAssertEqual(levels.first { $0.id == "lvl_panel_intro" }?.resolvedTier, .pro)
+    }
+
+    /// ტარიფის მოდელი: Learn=უფასო (მხოლოდ ბაზისური კომპონენტებით), დანარჩენი=Pro.
+    func testTierModelLearnFreeRestPro() throws {
+        let templates = try GameData.loadTemplates()
+        let levels = try GameData.loadLevels()
+        var freeCount = 0
+        for level in levels {
+            if level.resolvedTier == .free {
+                freeCount += 1
+                // 1. უფასო დონე = Learn/tutorial კატეგორია
+                XCTAssertEqual(level.resolvedCategory, .tutorial,
+                               "უფასო დონე \(level.id) უნდა იყოს Learn/tutorial")
+                // 2. სრულდება მხოლოდ ბაზისური (უფასო) კომპონენტებით
+                for entry in level.palette {
+                    guard let kind = templates[entry.templateId]?.kind else {
+                        XCTFail("\(level.id): უცნობი შაბლონი \(entry.templateId)"); continue
+                    }
+                    XCTAssertTrue(ComponentGating.isBasicFree(kind),
+                                  "უფასო დონე \(level.id) იყენებს არა-ბაზისურ კომპონენტს \(entry.templateId) (\(kind))")
+                }
+                // 3. მიზნის ყველა დატვირთვა პალიტრაშია
+                let avail = Set(level.palette.compactMap { templates[$0.templateId]?.kind })
+                for (k, _) in level.goal.poweredLoads {
+                    XCTAssertTrue(ComponentKind(rawValue: k).map(avail.contains) ?? false,
+                                  "უფასო დონე \(level.id): მიზანი \(k) პალიტრაში არ არის")
+                }
+            } else {
+                // 4. დანარჩენი (panel/3ph/fault/advanced/sandbox) — Pro
+                XCTAssertEqual(level.resolvedTier, .pro, "\(level.id) უნდა იყოს Pro")
+            }
+        }
+        XCTAssertGreaterThanOrEqual(freeCount, 1, "უნდა არსებობდეს მინიმუმ ერთი უფასო Learn დონე")
+        // sandbox ყოველთვის Pro
+        for s in levels where s.resolvedMode == .sandbox {
+            XCTAssertEqual(s.resolvedTier, .pro, "sandbox უნდა იყოს Pro")
+        }
+        // panel-assembly / three-phase / fault-finding — ყველა Pro
+        for l in levels where [.panelAssembly, .threePhase, .faultFinding].contains(l.resolvedCategory) {
+            XCTAssertEqual(l.resolvedTier, .pro, "\(l.id) (\(l.resolvedCategory)) უნდა იყოს Pro")
+        }
     }
 
     // MARK: - 15. ფარის აწყობის ვალიდაცია (panel assembly)

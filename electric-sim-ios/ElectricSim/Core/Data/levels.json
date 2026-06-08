@@ -26,7 +26,7 @@
     "brief": "დააკავშირე როზეტის ხაზი. როზეტი ვალდებულია იყოს RCD-ის (30mA) ქვემოთ. გამოიყენე 2.5mm² კაბელი და ავტომატი B16.",
     "hint": "L → მთავარი → RCD → ავტომატი B16 → როზეტი. N → მთავარი → RCD → როზეტი. PE პირდაპირ მიწის ზოლიდან როზეტამდე. RCD-ის გარეშე როზეტი დაუშვებელია.",
     "phase": "single",
-    "category": "singlePhase",
+    "category": "tutorial",
     "difficulty": 1,
     "tier": "free",
     "palette": [
@@ -49,7 +49,7 @@
     "phase": "single",
     "category": "singlePhase",
     "difficulty": 2,
-    "tier": "free",
+    "tier": "pro",
     "palette": [
       { "templateId": "main_2p", "max": 1 },
       { "templateId": "spd", "max": 1 },
@@ -74,7 +74,7 @@
     "phase": "single",
     "category": "faultFinding",
     "difficulty": 2,
-    "tier": "free",
+    "tier": "pro",
     "mode": "faultFind",
     "palette": [],
     "prebuilt": {
@@ -106,7 +106,7 @@
     "phase": "single",
     "category": "panelAssembly",
     "difficulty": 2,
-    "tier": "free",
+    "tier": "pro",
     "palette": [
       { "templateId": "main_2p", "max": 1 },
       { "templateId": "spd", "max": 1 },
