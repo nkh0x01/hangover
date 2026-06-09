@@ -103,6 +103,35 @@ abstract class AbstractMetaDriver implements ChannelDriver
         }
     }
 
+    /** Convenience: GET from Graph with the channel's access token. */
+    protected function graphGet(string $path, array $query = [], ?string $tokenOverride = null): array
+    {
+        $token = $tokenOverride ?? ($this->config['access_token'] ?? $this->config['page_access_token'] ?? null);
+        if ($token) {
+            $query['access_token'] = $token;
+        }
+
+        try {
+            $res = $this->http->get(ltrim($path, '/'), [
+                'query' => $query,
+                'headers' => ['Accept' => 'application/json'],
+            ]);
+
+            $status = $res->getStatusCode();
+            $body = (string) $res->getBody();
+            $data = json_decode($body, true) ?: ['raw' => $body];
+
+            if ($status >= 400) {
+                Log::warning('graph.get.error', ['platform' => $this->platform(), 'path' => $path, 'status' => $status, 'body' => $data]);
+            }
+
+            return ['status' => $status, 'data' => $data];
+        } catch (GuzzleException $e) {
+            Log::error('graph.get.exception', ['platform' => $this->platform(), 'path' => $path, 'msg' => $e->getMessage()]);
+            return ['status' => 0, 'data' => ['error' => ['message' => $e->getMessage()]]];
+        }
+    }
+
     protected function asSendResult(array $resp): SendResult
     {
         $status = $resp['status'] ?? 0;

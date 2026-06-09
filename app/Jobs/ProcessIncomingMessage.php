@@ -89,15 +89,33 @@ class ProcessIncomingMessage implements ShouldQueue
             $newJobId = (string) Str::ulid();
             $conversation->update(['pending_reply_job_id' => $newJobId]);
 
-            // Debounced reply
-            $delay = random_int(
-                (int) config('chatbot.debounce.min_seconds', 5),
-                (int) config('chatbot.debounce.max_seconds', 15),
-            );
+            // Debounced reply. AUTO_REPLY_DELAY_SECONDS (admin setting) wins
+            // over the .env-defaulted debounce window. Master toggle / per-
+            // channel toggle are checked at job execution time so admins
+            // can flip them on/off without flushing the queue.
+            $settings = app(\App\Services\SettingsService::class);
+            $delaySetting = $settings->getInt('AUTO_REPLY_DELAY_SECONDS', 0);
+            if ($delaySetting > 0) {
+                $delay = $delaySetting;
+            } else {
+                $delay = random_int(
+                    (int) config('chatbot.debounce.min_seconds', 5),
+                    (int) config('chatbot.debounce.max_seconds', 15),
+                );
+            }
 
             GenerateAIReply::dispatch($conversation->id, $newJobId)
                 ->onQueue('reply')
                 ->delay(now()->addSeconds($delay));
+
+            // Dedicated auto-reply log entry: "scheduled"
+            try {
+                app(\App\Services\AI\AutoReplySender::class)->scheduledLog(
+                    $conversation, $delay, $newJobId
+                );
+            } catch (\Throwable $e) {
+                // logging should never fail the main pipeline
+            }
 
             AuditLog::record('system', 'message.in', 'conversation', $conversation->id, [
                 'platform_msg_id' => $this->event['platform_msg_id'] ?? null,

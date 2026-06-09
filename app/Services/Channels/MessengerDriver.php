@@ -118,6 +118,76 @@ class MessengerDriver extends AbstractMetaDriver
         ));
     }
 
+    /**
+     * Send an image attachment by URL. Messenger Cloud API will fetch the
+     * URL and deliver it inline to the user. Returns SendResult — same
+     * shape as sendText().
+     */
+    public function sendImage(string $recipient, string $imageUrl, ?string $captionText = null): SendResult
+    {
+        $resp = $this->graphPost(
+            'me/messages',
+            [
+                'recipient' => ['id' => $recipient],
+                'messaging_type' => 'RESPONSE',
+                'message' => [
+                    'attachment' => [
+                        'type' => 'image',
+                        'payload' => ['url' => $imageUrl, 'is_reusable' => true],
+                    ],
+                ],
+            ],
+            $this->config['page_access_token'] ?? null,
+        );
+
+        // Optionally append a caption as a separate text message
+        if ($captionText !== null && $captionText !== '') {
+            $this->graphPost(
+                'me/messages',
+                [
+                    'recipient' => ['id' => $recipient],
+                    'messaging_type' => 'RESPONSE',
+                    'message' => ['text' => $captionText],
+                ],
+                $this->config['page_access_token'] ?? null,
+            );
+        }
+
+        return $this->asSendResult($resp);
+    }
+
+    /**
+     * Fetch public profile (name + photo) for a PSID. Returns
+     * ['ok' => bool, 'name' => ?string, 'profile_pic' => ?string, 'error' => ?string].
+     * Requires pages_show_list + pages_messaging or an admin/tester role.
+     * Always fails gracefully — never throws.
+     */
+    public function fetchProfile(string $psid): array
+    {
+        $resp = $this->graphGet($psid, [
+            'fields' => 'name,profile_pic',
+        ], $this->config['page_access_token'] ?? null);
+
+        $status = $resp['status'] ?? 0;
+        $data = $resp['data'] ?? [];
+
+        if ($status >= 200 && $status < 300) {
+            return [
+                'ok' => true,
+                'name' => $data['name'] ?? null,
+                'profile_pic' => $data['profile_pic'] ?? null,
+                'error' => null,
+            ];
+        }
+
+        return [
+            'ok' => false,
+            'name' => null,
+            'profile_pic' => null,
+            'error' => $data['error']['message'] ?? "http_{$status}",
+        ];
+    }
+
     public function sendMedia(string $recipient, MediaPayload $media): SendResult
     {
         return $this->asSendResult($this->graphPost(

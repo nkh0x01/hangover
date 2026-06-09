@@ -91,7 +91,17 @@ class WooCommerceClient
             $res = $this->http->request($method, ltrim($path, '/'), $opts);
             $status = $res->getStatusCode();
             $body = (string) $res->getBody();
-            $data = $body === '' ? [] : (json_decode($body, true) ?: ['raw' => $body]);
+            // NOTE: prior code used `json_decode(...) ?: ['raw' => $body]` which
+            // wrongly treated a VALID empty array `[]` as falsy and wrapped it
+            // as `['raw' => '[]']`. That broke empty-result responses from
+            // /products?search=... when WC returns `[]`. Use strict is_array
+            // check instead.
+            if ($body === '') {
+                $data = [];
+            } else {
+                $decoded = json_decode($body, true);
+                $data = is_array($decoded) ? $decoded : ['raw' => $body];
+            }
 
             if ($status >= 500 && $attempt < $retries) {
                 $this->backoff(++$attempt);

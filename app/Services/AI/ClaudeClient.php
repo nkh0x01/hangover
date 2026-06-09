@@ -2,6 +2,7 @@
 
 namespace App\Services\AI;
 
+use App\Services\SettingsService;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
@@ -9,12 +10,15 @@ use RuntimeException;
 /**
  * Thin Anthropic Messages API client. Supports tool use and prompt
  * caching. Keep this dumb — the orchestration lives in ReplyEngine.
+ *
+ * SettingsService is consulted first for ANTHROPIC_API_KEY / model overrides
+ * so admin-saved values take effect without an env-edit / redeploy.
  */
 class ClaudeClient
 {
     private Client $http;
 
-    public function __construct()
+    public function __construct(private SettingsService $settings)
     {
         $this->http = new Client([
             'base_uri' => rtrim(config('ai.anthropic.base_url'), '/') . '/',
@@ -38,12 +42,18 @@ class ClaudeClient
      */
     public function messages(array $args): array
     {
-        $model = $args['model']
-            ?? config('ai.models.' . (($args['light'] ?? false) ? 'light' : 'primary'));
+        // Prefer admin-saved model (DB) over .env, with config() fallback
+        $isLight = (bool) ($args['light'] ?? false);
+        $modelKey = $isLight ? 'ANTHROPIC_MODEL_LIGHT' : 'ANTHROPIC_MODEL_PRIMARY';
+        $defaultModel = config('ai.models.' . ($isLight ? 'light' : 'primary'));
+        $model = $args['model'] ?? $this->settings->get($modelKey) ?: $defaultModel;
+
+        $maxTokens = $args['max_tokens']
+            ?? (int) ($this->settings->get('ANTHROPIC_MAX_TOKENS') ?: config('ai.limits.max_tokens', 1024));
 
         $body = [
             'model' => $model,
-            'max_tokens' => $args['max_tokens'] ?? config('ai.limits.max_tokens', 1024),
+            'max_tokens' => $maxTokens,
             'messages' => $args['messages'],
         ];
 
@@ -57,7 +67,8 @@ class ClaudeClient
             $body['temperature'] = $args['temperature'];
         }
 
-        $apiKey = config('ai.anthropic.api_key');
+        // DB first, .env fallback — admin-saved key wins.
+        $apiKey = $this->settings->get('ANTHROPIC_API_KEY') ?: config('ai.anthropic.api_key');
         if (! $apiKey) {
             throw new RuntimeException('ANTHROPIC_API_KEY is not configured.');
         }
@@ -81,7 +92,12 @@ class ClaudeClient
 
         if ($status >= 400) {
             Log::error('anthropic.error', ['status' => $status, 'body' => $data, 'model' => $model]);
-            throw new RuntimeException('Anthropic API error: ' . ($data['error']['message'] ?? "http_$status"));
+            $err = $data['error'] ?? [];
+            $type = (string) ($err['type'] ?? '');
+            $msg = (string) ($err['message'] ?? "http_$status");
+            // Surface a stable categorization so callers can produce
+            // user-friendly Georgian messages without parsing strings.
+            throw new RuntimeException("anthropic_{$type}: {$msg}");
         }
 
         return $data;

@@ -2,6 +2,7 @@
 
 use App\Exceptions\WebhookVerificationException;
 use App\Http\Middleware\AdminAuth;
+use App\Http\Middleware\LogMessengerWebhook;
 use App\Http\Middleware\VerifyMetaSignature;
 use App\Http\Middleware\WebhookRateLimit;
 use Illuminate\Foundation\Application;
@@ -25,6 +26,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->group('webhook', [
+            // Pass-through for WhatsApp / Instagram — only logs when channel = messenger.
+            // Placed BEFORE signature check so we capture rejected requests too.
+            LogMessengerWebhook::class,
             VerifyMetaSignature::class,
             WebhookRateLimit::class,
         ]);

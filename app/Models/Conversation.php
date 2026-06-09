@@ -37,6 +37,7 @@ class Conversation extends Model
         'context_json' => 'array',
         'last_inbound_at' => 'datetime',
         'last_outbound_at' => 'datetime',
+        'last_read_at' => 'datetime',
         'last_followup_at' => 'datetime',
     ];
 
