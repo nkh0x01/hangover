@@ -3,214 +3,165 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Gadget AI · Inbox</title>
+    <title>@yield('title', 'Dashboard') · Gadget AI</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif', 'Noto Sans Georgian', 'Apple Color Emoji', 'Segoe UI Emoji'],
+            },
+            colors: {
+              brand: {
+                50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+                400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+                800: '#3730a3', 900: '#312e81', 950: '#1e1b4b',
+              },
+            },
+          },
+        },
+      };
+    </script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
-        body { font-family: ui-sans-serif, system-ui, -apple-system, "Noto Sans Georgian", sans-serif; }
-        .badge { @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium; }
+      body { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Noto Sans Georgian', sans-serif; }
+      [x-cloak] { display: none !important; }
+      .nav-link { display:flex; align-items:center; gap:.75rem; padding:.5rem .75rem; border-radius:.5rem; font-size:.875rem; color:rgb(71 85 105); transition: all .15s; }
+      .nav-link:hover { background:rgb(241 245 249); color:rgb(15 23 42); }
+      .nav-link.active { background:rgb(238 242 255); color:rgb(67 56 202); font-weight:500; }
+      .nav-link svg { width:1.25rem; height:1.25rem; flex-shrink:0; }
+      .card { background:white; border-radius:.75rem; border:1px solid rgb(226 232 240); box-shadow: 0 1px 2px rgb(0 0 0 / 0.05); }
+      .btn { display:inline-flex; align-items:center; gap:.5rem; padding:.5rem .75rem; border-radius:.5rem; font-size:.875rem; font-weight:500; transition: all .15s; cursor: pointer; }
+      .btn:disabled { opacity:.5; cursor:not-allowed; }
+      .btn-primary { background:rgb(79 70 229); color:white; }
+      .btn-primary:hover:not(:disabled) { background:rgb(67 56 202); }
+      .btn-secondary { background:white; border:1px solid rgb(226 232 240); color:rgb(51 65 85); }
+      .btn-secondary:hover:not(:disabled) { background:rgb(248 250 252); }
+      .btn-danger { background:rgb(220 38 38); color:white; }
+      .btn-danger:hover:not(:disabled) { background:rgb(185 28 28); }
+      .badge { display:inline-flex; align-items:center; padding:.125rem .5rem; border-radius:.25rem; font-size:.75rem; font-weight:500; }
+      .field-label { display:block; font-size:.75rem; font-weight:500; color:rgb(71 85 105); margin-bottom:.25rem; }
+      .field-input { width:100%; padding:.5rem .75rem; border-radius:.5rem; border:1px solid rgb(226 232 240); background:white; font-size:.875rem; outline:none; }
+      .field-input:focus { border-color:rgb(99 102 241); box-shadow: 0 0 0 1px rgb(99 102 241); }
+      .field-input[readonly] { background:rgb(248 250 252); color:rgb(100 116 139); }
     </style>
+    @stack('head')
 </head>
-<body class="h-screen overflow-hidden bg-slate-50 text-slate-800">
+<body class="bg-slate-50 text-slate-800 antialiased" x-data="adminShell()" x-init="boot()" x-cloak>
 
-<div x-data="inbox()" x-init="boot()" class="flex h-full">
+<div class="min-h-screen flex" x-show="ready">
+    @include('admin.partials.sidebar')
 
-    <aside class="w-80 border-r bg-white flex flex-col">
-        <div class="p-4 border-b">
-            <div class="text-lg font-semibold">Gadget · Unified Inbox</div>
-            <div class="text-xs text-slate-500 mt-1" x-text="me?.name ? me.name + ' · ' + me.role : 'არ ხართ შესული'"></div>
+    <main class="flex-1 min-w-0 flex flex-col">
+        @include('admin.partials.topbar')
+
+        @include('admin.partials.demo-banner')
+
+        <div class="flex-1 p-6 max-w-[1400px] w-full mx-auto">
+            @yield('content')
         </div>
-
-        <div class="p-2 flex gap-1 border-b text-xs">
-            <button class="px-2 py-1 rounded" :class="filters.platform === '' ? 'bg-slate-200' : ''" @click="filters.platform = ''; load()">ყველა</button>
-            <template x-for="p in ['whatsapp','messenger','instagram','facebook']">
-                <button class="px-2 py-1 rounded capitalize"
-                        :class="filters.platform === p ? 'bg-slate-200' : ''"
-                        @click="filters.platform = p; load()" x-text="p"></button>
-            </template>
-        </div>
-
-        <div class="overflow-y-auto flex-1">
-            <template x-for="c in items" :key="c.id">
-                <div class="p-3 border-b hover:bg-slate-50 cursor-pointer"
-                     :class="active?.id === c.id ? 'bg-blue-50' : ''"
-                     @click="open(c.id)">
-                    <div class="flex items-center justify-between">
-                        <div class="font-medium text-sm truncate" x-text="c.customer.name || c.customer.handle"></div>
-                        <span class="badge"
-                              :class="{
-                                'bg-rose-100 text-rose-700':   c.escalated,
-                                'bg-amber-100 text-amber-700': c.ai_paused && !c.escalated,
-                                'bg-emerald-100 text-emerald-700': !c.ai_paused && !c.escalated,
-                              }"
-                              x-text="c.escalated ? 'escalated' : (c.ai_paused ? 'human' : 'AI')"></span>
-                    </div>
-                    <div class="text-xs text-slate-500 mt-0.5 flex items-center gap-2">
-                        <span class="uppercase" x-text="c.platform"></span>
-                        <span>·</span>
-                        <span x-text="c.lead_status"></span>
-                    </div>
-                    <div class="text-xs text-slate-600 mt-1 truncate" x-text="c.last_message?.body || ''"></div>
-                </div>
-            </template>
-            <div class="p-6 text-center text-sm text-slate-400" x-show="!loading && items.length === 0">
-                ცარიელია 🙌
-            </div>
-        </div>
-
-        <div class="p-3 border-t text-xs text-slate-500" x-show="!me">
-            <input x-model="login.email" placeholder="email" class="border rounded w-full px-2 py-1 mb-1">
-            <input x-model="login.password" type="password" placeholder="password" class="border rounded w-full px-2 py-1 mb-1">
-            <button class="bg-slate-800 text-white rounded w-full py-1" @click="signin()">შესვლა</button>
-        </div>
-    </aside>
-
-    <main class="flex-1 flex flex-col">
-        <div x-show="!active" class="flex-1 flex items-center justify-center text-slate-400">
-            აირჩიე ჩატი მარცხნივ
-        </div>
-
-        <template x-if="active">
-            <div class="flex-1 flex flex-col">
-                <header class="p-4 border-b bg-white flex items-center justify-between">
-                    <div>
-                        <div class="font-semibold" x-text="active.customer?.display_name || active.customer?.platform_user_id"></div>
-                        <div class="text-xs text-slate-500" x-text="active.conversation.platform.toUpperCase() + ' · ' + active.conversation.lead_status"></div>
-                    </div>
-                    <div class="flex gap-2">
-                        <button class="px-3 py-1 text-sm rounded border" @click="takeover()" x-show="!active.conversation.ai_paused">Take over</button>
-                        <button class="px-3 py-1 text-sm rounded border" @click="release()"  x-show="active.conversation.ai_paused || active.conversation.escalated">Release</button>
-                        <button class="px-3 py-1 text-sm rounded border text-rose-700" @click="spam()">Spam</button>
-                    </div>
-                </header>
-
-                <div class="flex-1 overflow-y-auto p-4 space-y-2 bg-slate-50" x-ref="messages">
-                    <template x-for="m in active.messages" :key="m.id">
-                        <div class="flex" :class="m.direction === 'inbound' ? 'justify-start' : 'justify-end'">
-                            <div class="max-w-lg rounded-lg px-3 py-2 text-sm shadow-sm"
-                                 :class="m.direction === 'inbound'
-                                    ? 'bg-white border'
-                                    : (m.is_ai ? 'bg-emerald-100' : 'bg-blue-100')">
-                                <div x-text="m.body || (m.media?.url ? '[media] ' + m.media.url : '')"></div>
-                                <div class="text-[10px] text-slate-500 mt-1">
-                                    <span x-text="new Date(m.created_at).toLocaleTimeString('ka-GE')"></span>
-                                    <span x-show="m.is_ai">· AI</span>
-                                    <span x-show="m.author?.name" x-text="'· ' + m.author.name"></span>
-                                    <span x-show="m.confidence" x-text="'· conf ' + Number(m.confidence).toFixed(2)"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </template>
-                </div>
-
-                <footer class="border-t bg-white p-3">
-                    <form @submit.prevent="send()" class="flex gap-2">
-                        <input x-model="draft" placeholder="დაწერეთ პასუხი..." class="flex-1 border rounded px-3 py-2 text-sm">
-                        <button class="bg-slate-800 text-white rounded px-4 py-2 text-sm">გაგზავნა</button>
-                    </form>
-                </footer>
-            </div>
-        </template>
     </main>
+</div>
 
-    <aside class="w-80 border-l bg-white p-4 overflow-y-auto" x-show="active">
-        <h3 class="text-sm font-semibold text-slate-500 uppercase mb-2">Customer</h3>
-        <pre class="text-xs bg-slate-50 rounded p-2 overflow-x-auto" x-text="JSON.stringify(active?.customer, null, 2)"></pre>
+<!-- Boot-time loader -->
+<div x-show="!ready" class="min-h-screen grid place-items-center bg-slate-50">
+    <div class="text-center">
+        <div class="w-10 h-10 mx-auto mb-3 border-2 border-brand-600 border-t-transparent rounded-full animate-spin"></div>
+        <div class="text-sm text-slate-500">იტვირთება…</div>
+    </div>
+</div>
 
-        <h3 class="text-sm font-semibold text-slate-500 uppercase mt-4 mb-2">Memory</h3>
-        <pre class="text-xs bg-slate-50 rounded p-2 overflow-x-auto" x-text="JSON.stringify(active?.customer?.profile_json || {}, null, 2)"></pre>
-    </aside>
+<!-- Toast container -->
+<div class="fixed bottom-6 right-6 space-y-2 z-50" x-data="{ toasts: [] }"
+     x-init="window.addEventListener('toast', e => { const t = { id: Date.now(), ...e.detail }; toasts.push(t); setTimeout(() => toasts = toasts.filter(x => x.id !== t.id), 4500); })">
+    <template x-for="t in toasts" :key="t.id">
+        <div :class="t.type === 'error' ? 'bg-red-600' : (t.type === 'warn' ? 'bg-amber-600' : (t.type === 'success' ? 'bg-emerald-600' : 'bg-slate-900'))"
+             class="text-white px-4 py-2 rounded-lg shadow-lg text-sm max-w-md">
+            <span x-text="t.message"></span>
+        </div>
+    </template>
 </div>
 
 <script>
-function inbox() {
+function adminShell() {
     return {
-        token: localStorage.getItem('admin_token') || null,
+        ready: false,
         me: null,
-        items: [],
-        active: null,
-        loading: false,
-        filters: { platform: '' },
-        draft: '',
-        login: { email: '', password: '' },
+        token: localStorage.getItem('admin_token') || null,
+        currentPath: window.location.pathname,
 
         async boot() {
-            if (this.token) {
-                try {
-                    this.me = await this.api('GET', '/api/admin/auth/me');
-                    await this.load();
-                    setInterval(() => this.load(), 30000);
-                    setInterval(() => this.active && this.refreshActive(), 5000);
-                } catch (e) { this.token = null; localStorage.removeItem('admin_token'); }
+            if (!this.token) {
+                window.location.href = '/admin/login';
+                return;
+            }
+            try {
+                const r = await fetch('/api/admin/auth/me', {
+                    headers: { Authorization: 'Bearer ' + this.token, Accept: 'application/json' },
+                });
+                if (!r.ok) throw new Error('unauthenticated');
+                const j = await r.json();
+                this.me = j.user ?? j;
+                this.ready = true;
+            } catch (e) {
+                localStorage.removeItem('admin_token');
+                window.location.href = '/admin/login';
             }
         },
 
-        async signin() {
-            const r = await fetch('/api/admin/auth/login', {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(this.login),
-            });
-            if (!r.ok) return alert('არასწორი მონაცემები');
-            const data = await r.json();
-            this.token = data.token; this.me = data.user;
-            localStorage.setItem('admin_token', this.token);
-            await this.load();
-        },
-
-        async api(method, url, body) {
-            const r = await fetch(url, {
-                method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'Authorization': 'Bearer ' + this.token,
-                },
-                body: body ? JSON.stringify(body) : undefined,
-            });
-            if (!r.ok) throw new Error('http ' + r.status);
-            return r.json();
-        },
-
-        async load() {
-            this.loading = true;
+        async logout() {
             try {
-                const params = new URLSearchParams();
-                if (this.filters.platform) params.set('platform', this.filters.platform);
-                const data = await this.api('GET', '/api/admin/inbox?' + params);
-                this.items = data.data || [];
-            } finally { this.loading = false; }
+                await fetch('/api/admin/auth/logout', {
+                    method: 'POST',
+                    headers: { Authorization: 'Bearer ' + this.token, Accept: 'application/json' },
+                });
+            } catch (e) {}
+            localStorage.removeItem('admin_token');
+            window.location.href = '/admin/login';
         },
 
-        async open(id) {
-            this.active = await this.api('GET', '/api/admin/inbox/' + id);
-            this.$nextTick(() => this.$refs.messages?.scrollTo(0, 1e9));
+        isActive(path) {
+            return this.currentPath === path || this.currentPath.startsWith(path + '/');
         },
-        async refreshActive() {
-            const fresh = await this.api('GET', '/api/admin/inbox/' + this.active.conversation.id);
-            this.active = fresh;
+
+        toast(message, type = 'info') {
+            window.dispatchEvent(new CustomEvent('toast', { detail: { message, type } }));
         },
-        async send() {
-            if (!this.draft.trim()) return;
-            await this.api('POST', '/api/admin/inbox/' + this.active.conversation.id + '/reply', { body: this.draft });
-            this.draft = '';
-            await this.refreshActive();
-        },
-        async takeover() {
-            await this.api('POST', '/api/admin/inbox/' + this.active.conversation.id + '/takeover');
-            await this.refreshActive();
-        },
-        async release() {
-            await this.api('POST', '/api/admin/inbox/' + this.active.conversation.id + '/release');
-            await this.refreshActive();
-        },
-        async spam() {
-            if (!confirm('Mark as spam?')) return;
-            await this.api('POST', '/api/admin/inbox/' + this.active.conversation.id + '/spam');
-            await this.load();
+
+        async api(path, opts = {}) {
+            const r = await fetch('/api/admin' + path, {
+                ...opts,
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + this.token,
+                    ...(opts.headers || {}),
+                },
+                body: opts.body ? JSON.stringify(opts.body) : undefined,
+            });
+            if (r.status === 401) {
+                localStorage.removeItem('admin_token');
+                window.location.href = '/admin/login';
+                return;
+            }
+            const j = await r.json().catch(() => ({}));
+            if (!r.ok) {
+                this.toast(j.message || j.error || ('Error ' + r.status), 'error');
+                throw new Error(j.message || j.error || ('HTTP ' + r.status));
+            }
+            return j;
         },
     };
 }
+window.adminShell = adminShell;
 </script>
+
+@stack('scripts')
 </body>
 </html>
