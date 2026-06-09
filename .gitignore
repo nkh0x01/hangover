@@ -17,11 +17,15 @@
 !/storage/logs/.gitkeep
 !/bootstrap/cache/.gitkeep
 .env
-.env.*.local
-.env.local
+.env.*
+!.env.example
 .phpunit.cache
 .phpunit.result.cache
 auth.json
+
+# Runtime logs (cPanel scatters error_log files) and local-only ops docs (contain tokens)
+error_log
+/storage/app/bot_docs/
 composer.lock
 package-lock.json
 yarn.lock
