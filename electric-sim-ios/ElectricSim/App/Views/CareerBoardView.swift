@@ -75,7 +75,7 @@ struct CareerBoardView: View {
                     Circle().fill(done ? Color.green.opacity(0.2) : Color.orange.opacity(0.15))
                         .frame(width: 40, height: 40)
                     Image(systemName: locked ? "lock.fill" : (done ? "checkmark" : "briefcase.fill"))
-                        .foregroundStyle(done ? .green : (locked ? .secondary : .orange))
+                        .foregroundStyle(done ? Color.green : (locked ? Color.secondary : Color.orange))
                 }
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 6) {

@@ -23,7 +23,7 @@ struct SandboxListView: View {
                     } label: {
                         HStack(spacing: 12) {
                             Image(systemName: locked ? "lock.fill" : "hammer.fill")
-                                .foregroundStyle(locked ? .secondary : .blue)
+                                .foregroundStyle(locked ? Color.secondary : Color.blue)
                                 .frame(width: 32)
                             VStack(alignment: .leading, spacing: 2) {
                                 HStack(spacing: 6) {
