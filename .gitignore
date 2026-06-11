@@ -103,3 +103,8 @@ coverage/
 
 # OS
 desktop.ini
+
+# Marketplace app
+marketplace/backend/database/database.sqlite
+marketplace/backend/storage/logs/*.log
+marketplace/mobile/.flutter-plugins-dependencies
