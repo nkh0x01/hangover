@@ -9,6 +9,7 @@ use App\Modules\Riding\StateMachine\RideStatus;
 use App\Modules\Support\Models\FraudFlag;
 use App\Modules\Support\Services\FraudDetector;
 use App\Support\Ulid;
+use Tests\Support\SpatialTestHelpers;
 
 beforeEach(function (): void {
     config()->set('safety.cancellation_storm.count', 3);
@@ -19,7 +20,7 @@ beforeEach(function (): void {
 
 function cancelledRide(User $customer, int $minutesAgo): Ride
 {
-    return Ride::create([
+    return SpatialTestHelpers::createRide([
         'ulid' => Ulid::new(),
         'customer_id' => $customer->id,
         'city_id' => City::factory()->create()->id,

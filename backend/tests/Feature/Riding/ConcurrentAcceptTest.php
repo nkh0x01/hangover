@@ -40,7 +40,7 @@ function buildOfferedRide(int $offers = 2): array
         'expires_at' => now()->addMinutes(30),
     ]);
 
-    $ride = new Ride([
+    $ride = SpatialTestHelpers::createRide([
         'ulid' => Ulid::new(),
         'customer_id' => $customer->id,
         'city_id' => $city->id,
@@ -51,8 +51,6 @@ function buildOfferedRide(int $offers = 2): array
         'payment_method' => 'cash',
         'requested_at' => now(),
     ]);
-    $ride->save();
-    SpatialTestHelpers::setRidePoints($ride->id, 44.8271, 41.7151, 44.8271, 41.7321);
 
     $drivers = collect();
     for ($i = 0; $i < $offers; $i++) {

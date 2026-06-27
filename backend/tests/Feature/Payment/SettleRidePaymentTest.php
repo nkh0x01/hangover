@@ -16,6 +16,7 @@ use App\Modules\Wallet\Models\Transaction;
 use App\Modules\Wallet\Models\Wallet;
 use App\Support\Money;
 use App\Support\Ulid;
+use Tests\Support\SpatialTestHelpers;
 
 function completedRide(): Ride
 {
@@ -36,7 +37,7 @@ function completedRide(): Ride
         'expires_at' => now()->addMinutes(30),
     ]);
 
-    $ride = Ride::create([
+    $ride = SpatialTestHelpers::createRide([
         'ulid' => Ulid::new(),
         'customer_id' => $customer->id,
         'driver_id' => $driver->id,

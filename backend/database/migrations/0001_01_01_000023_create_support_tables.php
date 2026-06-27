@@ -74,8 +74,10 @@ return new class extends Migration
         });
 
         if (DB::getDriverName() === 'mysql') {
-            DB::statement('ALTER TABLE sos_events ADD COLUMN location POINT NOT NULL SRID 4326');
-            DB::statement('ALTER TABLE sos_events ADD SPATIAL INDEX sos_events_location_sp (location)');
+            // An SOS can be raised without a GPS fix, so location is nullable.
+            // A SPATIAL INDEX would force NOT NULL and is unused here (SOS rows
+            // are looked up by user/status, never by proximity), so it is omitted.
+            DB::statement('ALTER TABLE sos_events ADD COLUMN location POINT NULL SRID 4326');
         }
     }
 

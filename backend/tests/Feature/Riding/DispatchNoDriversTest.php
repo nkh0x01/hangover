@@ -5,7 +5,6 @@ declare(strict_types=1);
 use App\Modules\Geo\Models\City;
 use App\Modules\Identity\Models\User;
 use App\Modules\Pricing\Models\FareEstimate;
-use App\Modules\Riding\Models\Ride;
 use App\Modules\Riding\Services\DispatchService;
 use App\Modules\Riding\StateMachine\RideStatus;
 use App\Support\Ulid;
@@ -24,7 +23,7 @@ it('terminates a ride as no_drivers once the search window elapses without candi
         'expires_at' => now()->addMinutes(30),
     ]);
 
-    $ride = new Ride([
+    $ride = SpatialTestHelpers::createRide([
         'ulid' => Ulid::new(),
         'customer_id' => $customer->id,
         'city_id' => $city->id,
@@ -36,8 +35,6 @@ it('terminates a ride as no_drivers once the search window elapses without candi
         // Old enough to exceed the search window.
         'requested_at' => now()->subSeconds((int) config('realtime.offer.search_timeout_seconds', 60) + 5),
     ]);
-    $ride->save();
-    SpatialTestHelpers::setRidePoints($ride->id, 44.8271, 41.7151, 44.8271, 41.7321);
 
     /** @var DispatchService $dispatch */
     $dispatch = app(DispatchService::class);
@@ -59,7 +56,7 @@ it('exits the loop gracefully when the ride has already advanced to a terminal s
         'expires_at' => now()->addMinutes(30),
     ]);
 
-    $ride = new Ride([
+    $ride = SpatialTestHelpers::createRide([
         'ulid' => Ulid::new(),
         'customer_id' => $customer->id,
         'city_id' => $city->id,
@@ -70,8 +67,6 @@ it('exits the loop gracefully when the ride has already advanced to a terminal s
         'payment_method' => 'cash',
         'requested_at' => now(),
     ]);
-    $ride->save();
-    SpatialTestHelpers::setRidePoints($ride->id, 44.8271, 41.7151, 44.8271, 41.7321);
 
     /** @var DispatchService $dispatch */
     $dispatch = app(DispatchService::class);

@@ -13,7 +13,6 @@ use App\Modules\Riding\Actions\CompleteTrip;
 use App\Modules\Riding\Actions\DriverArrived;
 use App\Modules\Riding\Actions\DriverArriving;
 use App\Modules\Riding\Actions\StartTrip;
-use App\Modules\Riding\Models\Ride;
 use App\Modules\Riding\Models\RideOffer;
 use App\Modules\Riding\Services\RideStateMachine;
 use App\Modules\Riding\StateMachine\RideStatus;
@@ -39,7 +38,7 @@ function makeOfferedRide(): array
         'expires_at' => now()->addMinutes(30),
     ]);
 
-    $ride = new Ride([
+    $ride = SpatialTestHelpers::createRide([
         'ulid' => Ulid::new(),
         'customer_id' => $customer->id,
         'city_id' => $city->id,
@@ -50,8 +49,6 @@ function makeOfferedRide(): array
         'payment_method' => 'cash',
         'requested_at' => now(),
     ]);
-    $ride->save();
-    SpatialTestHelpers::setRidePoints($ride->id, 44.8271, 41.7151, 44.8271, 41.7321);
 
     RideOffer::create([
         'ride_id' => $ride->id,

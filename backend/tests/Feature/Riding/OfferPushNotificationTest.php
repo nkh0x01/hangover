@@ -11,9 +11,9 @@ use App\Modules\Identity\Models\User;
 use App\Modules\Identity\Models\UserDevice;
 use App\Modules\Riding\Events\RideOffered;
 use App\Modules\Riding\Listeners\SendOfferPush;
-use App\Modules\Riding\Models\Ride;
 use App\Modules\Riding\StateMachine\RideStatus;
 use App\Support\Ulid;
+use Tests\Support\SpatialTestHelpers;
 
 /**
  * In-memory PushGateway double — records every call.
@@ -46,7 +46,7 @@ function offerEventFor(User $driverUser, Driver $driver): RideOffered
     $city = $driver->city;
     $customer = User::factory()->create();
 
-    $ride = new Ride([
+    $ride = SpatialTestHelpers::createRide([
         'ulid' => Ulid::new(),
         'customer_id' => $customer->id,
         'city_id' => $city->id,
@@ -59,7 +59,6 @@ function offerEventFor(User $driverUser, Driver $driver): RideOffered
         'payment_method' => 'cash',
         'requested_at' => now(),
     ]);
-    $ride->save();
 
     return new RideOffered($ride->ulid, $driverUser->ulid, [
         'ride_ulid' => $ride->ulid,

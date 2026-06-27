@@ -75,7 +75,7 @@ function dispatchFallbackRide(City $city, User $customer, RideStatus $status = R
         'expires_at' => now()->addMinutes(30),
     ]);
 
-    $ride = Ride::create([
+    $ride = SpatialTestHelpers::createRide([
         'ulid' => Ulid::new(),
         'customer_id' => $customer->id,
         'city_id' => $city->id,
@@ -89,7 +89,6 @@ function dispatchFallbackRide(City $city, User $customer, RideStatus $status = R
         'payment_method' => 'cash',
         'requested_at' => now(),
     ]);
-    SpatialTestHelpers::setRidePoints($ride->id, 44.8271, 41.7151, 44.8271, 41.7321);
 
     return $ride->fresh();
 }
@@ -166,6 +165,12 @@ it('sets no_drivers without a 500 when no nearby drivers exist', function (): vo
 });
 
 it('lets the driver fetch and accept a DB-fallback offer', function (): void {
+    // Asserts on pickup/dropoff coordinates read from the MySQL spatial
+    // columns, which SQLite omits.
+    if (! SpatialTestHelpers::requiresMysql()) {
+        $this->markTestSkipped('Reads MySQL spatial coordinates');
+    }
+
     Queue::fake([ExpireRideOffer::class, OfferRideToNextDriver::class]);
     config(['geo.index.enabled' => false]);
 
@@ -197,6 +202,11 @@ it('lets the driver fetch and accept a DB-fallback offer', function (): void {
 });
 
 it('includes pickup and dropoff coordinates in offered event payload', function (): void {
+    // Coordinates come from the MySQL spatial columns, absent on SQLite.
+    if (! SpatialTestHelpers::requiresMysql()) {
+        $this->markTestSkipped('Reads MySQL spatial coordinates');
+    }
+
     $city = City::factory()->create();
     [, $driver] = dispatchFallbackDriver($city);
     $customer = User::factory()->create();
