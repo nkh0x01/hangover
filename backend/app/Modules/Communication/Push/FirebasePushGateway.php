@@ -110,7 +110,7 @@ final readonly class FirebasePushGateway implements PushGateway
     }
 
     /**
-     * @param  array<string, string>  $data
+     * @param array<string, string> $data
      */
     private function buildMessage(string $title, string $body, array $data): CloudMessage
     {

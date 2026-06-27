@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 namespace App\Modules\Payment\Gateways;
 
+use App\Modules\Payment\Actions\SettleRidePayment;
 use App\Modules\Payment\Contracts\GatewayResult;
 use App\Modules\Payment\Contracts\PaymentGateway;
+use App\Modules\Wallet\Services\WalletPoster;
 
 /**
  * Wallet-credit settlement.
  *
  * Doesn't talk to anything external. The actual debit + ledger entry
- * happens inside {@see \App\Modules\Wallet\Services\WalletPoster}
- * during {@see \App\Modules\Payment\Actions\SettleRidePayment}.
+ * happens inside {@see WalletPoster}
+ * during {@see SettleRidePayment}.
  *
  * The gateway exists so the wallet shows up as a first-class option
  * in `config('payment.gateways')` and `payments.provider`.

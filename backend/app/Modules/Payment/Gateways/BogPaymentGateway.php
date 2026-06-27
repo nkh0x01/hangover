@@ -7,6 +7,7 @@ namespace App\Modules\Payment\Gateways;
 use App\Modules\Payment\Contracts\GatewayResult;
 use App\Modules\Payment\Contracts\PaymentGateway;
 use Illuminate\Http\Client\Factory as HttpFactory;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
 use Throwable;
@@ -118,7 +119,7 @@ final class BogPaymentGateway implements PaymentGateway
             if ((string) config("payment.gateways.bog.$key") === '') {
                 throw new RuntimeException(
                     "BogPaymentGateway: BOG_{$this->envName($key)} is not configured. "
-                    .'Provide BOG credentials or route `card` to a different gateway.'
+                    .'Provide BOG credentials or route `card` to a different gateway.',
                 );
             }
         }
@@ -138,7 +139,7 @@ final class BogPaymentGateway implements PaymentGateway
      * once the BOG endpoints are wired. Wrapping the factory in this
      * helper keeps the gateway's HTTP timeout/headers in one place.
      */
-    private function client(): \Illuminate\Http\Client\PendingRequest
+    private function client(): PendingRequest
     {
         return $this->http
             ->baseUrl((string) config('payment.gateways.bog.base_url'))

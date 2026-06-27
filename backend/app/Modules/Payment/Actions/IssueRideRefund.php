@@ -60,12 +60,12 @@ final class IssueRideRefund
             (float) Refund::query()
                 ->where('payment_id', $payment->id)
                 ->where('status', 'succeeded')
-                ->sum('amount') * 100
+                ->sum('amount') * 100,
         );
         $remaining = $paid - $alreadyRefunded;
         if ($amount->minor > $remaining) {
             throw new InvalidArgumentException(
-                "refund {$amount->toDecimal()} exceeds remaining {$remaining}/100 on payment {$payment->id}"
+                "refund {$amount->toDecimal()} exceeds remaining {$remaining}/100 on payment {$payment->id}",
             );
         }
 

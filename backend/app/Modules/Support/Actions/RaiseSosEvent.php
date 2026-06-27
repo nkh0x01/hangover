@@ -6,6 +6,7 @@ namespace App\Modules\Support\Actions;
 
 use App\Modules\Identity\Models\User;
 use App\Modules\Riding\Models\Ride;
+use App\Modules\Support\Listeners\NotifyOpsOfSos;
 use App\Modules\Support\Models\SosEvent;
 use App\Support\Geo\Point;
 use Illuminate\Support\Facades\DB;
@@ -21,7 +22,7 @@ use Illuminate\Support\Facades\Log;
  * SQLite test suite stays portable.
  *
  * Side effects (out of band): the queued
- * {@see \App\Modules\Support\Listeners\NotifyOpsOfSos} listener
+ * {@see NotifyOpsOfSos} listener
  * pushes to the dispatcher SMS group + opens a high-priority
  * support ticket linked to the SOS event.
  */

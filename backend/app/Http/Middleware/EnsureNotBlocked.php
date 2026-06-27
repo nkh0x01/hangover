@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Support\Http\JsonErrorRenderer;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -11,7 +12,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /**
  * Hard-stops requests from suspended or banned users with a 403 +
- * structured envelope ({@see \App\Support\Http\JsonErrorRenderer}).
+ * structured envelope ({@see JsonErrorRenderer}).
  *
  * The middleware sits AFTER auth + device-binding, so we know the
  * user is resolved. The status check is intentionally string-based

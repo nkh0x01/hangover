@@ -6,6 +6,7 @@ namespace App\Modules\Geo\Services;
 
 use App\Modules\Riding\StateMachine\RideStatus;
 use App\Support\Geo\Point;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 final class DbNearbyDriverFinder
@@ -35,7 +36,7 @@ final class DbNearbyDriverFinder
 
         $distanceSql = 'ST_Distance_Sphere(ll.location, ST_GeomFromText(CONCAT(\'POINT(\', ?, \' \', ?, \')\'), 4326))';
 
-        /** @var \Illuminate\Support\Collection<int, object{driver_id: int, lat: numeric-string|float, lng: numeric-string|float, distance_m: numeric-string|float}> $rows */
+        /** @var Collection<int, object{driver_id: int, lat: numeric-string|float, lng: numeric-string|float, distance_m: numeric-string|float}> $rows */
         $rows = DB::table('live_locations as ll')
             ->joinSub($latestLocations, 'latest_locations', fn ($join) => $join->on('ll.id', '=', 'latest_locations.id'))
             ->join('drivers as d', 'd.id', '=', 'll.driver_id')

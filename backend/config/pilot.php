@@ -25,7 +25,7 @@ return [
     'cohort' => env('PILOT_COHORT'),
 
     'test_phone_numbers' => array_values(array_filter(
-        array_map('trim', explode(',', (string) env('PILOT_TEST_PHONES', '')))
+        array_map('trim', explode(',', (string) env('PILOT_TEST_PHONES', ''))),
     )),
 
     'monitoring' => [

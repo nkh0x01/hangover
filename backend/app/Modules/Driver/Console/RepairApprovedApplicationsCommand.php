@@ -42,6 +42,7 @@ final class RepairApprovedApplicationsCommand extends Command
                             $application->user_id,
                             implode(',', $reasons),
                         ));
+
                         continue;
                     }
 
@@ -52,6 +53,7 @@ final class RepairApprovedApplicationsCommand extends Command
                             $application->user_id,
                             implode(',', $reasons),
                         ));
+
                         continue;
                     }
 

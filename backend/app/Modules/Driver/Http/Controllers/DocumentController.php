@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Driver\Http\Controllers;
 
 use App\Modules\Driver\Actions\SubmitDriverDocument;
+use App\Modules\Driver\Models\Driver;
+use App\Modules\Driver\Models\DriverDocument;
 use App\Modules\Driver\Services\DriverVerificationPresenter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -38,7 +40,7 @@ final class DocumentController
 
         $user = $request->user();
         $driver = $user !== null
-            ? \App\Modules\Driver\Models\Driver::query()->where('user_id', $user->id)->first()
+            ? Driver::query()->where('user_id', $user->id)->first()
             : null;
         if ($driver === null) {
             throw new HttpException(404, 'driver.not_onboarded');
@@ -66,19 +68,19 @@ final class DocumentController
     {
         $user = $request->user();
         $driver = $user !== null
-            ? \App\Modules\Driver\Models\Driver::query()->where('user_id', $user->id)->first()
+            ? Driver::query()->where('user_id', $user->id)->first()
             : null;
         if ($driver === null) {
             throw new HttpException(404, 'driver.not_onboarded');
         }
 
-        $docs = \App\Modules\Driver\Models\DriverDocument::query()
+        $docs = DriverDocument::query()
             ->where('driver_id', $driver->id)
             ->orderBy('doc_type')
             ->get(['id', 'doc_type', 'status', 'expires_on', 'review_notes', 'reviewed_at']);
 
         return new JsonResponse([
-            'data' => $docs->map(fn (\App\Modules\Driver\Models\DriverDocument $d): array => [
+            'data' => $docs->map(fn (DriverDocument $d): array => [
                 'id' => $d->id,
                 'doc_type' => $d->doc_type,
                 'status' => $d->status,

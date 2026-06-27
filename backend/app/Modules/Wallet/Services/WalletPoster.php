@@ -192,7 +192,7 @@ final class WalletPoster
 
         if ($wallet->currency !== $currency) {
             throw new InvalidArgumentException(
-                "WalletPoster: wallet currency mismatch (have {$wallet->currency}, got {$currency})."
+                "WalletPoster: wallet currency mismatch (have {$wallet->currency}, got {$currency}).",
             );
         }
 

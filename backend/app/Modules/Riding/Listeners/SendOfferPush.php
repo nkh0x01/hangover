@@ -112,7 +112,7 @@ final class SendOfferPush implements ShouldQueue
     }
 
     /**
-     * @param  array<string, mixed>  $fare
+     * @param array<string, mixed> $fare
      */
     private function formatFare(array $fare): string
     {

@@ -1,6 +1,12 @@
 <?php
 
 declare(strict_types=1);
+use App\Modules\Payment\Gateways\BogPaymentGateway;
+use App\Modules\Payment\Gateways\CashPaymentGateway;
+use App\Modules\Payment\Gateways\NullPaymentGateway;
+use App\Modules\Payment\Gateways\StripePaymentGateway;
+use App\Modules\Payment\Gateways\TbcPayPaymentGateway;
+use App\Modules\Payment\Gateways\WalletPaymentGateway;
 
 /*
  * Phase 2.3 — payment gateway routing.
@@ -33,23 +39,23 @@ return [
 
     'gateways' => [
         'cash' => [
-            'class' => App\Modules\Payment\Gateways\CashPaymentGateway::class,
+            'class' => CashPaymentGateway::class,
         ],
         'null' => [
-            'class' => App\Modules\Payment\Gateways\NullPaymentGateway::class,
+            'class' => NullPaymentGateway::class,
         ],
         'wallet' => [
-            'class' => App\Modules\Payment\Gateways\WalletPaymentGateway::class,
+            'class' => WalletPaymentGateway::class,
         ],
         'stripe' => [
-            'class' => App\Modules\Payment\Gateways\StripePaymentGateway::class,
+            'class' => StripePaymentGateway::class,
             'secret_key' => env('STRIPE_SECRET_KEY'),
             'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
             'api_version' => '2024-12-18.acacia',
             'timeout_seconds' => 10,
         ],
         'bog' => [
-            'class' => App\Modules\Payment\Gateways\BogPaymentGateway::class,
+            'class' => BogPaymentGateway::class,
             'base_url' => env('BOG_BASE_URL', 'https://api.bog.ge/payments/v1'),
             'client_id' => env('BOG_CLIENT_ID'),
             'client_secret' => env('BOG_CLIENT_SECRET'),
@@ -57,7 +63,7 @@ return [
             'timeout_seconds' => 10,
         ],
         'tbc_pay' => [
-            'class' => App\Modules\Payment\Gateways\TbcPayPaymentGateway::class,
+            'class' => TbcPayPaymentGateway::class,
             'base_url' => env('TBC_PAY_BASE_URL', 'https://api.tbcpay.ge/v1'),
             'api_key' => env('TBC_PAY_API_KEY'),
             'api_secret' => env('TBC_PAY_API_SECRET'),

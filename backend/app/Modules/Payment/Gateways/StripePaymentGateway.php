@@ -90,7 +90,7 @@ final class StripePaymentGateway implements PaymentGateway
         if ($secret === '') {
             throw new RuntimeException(
                 'StripePaymentGateway: STRIPE_SECRET_KEY is not configured. '
-                .'Either provide it or route `card` to a different gateway in config/payment.php.'
+                .'Either provide it or route `card` to a different gateway in config/payment.php.',
             );
         }
     }

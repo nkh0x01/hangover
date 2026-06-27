@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Geo\Models\City;
 use App\Modules\Identity\Models\User;
 use App\Modules\Riding\Models\Ride;
 use App\Modules\Riding\StateMachine\RideStatus;
@@ -21,7 +22,7 @@ function cancelledRide(User $customer, int $minutesAgo): Ride
     return Ride::create([
         'ulid' => Ulid::new(),
         'customer_id' => $customer->id,
-        'city_id' => \App\Modules\Geo\Models\City::factory()->create()->id,
+        'city_id' => City::factory()->create()->id,
         'status' => RideStatus::Cancelled,
         'pickup_address' => 'A', 'dropoff_address' => 'B',
         'quoted_amount' => 1.0, 'surge_multiplier' => 1.0,

@@ -6,6 +6,7 @@ namespace App\Modules\Driver\Services;
 
 use App\Modules\Driver\Models\Driver;
 use App\Modules\Driver\Models\DriverDocument;
+use App\Modules\Support\Models\FraudFlag;
 
 /**
  * Produces the public "verification badge" view used by:
@@ -95,7 +96,7 @@ final class DriverVerificationPresenter
         if ($user?->status !== 'active') {
             return false;
         }
-        $blockingFlag = \App\Modules\Support\Models\FraudFlag::query()
+        $blockingFlag = FraudFlag::query()
             ->where('user_id', $user->id)
             ->where('severity', 'block')
             ->whereNull('resolved_at')

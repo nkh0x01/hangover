@@ -34,7 +34,7 @@ final class SubmitComplaint
     ];
 
     /**
-     * @param  array<int, array{filename: string, path: string, size: int, mime: string}>  $attachments
+     * @param array<int, array{filename: string, path: string, size: int, mime: string}> $attachments
      */
     public function execute(
         User $reporter,

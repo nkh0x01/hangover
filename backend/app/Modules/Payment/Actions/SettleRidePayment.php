@@ -8,6 +8,7 @@ use App\Modules\Payment\Models\Payment;
 use App\Modules\Payment\Services\MoneyAuditLogger;
 use App\Modules\Payment\Services\PaymentGatewayManager;
 use App\Modules\Pricing\Services\CommissionCalculator;
+use App\Modules\Riding\Actions\CompleteTrip;
 use App\Modules\Riding\Models\Ride;
 use App\Modules\Wallet\Services\WalletPoster;
 use App\Support\Money;
@@ -15,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
- * "Money clearing" action invoked by {@see \App\Modules\Riding\Actions\CompleteTrip}.
+ * "Money clearing" action invoked by {@see CompleteTrip}.
  *
  * Sequence:
  *   1. Resolve the gateway for the ride's payment method.

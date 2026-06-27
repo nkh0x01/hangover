@@ -6,6 +6,7 @@ namespace App\Modules\Payment\Gateways;
 
 use App\Modules\Payment\Contracts\GatewayResult;
 use App\Modules\Payment\Contracts\PaymentGateway;
+use App\Modules\Wallet\Actions\IssueWalletCredit;
 
 /**
  * Cash settlement.
@@ -14,7 +15,7 @@ use App\Modules\Payment\Contracts\PaymentGateway;
  * end. `authorize` is a no-op that immediately reports `captured`;
  * `capture` is idempotent and reports the same status; `refund` is
  * a marker only (the actual cash refund happens via wallet credit,
- * see {@see \App\Modules\Wallet\Actions\IssueWalletCredit}).
+ * see {@see IssueWalletCredit}).
  *
  * Used by the pilot and remains a permanent option for cash-preferring
  * markets in production.

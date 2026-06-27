@@ -9,6 +9,7 @@ use App\Modules\Driver\Models\Driver;
 use App\Modules\Geo\Models\LiveLocation;
 use App\Modules\Riding\Models\Ride;
 use App\Modules\Riding\Models\RideOffer;
+use Carbon\CarbonImmutable;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
@@ -153,7 +154,7 @@ final class AdminDiagnosticsPage extends Page
             return null;
         }
 
-        return \Carbon\CarbonImmutable::parse($timestamp)
+        return CarbonImmutable::parse($timestamp)
             ->timezone(config('app.timezone'))
             ->format('Y-m-d H:i:s');
     }
@@ -217,7 +218,7 @@ final class AdminDiagnosticsPage extends Page
 
         return sprintf(
             '%s on %s',
-            $row->failed_at ? \Carbon\CarbonImmutable::parse($row->failed_at)->timezone(config('app.timezone'))->format('Y-m-d H:i:s') : 'unknown time',
+            $row->failed_at ? CarbonImmutable::parse($row->failed_at)->timezone(config('app.timezone'))->format('Y-m-d H:i:s') : 'unknown time',
             $row->queue ?: 'unknown queue',
         );
     }
@@ -233,7 +234,7 @@ final class AdminDiagnosticsPage extends Page
             return null;
         }
 
-        return \Carbon\CarbonImmutable::createFromTimestamp((int) $timestamp)
+        return CarbonImmutable::createFromTimestamp((int) $timestamp)
             ->timezone(config('app.timezone'))
             ->format('Y-m-d H:i:s');
     }

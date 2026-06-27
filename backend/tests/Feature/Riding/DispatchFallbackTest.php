@@ -10,9 +10,9 @@ use App\Modules\Geo\Services\DbNearbyDriverFinder;
 use App\Modules\Geo\Services\LiveLocationRecorder;
 use App\Modules\Identity\Models\User;
 use App\Modules\Pricing\Models\FareEstimate;
+use App\Modules\Riding\Events\RideOffered;
 use App\Modules\Riding\Jobs\ExpireRideOffer;
 use App\Modules\Riding\Jobs\OfferRideToNextDriver;
-use App\Modules\Riding\Events\RideOffered;
 use App\Modules\Riding\Models\Ride;
 use App\Modules\Riding\Models\RideOffer;
 use App\Modules\Riding\Services\DispatchService;
@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Queue;
 use Laravel\Sanctum\Sanctum;
 use Tests\Support\SpatialTestHelpers;
 
-function dispatchFallbackDriver(City $city, array $driverOverrides = [], ?Point $location = null, ?\DateTimeInterface $recordedAt = null): array
+function dispatchFallbackDriver(City $city, array $driverOverrides = [], ?Point $location = null, ?DateTimeInterface $recordedAt = null): array
 {
     $driverUser = User::factory()->driver()->create();
     $driver = Driver::factory()->create(array_merge([

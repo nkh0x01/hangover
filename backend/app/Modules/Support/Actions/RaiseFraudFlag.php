@@ -6,13 +6,14 @@ namespace App\Modules\Support\Actions;
 
 use App\Modules\Identity\Models\User;
 use App\Modules\Support\Models\FraudFlag;
+use App\Modules\Support\Services\FraudDetector;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 
 /**
  * Records a fraud / safety flag against a user. Used by both the
- * automatic detection service ({@see \App\Modules\Support\Services\FraudDetector})
+ * automatic detection service ({@see FraudDetector})
  * and the admin "Flag user" Filament action.
  *
  * Severity ladder:
@@ -39,7 +40,7 @@ final class RaiseFraudFlag
     private const SEVERITIES = ['info', 'warn', 'block'];
 
     /**
-     * @param  array<string, mixed>  $evidence
+     * @param array<string, mixed> $evidence
      */
     public function execute(
         User $subject,

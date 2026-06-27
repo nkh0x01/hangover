@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Payment\Services;
 
+use App\Modules\Identity\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 use Spatie\Activitylog\Facades\CauserResolver;
@@ -68,7 +69,7 @@ final class MoneyAuditLogger
             $activity->description = $event;
             $activity->subject_type = $subject ? $subject::class : null;
             $activity->subject_id = $subject?->getKey();
-            $activity->causer_type = $causerId !== null ? \App\Modules\Identity\Models\User::class : null;
+            $activity->causer_type = $causerId !== null ? User::class : null;
             $activity->causer_id = $causerId;
             $activity->properties = $properties;
             $activity->event = $event;

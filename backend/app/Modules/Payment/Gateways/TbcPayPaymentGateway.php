@@ -7,6 +7,7 @@ namespace App\Modules\Payment\Gateways;
 use App\Modules\Payment\Contracts\GatewayResult;
 use App\Modules\Payment\Contracts\PaymentGateway;
 use Illuminate\Http\Client\Factory as HttpFactory;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
 use Throwable;
@@ -89,7 +90,7 @@ final class TbcPayPaymentGateway implements PaymentGateway
             if ((string) config("payment.gateways.tbc_pay.$key") === '') {
                 throw new RuntimeException(
                     "TbcPayPaymentGateway: TBC_PAY_{$this->envName($key)} is not configured. "
-                    .'Provide TBC Pay credentials or route `card` to a different gateway.'
+                    .'Provide TBC Pay credentials or route `card` to a different gateway.',
                 );
             }
         }
@@ -101,7 +102,7 @@ final class TbcPayPaymentGateway implements PaymentGateway
         return strtoupper($key);
     }
 
-    private function client(): \Illuminate\Http\Client\PendingRequest
+    private function client(): PendingRequest
     {
         return $this->http
             ->baseUrl((string) config('payment.gateways.tbc_pay.base_url'))

@@ -9,7 +9,6 @@ use App\Modules\Payment\Models\Refund;
 use App\Modules\Riding\Models\Ride;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Finance KPIs — gross revenue, commission take, refund leakage,
