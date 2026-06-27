@@ -24,7 +24,7 @@ return new class extends Migration
         });
 
         if (DB::getDriverName() === 'mysql') {
-            DB::statement('ALTER TABLE cities ADD COLUMN center POINT NULL SRID 4326');
+            DB::statement('ALTER TABLE cities ADD COLUMN center POINT NOT NULL SRID 4326');
             DB::statement('ALTER TABLE cities ADD COLUMN bounding_polygon POLYGON NULL SRID 4326');
             DB::statement('ALTER TABLE cities ADD SPATIAL INDEX cities_center_sp (center)');
         }
