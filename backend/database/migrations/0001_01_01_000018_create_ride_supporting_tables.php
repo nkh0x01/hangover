@@ -52,7 +52,7 @@ return new class extends Migration
         });
 
         if (DB::getDriverName() === 'mysql') {
-            DB::statement('ALTER TABLE ride_route_points ADD COLUMN location POINT NOT NULL SRID 4326');
+            DB::statement('ALTER TABLE ride_route_points ADD COLUMN location POINT NULL SRID 4326');
         }
 
         Schema::create('ride_messages', function (Blueprint $t): void {

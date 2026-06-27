@@ -76,8 +76,8 @@ return new class extends Migration
         });
 
         if (DB::getDriverName() === 'mysql') {
-            DB::statement('ALTER TABLE rides ADD COLUMN pickup_location POINT NOT NULL SRID 4326');
-            DB::statement('ALTER TABLE rides ADD COLUMN dropoff_location POINT NOT NULL SRID 4326');
+            DB::statement('ALTER TABLE rides ADD COLUMN pickup_location POINT NULL SRID 4326');
+            DB::statement('ALTER TABLE rides ADD COLUMN dropoff_location POINT NULL SRID 4326');
             DB::statement('ALTER TABLE rides ADD SPATIAL INDEX rides_pickup_sp (pickup_location)');
             DB::statement('ALTER TABLE rides ADD SPATIAL INDEX rides_dropoff_sp (dropoff_location)');
 

@@ -25,7 +25,7 @@ return new class extends Migration
         });
 
         if (DB::getDriverName() === 'mysql') {
-            DB::statement('ALTER TABLE favorite_addresses ADD COLUMN location POINT NOT NULL SRID 4326');
+            DB::statement('ALTER TABLE favorite_addresses ADD COLUMN location POINT NULL SRID 4326');
             DB::statement('ALTER TABLE favorite_addresses ADD SPATIAL INDEX favorite_addresses_location_sp (location)');
         }
     }
