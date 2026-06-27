@@ -31,19 +31,24 @@ final class RaiseSosEvent
     public function execute(User $user, ?Ride $ride, ?Point $location, ?string $body = null): SosEvent
     {
         $event = DB::transaction(function () use ($user, $ride, $location, $body): SosEvent {
-            $event = SosEvent::create([
+            $event = new SosEvent([
                 'user_id' => $user->id,
                 'ride_id' => $ride?->id,
                 'body' => $body,
                 'status' => 'open',
             ]);
 
+            // `location` is a MySQL-only spatial column (POINT NOT NULL with a
+            // SPATIAL INDEX), so it must be set at insert time rather than via a
+            // post-insert UPDATE, which would fail the NOT NULL check first.
             if (DB::getDriverName() === 'mysql' && $location !== null) {
-                DB::statement(
-                    'UPDATE sos_events SET location = ST_GeomFromText(CONCAT(\'POINT(\', ?, \' \', ?, \')\'), 4326) WHERE id = ?',
-                    [$location->lng, $location->lat, $event->id],
+                $event->setAttribute(
+                    'location',
+                    DB::raw(sprintf("ST_GeomFromText('POINT(%F %F)', 4326)", $location->lng, $location->lat)),
                 );
             }
+
+            $event->save();
 
             return $event->fresh() ?? $event;
         });

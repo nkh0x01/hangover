@@ -30,13 +30,15 @@ final class CityFactory extends Factory
 
     public function configure(): static
     {
-        return $this->afterCreating(function (City $city): void {
-            // POINT lives in MySQL only; SQLite test runs use the
-            // sqlite-aware migration which omits the spatial column.
+        return $this->afterMaking(function (City $city): void {
+            // `center` is a MySQL-only spatial column (SQLite omits it). It is
+            // POINT NOT NULL with a SPATIAL INDEX, so it must be supplied at
+            // insert time — a post-insert UPDATE can't work because the insert
+            // itself would violate NOT NULL first.
             if (DB::getDriverName() === 'mysql') {
-                DB::statement(
-                    'UPDATE cities SET center = ST_GeomFromText(CONCAT(\'POINT(\', ?, \' \', ?, \')\'), 4326) WHERE id = ?',
-                    [44.8271, 41.7151, $city->id],
+                $city->setAttribute(
+                    'center',
+                    DB::raw("ST_GeomFromText('POINT(44.8271 41.7151)', 4326)"),
                 );
             }
         });
