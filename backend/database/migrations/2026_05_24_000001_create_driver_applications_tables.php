@@ -67,7 +67,9 @@ return new class extends Migration
             $t->foreignId('reviewed_by_user_id')->nullable()->constrained('users')->nullOnDelete();
             $t->timestamps(3);
 
-            $t->index(['application_id', 'doc_type', 'status']);
+            // Explicit short name: the auto-generated name exceeds MySQL's
+            // 64-char identifier limit.
+            $t->index(['application_id', 'doc_type', 'status'], 'da_docs_app_doc_status_idx');
         });
     }
 
