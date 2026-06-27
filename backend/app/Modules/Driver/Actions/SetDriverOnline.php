@@ -95,13 +95,15 @@ final readonly class SetDriverOnline
         $vehicleId ??= $driver->current_vehicle_id;
 
         $vehicle = $vehicleId !== null
-            ? $driver->vehicles()
+            ? Vehicle::query()
+                ->where('driver_id', $driver->id)
                 ->whereKey($vehicleId)
                 ->where('is_active', true)
                 ->first()
             : null;
 
-        $vehicle ??= $driver->vehicles()
+        $vehicle ??= Vehicle::query()
+            ->where('driver_id', $driver->id)
             ->where('is_active', true)
             ->latest('updated_at')
             ->first();

@@ -96,7 +96,7 @@ final class DriverApplicationApprovalService
             $application->update([
                 'status' => 'approved',
                 'driver_id' => $driver->id,
-                'vehicle_id' => $vehicle?->id ?? $application->vehicle_id,
+                'vehicle_id' => $vehicle->id,
                 'reviewed_at' => now(),
                 'reviewed_by_user_id' => $reviewerUserId,
                 'rejection_reason' => null,
