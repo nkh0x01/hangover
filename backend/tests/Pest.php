@@ -19,4 +19,5 @@ uses(RefreshDatabase::class)->in(
     __DIR__.'/Feature/Geo',
     __DIR__.'/Feature/Payment',
     __DIR__.'/Feature/Support',
+    __DIR__.'/Feature/Erp',
 );

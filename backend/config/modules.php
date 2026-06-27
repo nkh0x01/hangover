@@ -4,6 +4,7 @@ declare(strict_types=1);
 use App\Modules\Cms\Providers\CmsServiceProvider;
 use App\Modules\Communication\Providers\CommunicationServiceProvider;
 use App\Modules\Driver\Providers\DriverServiceProvider;
+use App\Modules\Erp\Providers\ErpServiceProvider;
 use App\Modules\Geo\Providers\GeoServiceProvider;
 use App\Modules\Identity\Providers\IdentityServiceProvider;
 use App\Modules\Payment\Providers\PaymentServiceProvider;
@@ -32,5 +33,6 @@ return [
         CommunicationServiceProvider::class,
         SupportServiceProvider::class,
         CmsServiceProvider::class,
+        ErpServiceProvider::class,
     ],
 ];
