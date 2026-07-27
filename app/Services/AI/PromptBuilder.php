@@ -21,6 +21,7 @@ class PromptBuilder
         $stored = AiPrompt::active('system');
 
         $stable = $stored?->body ?? $this->defaultSystem($brand);
+        $stable .= "\n\n" . $this->branchBlock();
 
         $voiceList = "Voice:\n- " . implode("\n- ", $brand['voice'] ?? []);
         $forbidden = "Forbidden:\n- " . implode("\n- ", $brand['forbidden'] ?? []);
@@ -89,6 +90,34 @@ class PromptBuilder
         }
 
         return $out;
+    }
+
+    /**
+     * Store-branch grounding block: the ONLY source the bot may use for
+     * location / address / working-hours answers. Prevents hallucinated
+     * addresses — anything not covered here must be escalated.
+     */
+    private function branchBlock(): string
+    {
+        $branches = (array) config('branches.list', []);
+
+        if ($branches === []) {
+            return 'Store branches: not configured. If a customer asks about a branch, address, city or '
+                . 'working hours, do NOT invent anything — call escalate_to_human or say a colleague will confirm.';
+        }
+
+        $lines = [];
+        foreach ($branches as $b) {
+            $lines[] = '- ' . ($b['name'] ?? '?') . ': ' . ($b['address'] ?? '') . ' — ' . ($b['hours'] ?? '');
+        }
+        $phone = config('branches.phone');
+
+        return "Store branches — the ONLY source for location / address / working-hours facts:\n"
+            . implode("\n", $lines)
+            . ($phone ? "\nPhone (all branches): {$phone}" : '')
+            . "\n\nLocation rule: answer where-are-you / address / working-hours questions ONLY from this list. "
+            . 'NEVER invent or guess an address, city or hours. If a customer asks about a location not listed, '
+            . 'or you are unsure, call escalate_to_human. Do not send website links for this.';
     }
 
     private function defaultSystem(array $brand): string

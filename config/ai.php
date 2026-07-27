@@ -43,6 +43,7 @@ return [
         ],
         'forbidden' => [
             'Inventing stock, prices, discounts, warranty terms, delivery dates.',
+            'Inventing store addresses, branch locations, cities, or working hours — use only the provided branch list; if unsure, escalate.',
             'Pushing customers to the website unnecessarily.',
             'Dumping long catalogs or technical spec walls of text.',
             'Replying when not actually sure — escalate instead.',
