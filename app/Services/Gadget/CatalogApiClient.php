@@ -7,13 +7,17 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * Client for the new gadget.ge product catalog API (Laravel, Bearer token).
- * Replaces the WooCommerce REST source for products/stock.
+ * Client for the new gadget.ge API (Laravel, Bearer token) — products/stock
+ * (read) and orders (write, ability `orders:write`). Replaces the WooCommerce
+ * REST source.
  *
- *   GET /products?page=&per_page=&search=&category=&sku=&in_stock=&updated_since=
- *   GET /products/{sku}
+ *   GET  /products?page&per_page&search&category&sku&in_stock&updated_since
+ *   GET  /products/{sku}
+ *   POST /orders                    (idempotent on external_id)
+ *   GET  /orders/{id}
+ *   POST /orders/{id}/status
  *
- * Response shape: { "data": [ <product> ], "meta": { current_page, last_page, ... } }
+ * List/search response: { "data": [ <product> ], "meta": { current_page, last_page, ... } }
  */
 class CatalogApiClient
 {
@@ -36,6 +40,8 @@ class CatalogApiClient
     {
         return ! empty(config('gadget.api.url')) && ! empty(config('gadget.api.token'));
     }
+
+    // ---------------------------------------------------------------- products
 
     /** GET /products with query params → decoded body { data, meta } or null. */
     public function products(array $params = []): ?array
@@ -60,7 +66,7 @@ class CatalogApiClient
     public function product(string $sku): ?array
     {
         try {
-            $res = $this->http->get('products/' . rawurlencode($sku), ['headers' => ['Accept' => 'application/json']]);
+            $res = $this->http->get('products/' . rawurlencode($sku));
             if ($res->getStatusCode() >= 400) {
                 return null;
             }
@@ -99,5 +105,67 @@ class CatalogApiClient
             $lastPage = (int) ($resp['meta']['last_page'] ?? $page);
             $page++;
         } while ($page <= $lastPage);
+    }
+
+    // ------------------------------------------------------------------ orders
+
+    /** POST /orders — idempotent on external_id. Returns the `data` payload or null. */
+    public function createOrder(array $payload): ?array
+    {
+        try {
+            $res = $this->http->post('orders', ['json' => $payload]);
+            $body = json_decode((string) $res->getBody(), true) ?: [];
+            if ($res->getStatusCode() >= 400) {
+                Log::warning('gadget.api.order.create.http', [
+                    'status' => $res->getStatusCode(),
+                    'external_id' => $payload['external_id'] ?? null,
+                    'body' => $body,
+                ]);
+
+                return null;
+            }
+
+            return $body['data'] ?? $body;
+        } catch (Throwable $e) {
+            Log::error('gadget.api.order.create.exception', ['msg' => $e->getMessage()]);
+
+            return null;
+        }
+    }
+
+    /** GET /orders/{id} → order `data` or null. */
+    public function getOrder(string $id): ?array
+    {
+        try {
+            $res = $this->http->get('orders/' . rawurlencode($id));
+            if ($res->getStatusCode() >= 400) {
+                return null;
+            }
+            $j = json_decode((string) $res->getBody(), true);
+
+            return $j['data'] ?? null;
+        } catch (Throwable $e) {
+            Log::error('gadget.api.order.get.exception', ['id' => $id, 'msg' => $e->getMessage()]);
+
+            return null;
+        }
+    }
+
+    /** POST /orders/{id}/status — e.g. mark paid after BOG. Returns `data` or null. */
+    public function setOrderStatus(string $id, string $status): ?array
+    {
+        try {
+            $res = $this->http->post('orders/' . rawurlencode($id) . '/status', ['json' => ['status' => $status]]);
+            if ($res->getStatusCode() >= 400) {
+                return null;
+            }
+            $j = json_decode((string) $res->getBody(), true);
+
+            return $j['data'] ?? null;
+        } catch (Throwable $e) {
+            Log::error('gadget.api.order.status.exception', ['id' => $id, 'msg' => $e->getMessage()]);
+
+            return null;
+        }
     }
 }
