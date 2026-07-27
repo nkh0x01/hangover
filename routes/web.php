@@ -1,10 +1,18 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminViewController;
+use App\Http\Controllers\Payments\PaymentController;
 use Illuminate\Support\Facades\Route;
 
 // Public root → land on the login page
 Route::get('/', fn () => redirect('/admin/login'));
+
+// Bank of Georgia payment endpoints.
+// The callback is a server-to-server POST from BOG (no session) → CSRF-exempt
+// in bootstrap/app.php. return/fail are the customer's browser redirect targets.
+Route::post('/payments/bog/callback', [PaymentController::class, 'bogCallback'])->name('payments.bog.callback');
+Route::get('/payments/return', [PaymentController::class, 'success'])->name('payments.return');
+Route::get('/payments/fail', [PaymentController::class, 'fail'])->name('payments.fail');
 
 // Standalone login (no auth)
 Route::get('/admin/login', [AdminViewController::class, 'login'])->name('admin.login');

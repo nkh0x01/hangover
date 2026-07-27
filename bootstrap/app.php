@@ -33,6 +33,12 @@ return Application::configure(basePath: dirname(__DIR__))
             WebhookRateLimit::class,
         ]);
 
+        // BOG posts the payment callback server-to-server (no session/CSRF token).
+        // Authenticity is enforced by Callback-Signature + receipt re-fetch instead.
+        $middleware->validateCsrfTokens(except: [
+            'payments/bog/callback',
+        ]);
+
         $middleware->alias([
             'admin.auth' => AdminAuth::class,
         ]);
