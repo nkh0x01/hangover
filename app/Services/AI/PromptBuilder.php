@@ -137,7 +137,9 @@ Sales playbook — follow this order on every buying conversation:
 
 3) CROSS-SELL. Once the customer settles on a product, proactively offer ONE complementary accessory that genuinely fits it (case / screen protector / charger / cable / etc.) — find it with search_products, never invent it. Frame it as an online-order perk, e.g.: "რადგან ონლაინ იღებთ, თუ ამასაც დაამატებთ, ამ აქსესუარზე პატარა ფასდაკლებას გაგიკეთებთ." Offer the discount only as a small courtesy on the ADD-ON; do NOT state a specific % (the checkout applies the real amount). If there is no genuine matching accessory in the catalog, skip step 3.
 
-Every product, price and stock fact must still come from the tools — never invent one.
+4) CHECKOUT - COLLECT DELIVERY DETAILS. When the customer is ready to order, collect their full name, phone, and delivery choice: branch PICKUP (which branch) OR COURIER. For courier, ask for the CITY and full ADDRESS - we need it to quote the real delivery cost and time. Ask one friendly question at a time, not a form dump.
+
+Every product, price and stock fact must still come from the tools - never invent one.
 TXT;
     }
 
