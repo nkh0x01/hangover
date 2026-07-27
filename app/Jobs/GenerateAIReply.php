@@ -7,6 +7,7 @@ use App\Models\Conversation;
 use App\Models\Message;
 use App\Services\AI\AiSuggestionService;
 use App\Services\AI\AutoReplySender;
+use App\Services\AI\ReplyEngine;
 use App\Services\SettingsService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -60,6 +61,28 @@ class GenerateAIReply implements ShouldQueue
         // ============ Safety gates ============
         if ($skip = $this->checkGates($conv, $settings)) {
             $sender->skip($conv, $skip);
+            return;
+        }
+
+        // ============ Autonomous sales engine (full_auto) ============
+        // When ROLLOUT_MODE=full_auto, hand off to the tool-use ReplyEngine
+        // (product search, native cards, draft orders, BOG payment links,
+        // tool-driven escalation). It sends its own replies with pacing.
+        // All the safety gates above still apply. Opt-in: default is
+        // public_product_only, so this branch is inert until explicitly enabled.
+        if ($settings->rolloutMode() === 'full_auto') {
+            try {
+                app(ReplyEngine::class)->reply($conv);
+                AuditLog::record('ai', 'reply.engine', 'conversation', $conv->id, [
+                    'token' => substr($this->jobToken, 0, 8),
+                    'mode' => 'full_auto',
+                    'platform' => $conv->platform,
+                ]);
+            } catch (Throwable $e) {
+                report($e);
+                $sender->skip($conv, 'engine_exception: '.$e->getMessage());
+            }
+
             return;
         }
 

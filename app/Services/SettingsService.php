@@ -174,7 +174,9 @@ class SettingsService
      *   beta                — auto-reply both product + general (internal testing)
      *   public_receive_only — never auto-send; receive + note for humans
      *   public_product_only — auto-send ONLY wc_grounded product replies (DEFAULT)
-     *   full_auto           — DISABLED for now; treated as public_product_only
+     *   full_auto           — autonomous sales engine: tool-use loop (product
+     *                          search, native cards, draft orders, BOG payment
+     *                          links, escalation). Opt-in; all safety gates apply.
      */
     public function rolloutMode(): string
     {
@@ -182,10 +184,8 @@ class SettingsService
         if (! in_array($mode, self::ROLLOUT_MODES, true)) {
             $mode = 'public_product_only';
         }
-        // full_auto is intentionally not active yet — fall back to product-only
-        if ($mode === 'full_auto') {
-            $mode = 'public_product_only';
-        }
+        // full_auto → GenerateAIReply hands off to the autonomous sales engine
+        // (ReplyEngine tool-use loop). Opt-in only: default stays product-only.
         return $mode;
     }
 
