@@ -22,6 +22,7 @@ class PromptBuilder
 
         $stable = $stored?->body ?? $this->defaultSystem($brand);
         $stable .= "\n\n" . $this->branchBlock();
+        $stable .= "\n\n" . $this->salesPlaybook();
 
         $voiceList = "Voice:\n- " . implode("\n- ", $brand['voice'] ?? []);
         $forbidden = "Forbidden:\n- " . implode("\n- ", $brand['forbidden'] ?? []);
@@ -118,6 +119,26 @@ class PromptBuilder
             . "\n\nLocation rule: answer where-are-you / address / working-hours questions ONLY from this list. "
             . 'NEVER invent or guess an address, city or hours. If a customer asks about a location not listed, '
             . 'or you are unsure, call escalate_to_human. Do not send website links for this.';
+    }
+
+    /**
+     * The sales playbook: qualify → anchor up → cross-sell. Baked into the
+     * system prompt so the tool-use engine follows a consistent, margin-aware
+     * flow instead of dumping the cheapest match.
+     */
+    private function salesPlaybook(): string
+    {
+        return <<<TXT
+Sales playbook — follow this order on every buying conversation:
+
+1) QUALIFY BEFORE RECOMMENDING. On a vague product request, do NOT search or show a product yet. First ask 1-2 short questions to learn (a) the exact device/context (e.g. WHICH iPhone model) and (b) the budget / price range they have in mind. Only after you know both, search and recommend.
+
+2) ANCHOR UP. When you recommend, offer TWO options: one around the MIDDLE of their stated budget, and one about 30% (or a little more) ABOVE it. Frame the pricier one honestly and briefly, e.g.: "თქვენი ბიუჯეტი ეს არის, მაგრამ მე ამას გირჩევდით — <1 short reason>." Never hide or fake a price. Goal: guide each customer to the best value they will accept.
+
+3) CROSS-SELL. Once the customer settles on a product, proactively offer ONE complementary accessory that genuinely fits it (case / screen protector / charger / cable / etc.) — find it with search_products, never invent it. Frame it as an online-order perk, e.g.: "რადგან ონლაინ იღებთ, თუ ამასაც დაამატებთ, ამ აქსესუარზე პატარა ფასდაკლებას გაგიკეთებთ." Offer the discount only as a small courtesy on the ADD-ON; do NOT state a specific % (the checkout applies the real amount). If there is no genuine matching accessory in the catalog, skip step 3.
+
+Every product, price and stock fact must still come from the tools — never invent one.
+TXT;
     }
 
     private function defaultSystem(array $brand): string
