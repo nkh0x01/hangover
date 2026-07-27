@@ -78,6 +78,47 @@ class ProductMapper
         ];
     }
 
+    /**
+     * Translate a product from the new gadget.ge catalog API into the
+     * column shape expected by our `products` table. The API is already
+     * clean, so this is a near 1:1 remap.
+     */
+    public function fromApi(array $p): array
+    {
+        $regular = $this->num($p['regular_price'] ?? null);
+        $sale = isset($p['sale_price']) && $p['sale_price'] !== null ? $this->num($p['sale_price']) : null;
+        $hasPromo = $sale !== null && $sale > 0 && ($regular <= 0 || $sale < $regular);
+        $effective = $hasPromo ? $sale : ($regular ?: ($sale ?: 0));
+
+        $images = array_values(array_filter((array) ($p['images'] ?? []), fn ($u) => is_string($u) && $u !== ''));
+        $attrs = (array) ($p['attributes'] ?? []);
+        $branch = (array) ($p['stock_by_branch'] ?? []);
+
+        return [
+            'sku' => (string) ($p['sku'] ?? ''),
+            'source_id' => (string) ($p['id'] ?? ''),
+            'name' => (string) ($p['name'] ?? ''),
+            'brand' => $p['brand'] ?? null,
+            'model' => $p['model'] ?? ($attrs['Model'] ?? $attrs['model'] ?? null),
+            'category' => $p['category'] ?? null,
+            'subcategory' => $p['subcategory'] ?? null,
+            'description' => (string) ($p['description'] ?? ''),
+            'price' => $effective,
+            'price_promo' => $hasPromo ? $sale : null,
+            'currency' => strtoupper((string) ($p['currency'] ?? 'GEL')),
+            'stock_total' => (int) ($p['stock_total'] ?? 0),
+            'stock_by_branch_json' => $branch ?: null,
+            'attributes_json' => $attrs ?: null,
+            'compatibility_json' => $this->extractCompatibility($attrs, []),
+            'images_json' => $images ?: null,
+            'url' => (string) ($p['url'] ?? ''),
+            'is_active' => true,
+            'is_promo' => (bool) ($p['on_sale'] ?? $hasPromo),
+            'margin_rank' => 0,
+            'synced_at' => now(),
+        ];
+    }
+
     private function num(mixed $v): float
     {
         if ($v === null || $v === '') {

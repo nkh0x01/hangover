@@ -3,74 +3,73 @@
 namespace App\Services\Gadget;
 
 use App\Models\Product;
-use App\Services\Gadget\Exceptions\WooApiException;
 use App\Services\Gadget\Mappers\ProductMapper;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
- * Mirrors the WooCommerce catalog into the local `products` table.
+ * Mirrors the gadget.ge catalog into the local `products` table.
+ *
+ * Source: the new gadget.ge catalog API (CatalogApiClient), Bearer token —
+ * gadget.ge migrated off WooCommerce to a Laravel site.
  *
  * Strategy:
- *   - paginate /products (status=publish), upsert by SKU (or source_id
- *     when SKU is empty — WC allows empty SKUs)
- *   - mark any product not seen in this run `is_active = false` so the
- *     bot never recommends a delisted item.
- *   - bounded delete: products inactive for >30 days get soft-pruned.
+ *   - paginate /products, upsert by SKU (source_id fallback when SKU empty)
+ *   - deactivate anything not touched this run (via synced_at) so the bot
+ *     never recommends a delisted item.
  */
 class CatalogSync
 {
     public function __construct(
-        private GadgetApi $api,
+        private CatalogApiClient $api,
         private ProductMapper $mapper,
     ) {}
 
     public function run(): array
     {
         if (! $this->api->isConfigured()) {
-            return ['ok' => false, 'reason' => 'wc_not_configured'];
+            return ['ok' => false, 'reason' => 'catalog_api_not_configured'];
         }
 
-        $seen = [];
+        $runStart = now();
         $upserted = 0;
-        $errors = 0;
 
         try {
-            foreach ($this->api->products()->each() as $p) {
-                $row = $this->mapper->fromWoo($p);
+            foreach ($this->api->each() as $p) {
+                $row = $this->mapper->fromApi($p);
                 if ($row['sku'] === '') {
-                    // Fall back to source_id as SKU stand-in.
-                    $row['sku'] = 'wc-' . $row['source_id'];
+                    $row['sku'] = 'gid-' . $row['source_id'];
+                }
+                if ($row['sku'] === 'gid-') {
+                    continue; // no usable identity — skip
                 }
 
                 Product::updateOrCreate(['sku' => $row['sku']], $row);
-                $seen[] = $row['sku'];
                 $upserted++;
             }
-        } catch (WooApiException $e) {
-            Log::error('catalog.sync.failed', ['status' => $e->status, 'msg' => $e->getMessage(), 'body' => $e->body]);
+        } catch (Throwable $e) {
+            // Partial failure (e.g. a mid-run page error). Do NOT deactivate —
+            // we may have only seen some pages.
+            Log::error('catalog.sync.failed', ['msg' => $e->getMessage(), 'upserted_so_far' => $upserted]);
 
-            return ['ok' => false, 'reason' => 'wc_api_error', 'detail' => $e->getMessage()];
+            return ['ok' => false, 'reason' => 'api_error', 'detail' => $e->getMessage(), 'upserted' => $upserted];
         }
 
-        // Deactivate anything we didn't see in this pass.
+        // Deactivate anything not touched this run (synced_at older than the
+        // run start), avoiding a giant WHERE NOT IN over thousands of SKUs.
         $deactivated = 0;
         if ($upserted > 0) {
-            $deactivated = Product::whereNotIn('sku', $seen)
-                ->where('is_active', true)
+            $deactivated = Product::where('is_active', true)
+                ->where(fn ($q) => $q->whereNull('synced_at')->orWhere('synced_at', '<', $runStart))
                 ->update(['is_active' => false, 'stock_total' => 0]);
         }
 
-        return [
-            'ok' => true,
-            'upserted' => $upserted,
-            'deactivated' => $deactivated,
-            'errors' => $errors,
-        ];
+        return ['ok' => true, 'upserted' => $upserted, 'deactivated' => $deactivated];
     }
 
     /**
-     * Cheap per-SKU refresh (used by the AI tool when it needs a
-     * "right now" stock answer rather than the mirror value).
+     * Cheap per-SKU refresh (used by the AI tool for a "right now" stock
+     * answer rather than the mirror value).
      */
     public function refreshSku(string $sku): ?Product
     {
@@ -78,16 +77,14 @@ class CatalogSync
             return null;
         }
 
-        $woo = $this->api->products()->findBySku($sku);
-        if (! $woo) {
+        $p = $this->api->product($sku);
+        if (! $p) {
             return null;
         }
 
-        $row = $this->mapper->fromWoo($woo);
+        $row = $this->mapper->fromApi($p);
         $row['sku'] = $row['sku'] ?: $sku;
 
-        $p = Product::updateOrCreate(['sku' => $row['sku']], $row);
-
-        return $p->fresh();
+        return Product::updateOrCreate(['sku' => $row['sku']], $row)->fresh();
     }
 }

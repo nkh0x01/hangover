@@ -38,10 +38,10 @@ Schedule::command('catalog:sync')
     ->cron('*/' . (int) config('catalog.sync_interval_min', 15) . ' * * * *')
     ->skip(fn () => ! empty(config('gadget.consumer_key')));
 
-// gadget.ge (WooCommerce) product mirror.
+// gadget.ge product mirror (new Laravel catalog API).
 Schedule::command('gadget:sync-products')
     ->cron('*/' . (int) config('gadget.sync.products_minutes', 15) . ' * * * *')
-    ->skip(fn () => empty(config('gadget.consumer_key')))
+    ->skip(fn () => empty(config('gadget.api.token')))
     ->withoutOverlapping(30);
 
 // gadget.ge coupons / promos.

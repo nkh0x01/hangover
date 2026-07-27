@@ -21,6 +21,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | New gadget.ge catalog API (Laravel + Bearer token)
+    |--------------------------------------------------------------------------
+    | gadget.ge migrated off WooCommerce to a Laravel site. Products/stock
+    | now come from this API. See App\Services\Gadget\CatalogApiClient.
+    */
+    'api' => [
+        'url' => env('GADGET_API_URL'),          // e.g. https://gadget.ge/api/v1
+        'token' => env('GADGET_API_TOKEN'),      // Bearer token
+        'timeout' => (int) env('GADGET_API_TIMEOUT', 25),
+        'page_size' => (int) env('GADGET_API_PAGE_SIZE', 100),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Sync cadence (minutes)
     |--------------------------------------------------------------------------
     */
