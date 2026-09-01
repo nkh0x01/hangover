@@ -1,6 +1,6 @@
 <?php
 /**
- * register_multi.php — ერთ ჩეკზე რამდენიმე ნივთის საგარანტიო.
+ * register_multi.php — ერთ ჩეკზე რამდენიმე ნივთის საგარანტიო + Fina autocomplete.
  * თითო ნივთი ცალკე gw_registrations ჩანაწერია; ერთი group → ერთი SMS → ერთი ხელმოწერა.
  * ADDITIVE — register.php უცვლელია.
  */
@@ -24,6 +24,7 @@ foreach (["SELECT id, full_name FROM gw_users WHERE is_active=1 ORDER BY full_na
     try { $staff = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC); break; } catch (Throwable $e) {}
 }
 
+$finaConfigured = (getenv('FINA_BASE_URL') ?: (defined('FINA_BASE_URL') ? FINA_BASE_URL : '')) !== '';
 $old = $_POST;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -70,6 +71,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $cq->execute([$catId]);
             $cat = $cq->fetch(PDO::FETCH_ASSOC);
             if (!$cat) { $rowErrors[$i] = 'კატეგორია ვერ მოიძებნა'; continue; }
+            if (!empty($cat['no_warranty'])) {
+                $rowErrors[$i] = '🚫 ამ კატეგორიაზე გარანტია არ გაიცემა (' . $cat['name'] . ')';
+                continue;
+            }
 
             /* დუბლის დაცვა — იგივე კოდი იმავე დღეს (register.php-ის იდენტური წესი) */
             if ($it['code'] !== '') {
@@ -180,7 +185,7 @@ $oldItems = $old['item'] ?? [['code' => '', 'name' => '', 'price' => '', 'catego
 <title>🧾 ჯგუფური საგარანტიო</title>
 <link rel="stylesheet" href="assets/css/style.css">
 <style>
-#pg{max-width:1000px;margin:0 auto;padding:4px 0 28px;color:#0F172A;font-size:14px}
+#pg{max-width:1040px;margin:0 auto;padding:4px 0 28px;color:#0F172A;font-size:14px}
 #pg *{box-sizing:border-box}
 #pg h1{font-size:21px;margin-bottom:6px}
 #pg .sub{color:#64748B;font-size:13px;margin-bottom:18px}
@@ -190,18 +195,27 @@ $oldItems = $old['item'] ?? [['code' => '', 'name' => '', 'price' => '', 'catego
 #pg .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 #pg label{display:block;font-size:12px;font-weight:600;margin-bottom:4px;color:#475569}
 #pg input,#pg select{width:100%;padding:9px 11px;border:1px solid #E7EBF1;border-radius:9px;font-size:14px;font-family:inherit}
-#pg .row{display:grid;grid-template-columns:1.1fr 2fr .8fr 1.4fr 34px;gap:10px;align-items:end;padding:11px;border:1px solid #EEF1F6;border-radius:11px;margin-bottom:10px;background:#FBFCFE}
-#pg .row .del{background:#fff;border:1px solid #FECACA;color:#DC2626;border-radius:8px;height:37px;cursor:pointer;font-size:15px}
+#pg .row{display:grid;grid-template-columns:1.2fr 2fr .75fr 1.35fr 34px;gap:10px;align-items:start;padding:11px;border:1px solid #EEF1F6;border-radius:11px;margin-bottom:10px;background:#FBFCFE}
+#pg .row .del{background:#fff;border:1px solid #FECACA;color:#DC2626;border-radius:8px;height:37px;cursor:pointer;font-size:15px;margin-top:18px}
 #pg .rowerr{background:#FEF2F2;color:#991B1B;border-radius:8px;padding:7px 10px;font-size:12px;margin:-4px 0 10px}
+#pg .rmsg{font-size:11.5px;margin-top:4px;min-height:14px;line-height:1.4}
 #pg .btn{background:#4F46E5;color:#fff;border:0;border-radius:10px;padding:11px 22px;font-weight:700;cursor:pointer;font-size:14px;font-family:inherit}
 #pg .btn.gray{background:#fff;color:#334155;border:1px solid #E7EBF1;font-weight:600}
+#pg .btn.sm{padding:7px 14px;font-size:12.5px}
 #pg .err{background:#FEF2F2;color:#991B1B;padding:12px;border-radius:10px;margin-bottom:14px}
 #pg .ok{background:#ECFDF5;border:1px solid #A7F3D0;color:#047857;padding:14px;border-radius:11px;margin-bottom:14px}
 #pg .lnk{font-family:ui-monospace,Menlo,monospace;font-size:13px;background:#fff;border:1px solid #A7F3D0;border-radius:8px;padding:9px 11px;margin-top:9px;word-break:break-all}
 #pg table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
 #pg th,#pg td{padding:8px 10px;border-bottom:1px solid #EEF1F6;text-align:left}
 #pg .hint{color:#94A3B8;font-size:11.5px;margin-top:3px}
-@media(max-width:820px){#pg .row{grid-template-columns:1fr 1fr;}#pg .g3,#pg .g2{grid-template-columns:1fr}}
+#pg .fina{background:#F0F9FF;border:1.5px solid #BAE6FD;border-radius:12px;padding:16px;margin-bottom:16px}
+#pg .fina h3{color:#0369A1}
+#pg .sale{background:#fff;border:1.5px solid #E0F2FE;border-radius:9px;padding:10px 12px;margin-bottom:7px;cursor:pointer}
+#pg .sale.on{border-color:#0369A1}
+#pg .prod{display:flex;justify-content:space-between;gap:10px;padding:7px 10px;background:#F0F9FF;border-radius:7px;margin-bottom:4px;font-size:13px;cursor:pointer}
+#pg .prod:hover{background:#E0F2FE}
+#pg .flex{display:flex;gap:9px;align-items:flex-end;flex-wrap:wrap}
+@media(max-width:860px){#pg .row{grid-template-columns:1fr 1fr}#pg .row .del{margin-top:0}#pg .g3,#pg .g2{grid-template-columns:1fr}}
 </style></head><body>
 <?php include 'includes/navbar.php'; ?>
 <div id="pg">
@@ -231,22 +245,36 @@ $oldItems = $old['item'] ?? [['code' => '', 'name' => '', 'price' => '', 'catego
 
 <?php if ($err): ?><div class="err">❌ <?= rm_e($err) ?></div><?php endif; ?>
 
+<?php if ($finaConfigured): ?>
+<div class="fina">
+  <h3>⚡ Fina — ჩეკიდან ჩატვირთვა</h3>
+  <div class="hint" style="margin-bottom:10px">ტელეფონით მოძებნე კლიენტი → აირჩიე ჩეკი → <b>ყველა ნივთი ერთბაშად ჩაჯდება</b>.</div>
+  <div class="flex">
+    <div style="flex:1;min-width:190px"><label>კლიენტის ტელეფონი</label>
+      <input id="fPhone" placeholder="5XXXXXXXX" onkeydown="if(event.key==='Enter'){event.preventDefault();finaLookup();}"></div>
+    <button type="button" class="btn sm" id="fBtn" onclick="finaLookup()">მოძებნა</button>
+  </div>
+  <div id="fMsg" class="rmsg" style="margin-top:8px"></div>
+  <div id="fSales" style="margin-top:10px"></div>
+</div>
+<?php endif; ?>
+
 <form method="POST" id="f">
   <?= $csrf ?>
   <div class="card">
     <h3>👤 კლიენტი</h3>
     <div class="g3">
-      <div><label>სახელი *</label><input name="first_name" required value="<?= rm_e($old['first_name'] ?? '') ?>"></div>
-      <div><label>გვარი *</label><input name="last_name" required value="<?= rm_e($old['last_name'] ?? '') ?>"></div>
-      <div><label>ტელეფონი * (9 ციფრი)</label><input name="phone" required placeholder="5XXXXXXXX" value="<?= rm_e($old['phone'] ?? '') ?>"></div>
+      <div><label>სახელი *</label><input id="cFirst" name="first_name" required value="<?= rm_e($old['first_name'] ?? '') ?>"></div>
+      <div><label>გვარი *</label><input id="cLast" name="last_name" required value="<?= rm_e($old['last_name'] ?? '') ?>"></div>
+      <div><label>ტელეფონი * (9 ციფრი)</label><input id="cPhone" name="phone" required placeholder="5XXXXXXXX" value="<?= rm_e($old['phone'] ?? '') ?>"></div>
     </div>
     <div class="g3" style="margin-top:12px">
-      <div><label>პირადი №</label><input name="personal_id" value="<?= rm_e($old['personal_id'] ?? '') ?>"></div>
-      <div><label>ელფოსტა</label><input type="email" name="customer_email" value="<?= rm_e($old['customer_email'] ?? '') ?>"></div>
-      <div><label>შეძენის თარიღი</label><input type="date" name="purchase_date" value="<?= rm_e($old['purchase_date'] ?? date('Y-m-d')) ?>"></div>
+      <div><label>პირადი №</label><input id="cPid" name="personal_id" value="<?= rm_e($old['personal_id'] ?? '') ?>"></div>
+      <div><label>ელფოსტა</label><input id="cEmail" type="email" name="customer_email" value="<?= rm_e($old['customer_email'] ?? '') ?>"></div>
+      <div><label>შეძენის თარიღი</label><input id="cDate" type="date" name="purchase_date" value="<?= rm_e($old['purchase_date'] ?? date('Y-m-d')) ?>"></div>
     </div>
     <div class="g2" style="margin-top:12px">
-      <div><label>ფილიალი *</label><select name="branch_id" required>
+      <div><label>ფილიალი *</label><select id="branchSelect" name="branch_id" required>
         <option value="">— აირჩიეთ —</option>
         <?php foreach ($branches as $b): ?>
           <option value="<?= (int)$b['id'] ?>" <?= (int)($old['branch_id'] ?? currentBranchId()) === (int)$b['id'] ? 'selected' : '' ?>><?= rm_e($b['name']) ?></option>
@@ -273,11 +301,12 @@ $oldItems = $old['item'] ?? [['code' => '', 'name' => '', 'price' => '', 'catego
       <?php foreach ($oldItems as $i => $it): ?>
       <?php if (isset($rowErrors[$i])): ?><div class="rowerr">⚠ <?= rm_e($rowErrors[$i]) ?></div><?php endif; ?>
       <div class="row">
-        <div><label>კოდი / სერიული</label><input name="item[<?= $i ?>][code]" value="<?= rm_e($it['code'] ?? '') ?>">
-          <div class="hint">Fina-კოდით კატეგორია თავისით შეირჩევა</div></div>
-        <div><label>დასახელება *</label><input name="item[<?= $i ?>][name]" value="<?= rm_e($it['name'] ?? '') ?>"></div>
-        <div><label>ფასი ₾</label><input name="item[<?= $i ?>][price]" value="<?= rm_e($it['price'] ?? '') ?>"></div>
-        <div><label>კატეგორია</label><select name="item[<?= $i ?>][category_id]">
+        <div><label>კოდი / სერიული</label>
+          <input name="item[<?= $i ?>][code]" class="icode" value="<?= rm_e($it['code'] ?? '') ?>">
+          <div class="rmsg"></div></div>
+        <div><label>დასახელება *</label><input name="item[<?= $i ?>][name]" class="iname" value="<?= rm_e($it['name'] ?? '') ?>"></div>
+        <div><label>ფასი ₾</label><input name="item[<?= $i ?>][price]" class="iprice" value="<?= rm_e($it['price'] ?? '') ?>"></div>
+        <div><label>კატეგორია</label><select name="item[<?= $i ?>][category_id]" class="icat">
           <option value="0">— ავტომატურად —</option>
           <?php foreach ($cats as $c): ?>
             <option value="<?= (int)$c['id'] ?>" <?= (int)($it['category_id'] ?? 0) === (int)$c['id'] ? 'selected' : '' ?>><?= rm_e($c['name']) ?></option>
@@ -297,23 +326,181 @@ $oldItems = $old['item'] ?? [['code' => '', 'name' => '', 'price' => '', 'catego
 <script>
 var CATS = <?= json_encode(array_map(function ($c) { return ['id' => (int)$c['id'], 'name' => $c['name']]; }, $cats), JSON_UNESCAPED_UNICODE) ?>;
 var n = <?= count($oldItems) ?>;
-function addRow() {
+
+function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }
+function authGone(x) {
+  if (x && x.auth === false) { alert('სესია ამოიწურა — გთხოვთ თავიდან შეხვიდეთ სისტემაში.'); location.href = 'login.php'; return true; }
+  return false;
+}
+function branchId() { var b = document.getElementById('branchSelect'); return b ? (b.value || '') : ''; }
+
+/* ── რიგები ───────────────────────────────────────────────────────────── */
+function rowHtml(i) {
   var opts = '<option value="0">— ავტომატურად —</option>';
-  CATS.forEach(function (c) { opts += '<option value="' + c.id + '">' + c.name.replace(/[<>&]/g, '') + '</option>'; });
+  CATS.forEach(function (c) { opts += '<option value="' + c.id + '">' + esc(c.name) + '</option>'; });
+  return '<div><label>კოდი / სერიული</label><input name="item[' + i + '][code]" class="icode"><div class="rmsg"></div></div>'
+    + '<div><label>დასახელება *</label><input name="item[' + i + '][name]" class="iname"></div>'
+    + '<div><label>ფასი ₾</label><input name="item[' + i + '][price]" class="iprice"></div>'
+    + '<div><label>კატეგორია</label><select name="item[' + i + '][category_id]" class="icat">' + opts + '</select></div>'
+    + '<button type="button" class="del" onclick="delRow(this)">✕</button>';
+}
+function addRow(fill) {
   var d = document.createElement('div');
   d.className = 'row';
-  d.innerHTML = '<div><label>კოდი / სერიული</label><input name="item[' + n + '][code]"><div class="hint">Fina-კოდით კატეგორია თავისით შეირჩევა</div></div>'
-    + '<div><label>დასახელება *</label><input name="item[' + n + '][name]"></div>'
-    + '<div><label>ფასი ₾</label><input name="item[' + n + '][price]"></div>'
-    + '<div><label>კატეგორია</label><select name="item[' + n + '][category_id]">' + opts + '</select></div>'
-    + '<button type="button" class="del" onclick="delRow(this)">✕</button>';
+  d.innerHTML = rowHtml(n);
   document.getElementById('rows').appendChild(d);
   n++;
+  bindRow(d);
+  if (fill) {
+    if (fill.code)  d.querySelector('.icode').value = fill.code;
+    if (fill.name)  d.querySelector('.iname').value = fill.name;
+    if (fill.price) d.querySelector('.iprice').value = fill.price;
+    if (fill.code) { codeLookup(d, true); }
+  }
+  return d;
 }
 function delRow(b) {
-  var rows = document.querySelectorAll('#rows .row');
-  if (rows.length <= 1) { return; }
+  if (document.querySelectorAll('#rows .row').length <= 1) { return; }
   b.parentNode.remove();
+}
+/* პირველი ცარიელი რიგი (ჩეკიდან ჩატვირთვისას ხელახლა არ დაგროვდეს) */
+function firstEmptyRow() {
+  var rows = document.querySelectorAll('#rows .row');
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    if (!r.querySelector('.icode').value && !r.querySelector('.iname').value && !r.querySelector('.iprice').value) { return r; }
+  }
+  return null;
+}
+
+/* ── რიგის Fina კოდის ძებნა ───────────────────────────────────────────── */
+function codeLookup(row, quiet) {
+  var code = (row.querySelector('.icode').value || '').trim();
+  var msg  = row.querySelector('.rmsg');
+  if (!code) { msg.textContent = ''; return; }
+  msg.style.color = '#64748B'; msg.textContent = '⏳ Fina…';
+  fetch('api_fina_lookup.php?action=code&code=' + encodeURIComponent(code) + '&branch_id=' + encodeURIComponent(branchId()))
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (authGone(d)) return;
+      if (!d.success || !d.found) {
+        msg.style.color = '#B45309';
+        msg.textContent = quiet ? '' : '🔍 ვერ მოიძებნა — შეავსე ხელით';
+        return;
+      }
+      var nm = row.querySelector('.iname');
+      if (d.name && !nm.value) { nm.value = d.name; }
+      var pr = row.querySelector('.iprice');
+      var eff = (d.price && d.price > 0) ? Math.round(d.price * 100) / 100 : 0;
+      if (eff > 0 && !pr.value) { pr.value = eff; }
+      if (d.category_id) { row.querySelector('.icat').value = String(d.category_id); }
+      var t = '✅ ' + esc(d.name || code);
+      if (eff > 0) { t += ' · <b>' + eff + '₾</b>' + (d.is_discount ? ' 🔖' : ''); }
+      t += d.category_name ? ' · ' + esc(d.category_name) : ' · ⚠ კატეგორია ხელით';
+      if (d.no_warranty) { t += ' · 🚫 გარანტიის გარეშე'; }
+      msg.style.color = d.no_warranty ? '#991B1B' : '#166534';
+      msg.innerHTML = t;
+    })
+    .catch(function () { msg.style.color = '#C00'; msg.textContent = '⚠️ Fina კავშირი ვერ დამყარდა'; });
+}
+function bindRow(row) {
+  var inp = row.querySelector('.icode');
+  if (!inp || inp._bound) { return; }
+  inp._bound = true;
+  var t = null;
+  inp.addEventListener('input', function () { clearTimeout(t); t = setTimeout(function () { codeLookup(row); }, 400); });
+  inp.addEventListener('blur', function () { clearTimeout(t); codeLookup(row); });
+}
+document.querySelectorAll('#rows .row').forEach(bindRow);
+
+/* ── Fina: კლიენტი + ჩეკები ───────────────────────────────────────────── */
+var _sales = [];
+function fmsg(t, c) { var m = document.getElementById('fMsg'); m.innerHTML = t; m.style.color = c || '#64748B'; }
+
+function finaLookup() {
+  var phone = (document.getElementById('fPhone').value || '').trim();
+  if (phone.length < 9) { fmsg('ტელეფონი 9 ნიშნა უნდა იყოს', '#B45309'); return; }
+  var btn = document.getElementById('fBtn');
+  btn.disabled = true; btn.textContent = '⏳';
+  document.getElementById('fSales').innerHTML = '';
+  fetch('api_fina_lookup.php?action=lookup&phone=' + encodeURIComponent(phone))
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (authGone(d)) return;
+      if (!d.success) { fmsg('⚠️ Fina კავშირი ვერ დამყარდა', '#C00'); return; }
+      if (!d.found) { fmsg('🔍 ამ ნომერზე კლიენტი ვერ მოიძებნა — შეავსე ხელით', '#B45309');
+        document.getElementById('cPhone').value = phone; return; }
+      var c = d.customer, p = (c.name || '').trim().split(' ');
+      document.getElementById('cFirst').value = p[0] || '';
+      document.getElementById('cLast').value  = p.slice(1).join(' ') || '';
+      document.getElementById('cPhone').value = phone;
+      if (c.email) { document.getElementById('cEmail').value = c.email; }
+      if (c.code && c.code.length === 11) { document.getElementById('cPid').value = c.code; }
+      _sales = d.sales || [];
+      if (!_sales.length) { fmsg('✅ ' + esc(c.name) + ' — გაყიდვები ვერ მოიძებნა', '#0369A1'); return; }
+      fmsg('✅ ' + esc(c.name) + ' — აირჩიე ჩეკი:', '#0369A1');
+      var h = '';
+      _sales.forEach(function (s, i) {
+        h += '<div class="sale" id="sale_' + i + '" onclick="saleOpen(' + i + ')">'
+           + '<div style="display:flex;justify-content:space-between;gap:10px">'
+           + '<div><div style="font-weight:600">' + esc(s.purpose) + '</div>'
+           + '<div style="font-size:12px;color:#888">📅 ' + esc(s.date) + ' · №' + esc(s.doc_num) + '</div></div>'
+           + '<div style="font-weight:700;color:#0369A1;white-space:nowrap">' + esc(s.amount) + '₾</div></div>'
+           + '<div id="prods_' + i + '" style="display:none;margin-top:9px;border-top:1px solid #E0F2FE;padding-top:9px"></div></div>';
+      });
+      document.getElementById('fSales').innerHTML = h;
+    })
+    .catch(function () { fmsg('⚠️ Fina კავშირი ვერ დამყარდა', '#C00'); })
+    .finally(function () { btn.disabled = false; btn.textContent = 'მოძებნა'; });
+}
+
+function saleOpen(i) {
+  var s = _sales[i], box = document.getElementById('prods_' + i);
+  document.querySelectorAll('.sale').forEach(function (e) { e.classList.remove('on'); });
+  document.getElementById('sale_' + i).classList.add('on');
+  if (box.style.display === 'block') { box.style.display = 'none'; return; }
+  box.style.display = 'block';
+  box.innerHTML = '<div style="font-size:12px;color:#888">⏳ იტვირთება…</div>';
+  fetch('api_fina_lookup.php?action=sale&id=' + encodeURIComponent(s.id) + '&type=' + encodeURIComponent(s.doc_type))
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (authGone(d)) return;
+      if (!d.success) { box.innerHTML = '<div style="font-size:12px;color:#C00">⚠️ ' + esc(d.error || 'შეცდომა') + '</div>'; return; }
+      var ps = d.products || [];
+      if (!ps.length) { box.innerHTML = '<div style="font-size:12px;color:#888">პროდუქტები ვერ მოიძებნა</div>'; return; }
+      if (d.date) { document.getElementById('cDate').value = d.date; }
+      window['_prods_' + i] = ps;
+      var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">'
+            + '<span style="font-size:12px;font-weight:600;color:#555">' + ps.length + ' ნივთი</span>'
+            + '<button type="button" class="btn sm" onclick="event.stopPropagation();addAll(' + i + ')">➕ ყველას დამატება</button></div>';
+      ps.forEach(function (p, j) {
+        var hint = (p.category_hint && p.category_hint.name) ? ' · <span style="color:#0369A1">' + esc(p.category_hint.name) + '</span>' : '';
+        h += '<div class="prod" onclick="event.stopPropagation();addOne(' + i + ',' + j + ')">'
+           + '<span>📦 ' + esc(p.name) + ' <small style="color:#888">code: ' + esc(p.id) + ' · ×' + esc(p.quantity) + '</small>' + hint + '</span>'
+           + '<span style="font-weight:700;color:#0369A1;white-space:nowrap">' + esc(p.price) + '₾</span></div>';
+      });
+      box.innerHTML = h;
+    })
+    .catch(function () { box.innerHTML = '<div style="font-size:12px;color:#C00">⚠️ Fina კავშირი ვერ დამყარდა</div>'; });
+}
+
+function fillInto(row, p) {
+  row.querySelector('.icode').value  = p.id;
+  row.querySelector('.iname').value  = p.name;
+  row.querySelector('.iprice').value = Math.round(p.price * 100) / 100;
+  bindRow(row);
+  codeLookup(row, true);
+}
+function addOne(i, j) {
+  var p = window['_prods_' + i][j];
+  var row = firstEmptyRow();
+  if (row) { fillInto(row, p); } else { addRow({ code: p.id, name: p.name, price: Math.round(p.price * 100) / 100 }); }
+}
+function addAll(i) {
+  var ps = window['_prods_' + i] || [];
+  ps.forEach(function (p, j) { addOne(i, j); });
+  fmsg('✅ დაემატა ' + ps.length + ' ნივთი — შეამოწმე და გამოწერე', '#166534');
+  document.getElementById('rows').scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 </script>
 <?php include 'includes/footer.php'; ?>
